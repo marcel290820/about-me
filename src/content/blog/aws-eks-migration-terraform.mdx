@@ -1,0 +1,37 @@
+---
+title: "AWS EKS Migration with Terraform"
+description: "Lessons learned from migrating a complex microservice system to AWS EKS using Terraform and Ansible. Real-world patterns for infrastructure-as-code at scale."
+pubDate: 2025-03-15
+tags: ["aws", "kubernetes", "terraform", "devops"]
+---
+
+Migrating a microservice architecture to AWS EKS is rarely straightforward. After spending over three years on this at Sourcepark, here are the patterns that actually worked.
+
+## The Starting Point
+
+We had a heterogeneous system — some services on EC2, some on ECS, and a few still running on bare metal. The goal: consolidate everything onto EKS with full IaC coverage.
+
+## Terraform Module Structure
+
+The key insight was organizing Terraform modules by **concern**, not by environment:
+
+```
+modules/
+  networking/     # VPC, subnets, security groups
+  eks/           # Cluster, node groups, addons
+  observability/ # CloudWatch, Prometheus, Grafana
+  ingress/       # ALB controller, external-dns
+```
+
+Each module exposes clean outputs and uses remote state for cross-module references.
+
+## Ansible for Bootstrapping
+
+Terraform provisions the infrastructure, but Ansible handles the configuration that Terraform can't — like installing cert-manager, setting up CRDs, and configuring application-level settings that require the cluster to already exist.
+
+## Key Takeaways
+
+1. **Start with the network layer** — get VPC and subnets right before touching EKS
+2. **Use managed node groups** — unless you have very specific requirements
+3. **Separate Terraform state per concern** — don't put everything in one state file
+4. **Ansible for post-provisioning** — keep Terraform declarative, use Ansible for imperative steps
