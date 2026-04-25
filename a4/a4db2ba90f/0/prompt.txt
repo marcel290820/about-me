@@ -1,0 +1,106 @@
+i want to build a website about me. the website should support basically showcasing what i do professionally besides some notes about my hobbys and interest. i also want to use it as my personal bloggin site. so that i can write posts/articles about engineering topics. the project should use AstroJS. make an implementation plan for that. keep in mind that im highly technical fullstack engineer. the website should be clean, modern, and give a strong engineering vibe when it comes to design.
+
+---
+
+it looks good. build the website and here also my CV which you can use to fill first basic info about me. everytime information should be missing you can use a PLACEHOLDER and track this in a dedicated file. the domain for the hosting will be marcel-heidebrecht.de. CV: # Marcel Heidebrecht
+
+Möckernstr. 74, 10965 Berlin | +49 163 1618633 | marcel@heidebrecht.de
+
+## AUSBILDUNG
+
+Technische Universität Berlin Berlin, Deutschland Master of Science in Wirtschaftsingenieurwesen (Vertiefung IT) Okt 2023 – heute
+
+- • Aktuelle Durchschnittsnote: 1,3
+- • Schwerpunkte: DevOps, Cloud Platforms, Distributed Systems
+
+
+Bachelor of Science in Wirtschaftsingenieurwesen (Vertiefung IT) Okt 2019 – Sep 2023
+
+- • Abschlussnote: 1,3 (Top 3%)
+- • Schwerpunkte: Software Engineering, Webtechnologien, Projektmanagement
+
+
+Friedrich-Ebert-Gymnasium Berlin, Deutschland Abitur Sep 2012 – Jun 2018
+
+• Abschlussnote: 1,4 mit Auszeichnung (GDCh-Preis)
+
+## BERUFSERFAHRUNG
+
+Capgemini Deutschland GmbH Berlin, Deutschland DevOps Engineer (Werkstudent) Feb 2026 – heute
+
+• Fokus: Cloud-Infrastruktur-Automatisierung und DevOps-Transformationen im Enterprise-Umfeld
+
+Campana & Schott GmbH Berlin, Deutschland Cloud, Data & AI Consultant (Werkstudent) Apr 2025 – Jan 2026
+
+- • Entwicklung eines KI-gestützten Lead-Generation-Agents mit Python und Browser-Automation
+- • Betreuung einer Datenplattform für internationalen Kunden; Erweiterung und Performance-Verbesserung
+- • Migrationskonzept zur Konsolidierung von Azure Data Factory und Databricks in Microsoft Fabric
+- • Präsentationen für Kundenprojekte und interne Initiative
+
+
+Sourcepark GmbH Berlin, Deutschland Software Engineer (Werkstudent) Nov 2021 – Apr 2025
+
+- • Cloud-Migration eines komplexen Microservice-Systems zu AWS EKS; Infrastruktur-Provisionierung mittels Terraform und Server-Konfiguration durch Ansible Playbooks
+- • Implementierung einer Java OCR-App (Tesseract) und eines Playwright Testprojekts
+- • Entwicklung spezialisierter Tooling-Lösungen: Full-Stack Security-Scanner und Custom Docker Client
+
+
+## AUSSERCURRICULARE AKTIVITÄTEN
+
+Company Consulting Team Berlin, Deutschland IT-Abteilung Jun 2024 – heute
+
+- • Projektleitung eines Datenbank-Redesigns zur Performancesteigerung (Faktor 10)
+- • Projektcontrolling der BCM-Konzeption sowie Einführung einer internen LLM-Infrastruktur
+- • IT-Ressortarbeit: Wissensmanagementsystem, Python Slack-App und CI/CD-Pipelines in GitLab
+
+
+Ocean College GmbH Globale Segelreise Mentoring & Wissenschaftliche Forschung (unbezahlt) Okt 2018 – Apr 2019
+
+- • Betreuung von 26 Schüler:innen während einer 6-monatigen globalen Segelexpedition in 11 Ländern
+- • Wissenschaftliche Forschung zur Mikroplastikverschmutzung der Ozeane; Veröffentlichung in der FAZ
+
+
+## FÄHIGKEITEN & INTERESSEN
+
+Sprachen: Fließend in Deutsch & Englisch, Fortgeschrittene Grundkenntnisse in Spanisch Interessen: Segeln, Tauchen, Gravel-Bike und Ski Zertifikate: ITILv4 Foundation (PeopleCert), Azure Fundamentals AZ-900, Fabric Data Engineer Associate DP-700 Technische Fähigkeiten:
+
+- • Full-Stack-Entwicklung: JVM-Ökosystem, TypeScript, Python, Web (Vue, Astro, Spring, FastAPI), Rust, Solana
+- • DevOps: CI/CD-Systeme, Terraform, Ansible, Git
+- • Cloud-Technologien: AWS, GCP, Azure, Kubernetes, Docker, Fabric, Databricks
+
+---
+
+still working?
+
+---
+
+what went wrong during your last shot at the problem?
+
+---
+
+fill some placeholders: 
+linkedin: www.linkedin.com/in/marcel-heidebrecht-a52296212
+github: https://github.com/marcel290820
+X: https://x.com/marcel290820
+
+and please write a suitable bio and tag line for me. i can still adapt them if i want to.
+
+---
+
+i put a picture of myself into the folder @60D143D3-BBD4-41D6-8DC6-EF716355450B_1_105_c.jpeg . put it into the correct folder and add it to my site. rename the file to a more descriptive name
+
+---
+
+the image has too low resolution. why is that? thats surprising to me because the image is quite big
+
+---
+
+the image still doesnt look to sharp. any idea why both images look bad? the one at the about page is even worse than the other one
+
+---
+
+can you now flip the image on the about page? the image isnt symetric and myself is on the right side. this looks good on the hero but on the about page i should be on the left side so the image needs to be flipped
+
+---
+
+no that looks weird now. maybe dont flip the image but put it right to the about text so that it aligns well with my hero page structure

@@ -1,0 +1,125 @@
+{
+  "cli_version": "0.5.5",
+  "checkpoint_id": "a4a4db2ba90f",
+  "session_id": "ses_23f506c8fffe4oNRQiPZv2KKKO",
+  "strategy": "manual-commit",
+  "created_at": "2026-04-25T10:50:58.199594Z",
+  "branch": "master",
+  "checkpoints_count": 5,
+  "files_touched": [
+    ".github/workflows/deploy.yml",
+    ".gitignore",
+    "PLACEHOLDERS.md",
+    "README.md",
+    "astro.config.mjs",
+    "package-lock.json",
+    "package.json",
+    "public/CNAME",
+    "public/favicon.svg",
+    "public/robots.txt",
+    "src/assets/images/marcel-heidebrecht-portrait.jpeg",
+    "src/components/Footer.astro",
+    "src/components/Header.astro",
+    "src/components/Hero.astro",
+    "src/components/Pagination.astro",
+    "src/components/PaginationNav.astro",
+    "src/components/PostCard.astro",
+    "src/components/ProjectCard.astro",
+    "src/components/SocialLinks.astro",
+    "src/components/TagList.astro",
+    "src/content.config.ts",
+    "src/content/blog/ai-lead-generation-python.mdx",
+    "src/content/blog/aws-eks-migration-terraform.mdx",
+    "src/content/blog/getting-started-astro-content-collections.mdx",
+    "src/content/interests/diving.md",
+    "src/content/interests/gravel-biking.md",
+    "src/content/interests/sailing.md",
+    "src/content/interests/skiing.md",
+    "src/content/projects/ai-lead-agent.md",
+    "src/content/projects/aws-eks-migration.md",
+    "src/content/projects/security-scanner.md",
+    "src/layouts/Base.astro",
+    "src/layouts/BlogPost.astro",
+    "src/layouts/Page.astro",
+    "src/pages/about.astro",
+    "src/pages/blog/[...slug].astro",
+    "src/pages/blog/index.astro",
+    "src/pages/blog/tags/[tag].astro",
+    "src/pages/index.astro",
+    "src/pages/projects.astro",
+    "src/pages/rss.xml.ts",
+    "src/pages/search.astro",
+    "src/styles/global.css",
+    "tsconfig.json"
+  ],
+  "agent": "OpenCode",
+  "model": "z-ai/glm-5.1",
+  "turn_id": "aee52631f6ad",
+  "token_usage": {
+    "input_tokens": 5554432,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 0,
+    "output_tokens": 33416,
+    "api_call_count": 88
+  },
+  "session_metrics": {
+    "turn_count": 6
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-04-25T10:50:58.183259Z",
+    "agent_lines": 7989,
+    "agent_removed": 0,
+    "human_added": 0,
+    "human_modified": 5,
+    "human_removed": 0,
+    "total_committed": 7994,
+    "total_lines_changed": 7994,
+    "agent_percentage": 99.93745308981737,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 7965,
+      "agent_lines_removed": 0
+    },
+    {
+      "checkpoint_number": 3,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 7973,
+      "agent_lines_removed": 0
+    },
+    {
+      "checkpoint_number": 4,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 7997,
+      "agent_lines_removed": 0
+    },
+    {
+      "checkpoint_number": 5,
+      "user_lines_added": 5,
+      "user_lines_removed": 5,
+      "agent_lines_added": 7997,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "src/components/Hero.astro": 2,
+        "src/pages/about.astro": 3
+      },
+      "user_removed_per_file": {
+        "src/components/Hero.astro": 2,
+        "src/pages/about.astro": 3
+      }
+    }
+  ]
+}
