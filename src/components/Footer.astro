@@ -1,0 +1,30 @@
+---
+const currentYear = new Date().getFullYear();
+
+const socialLinks = [
+  { label: 'github', href: 'https://github.com/marcel290820' },
+  { label: 'linkedin', href: 'https://www.linkedin.com/in/marcel-heidebrecht-a52296212' },
+  { label: 'x', href: 'https://x.com/marcel290820' },
+  { label: 'mail', href: 'mailto:marcel@heidebrecht.de' },
+];
+---
+
+<footer class="w-full max-w-3xl mx-auto px-4 sm:px-6 py-8 border-t border-border-subtle">
+  <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+    <p class="font-mono text-xs text-text-dim">
+      &copy; {currentYear} Marcel Heidebrecht. All rights reserved.
+    </p>
+    <div class="flex items-center gap-4">
+      {socialLinks.map((link) => (
+        <a
+          href={link.href}
+          class="font-mono text-xs text-text-dim hover:text-accent transition-colors"
+          target={link.href.startsWith('http') ? '_blank' : undefined}
+          rel={link.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+        >
+          {link.label}
+        </a>
+      ))}
+    </div>
+  </div>
+</footer>

@@ -1,0 +1,37 @@
+---
+import Page from '@/layouts/Page.astro';
+import ProjectCard from '@/components/ProjectCard.astro';
+import { getCollection } from 'astro:content';
+
+const allProjects = (await getCollection('projects'))
+  .sort((a, b) => b.data.sortOrder - a.data.sortOrder);
+
+const allTags = [...new Set(allProjects.flatMap((p) => p.data.tags))].sort();
+---
+
+<Page title="Projects" description="Projects by Marcel Heidebrecht">
+  <h1 class="text-3xl sm:text-4xl font-bold tracking-tight mb-2">Projects</h1>
+  <p class="font-mono text-sm text-text-dim mb-8">things i've built &amp; contributed to</p>
+
+  {allTags.length > 0 && (
+    <div class="mb-8">
+      <div class="flex flex-wrap gap-1.5">
+        {allTags.map((tag) => (
+          <span class="tag">{tag}</span>
+        ))}
+      </div>
+    </div>
+  )}
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    {allProjects.map((project) => (
+      <ProjectCard
+        title={project.data.title}
+        description={project.data.description}
+        tags={project.data.tags}
+        url={project.data.url}
+        repo={project.data.repo}
+      />
+    ))}
+  </div>
+</Page>

@@ -1,0 +1,87 @@
+---
+import Base from './Base.astro';
+import TagList from '@/components/TagList.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  pubDate: Date;
+  updatedDate?: Date;
+  heroImage?: string;
+  tags?: string[];
+}
+
+const { title, description, pubDate, updatedDate, heroImage, tags = [] } = Astro.props;
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BlogPosting',
+  headline: title,
+  description,
+  datePublished: pubDate.toISOString(),
+  dateModified: updatedDate?.toISOString() ?? pubDate.toISOString(),
+  author: {
+    '@type': 'Person',
+    name: 'Marcel Heidebrecht',
+    url: 'https://marcel-heidebrecht.de',
+  },
+  url: new URL(Astro.url.pathname, Astro.site).toString(),
+};
+
+function getReadingTime(content: string): number {
+  const words = content.replace(/\W+/g, ' ').split(/\s+/).length;
+  return Math.max(1, Math.ceil(words / 200));
+}
+
+const readingTime = getReadingTime(Astro.slots.has('default') ? await Astro.slots.render('default') : '');
+---
+
+<Base title={title} description={description}>
+  <article>
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+    <header class="mb-8">
+      <div class="flex items-center gap-2 text-sm font-mono text-text-muted mb-3">
+        <time datetime={pubDate.toISOString()}>
+          {pubDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+        </time>
+        {updatedDate && (
+          <span class="text-text-dim">
+            (updated {updatedDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })})
+          </span>
+        )}
+        <span class="text-text-dim">&middot;</span>
+        <span>{readingTime} min read</span>
+      </div>
+      <h1 class="text-3xl sm:text-4xl font-bold tracking-tight mb-4">{title}</h1>
+      {tags.length > 0 && <TagList tags={tags} />}
+      {heroImage && (
+        <img src={heroImage} alt={title} class="w-full rounded-lg border border-border mt-6" />
+      )}
+    </header>
+    <div class="prose prose-invert max-w-none" data-pagefind-body>
+      <slot />
+    </div>
+    <footer class="mt-12 pt-6 border-t border-border">
+      <a href="/blog" class="font-mono text-sm text-text-muted hover:text-accent transition-colors">
+        &larr; Back to all posts
+      </a>
+    </footer>
+  </article>
+  <script>
+    document.querySelectorAll('pre').forEach((pre) => {
+      const button = document.createElement('button');
+      button.className = 'copy-button';
+      button.textContent = 'copy';
+      button.addEventListener('click', async () => {
+        const code = pre.querySelector('code');
+        if (code) {
+          await navigator.clipboard.writeText(code.textContent ?? '');
+          button.textContent = 'copied!';
+          setTimeout(() => { button.textContent = 'copy'; }, 2000);
+        }
+      });
+      pre.style.position = 'relative';
+      pre.appendChild(button);
+    });
+  </script>
+</Base>

@@ -1,0 +1,64 @@
+---
+import Base from '@/layouts/Base.astro';
+import Hero from '@/components/Hero.astro';
+import PostCard from '@/components/PostCard.astro';
+import ProjectCard from '@/components/ProjectCard.astro';
+import { getCollection } from 'astro:content';
+
+const allPosts = (await getCollection('blog', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+  .slice(0, 3);
+
+const featuredProjects = (await getCollection('projects'))
+  .filter((p) => p.data.featured)
+  .sort((a, b) => b.data.sortOrder - a.data.sortOrder)
+  .slice(0, 3);
+---
+
+<Base title="Home">
+  <Hero />
+
+  {allPosts.length > 0 && (
+    <section class="mb-16">
+      <div class="section-heading">
+        <h2 class="font-mono text-sm font-medium text-text-muted">recent posts</h2>
+      </div>
+      <div class="flex flex-col gap-3">
+        {allPosts.map((post) => (
+          <PostCard
+            title={post.data.title}
+            description={post.data.description}
+            pubDate={post.data.pubDate}
+            tags={post.data.tags}
+            slug={post.id}
+          />
+        ))}
+      </div>
+      <a href="/blog" class="inline-block mt-4 font-mono text-sm text-text-dim hover:text-accent transition-colors">
+        all posts &rarr;
+      </a>
+    </section>
+  )}
+
+  {featuredProjects.length > 0 && (
+    <section>
+      <div class="section-heading">
+        <h2 class="font-mono text-sm font-medium text-text-muted">featured projects</h2>
+      </div>
+      <div class="grid gap-3 sm:grid-cols-2">
+        {featuredProjects.map((project) => (
+          <ProjectCard
+            title={project.data.title}
+            description={project.data.description}
+            tags={project.data.tags}
+            url={project.data.url}
+            repo={project.data.repo}
+          />
+        ))}
+      </div>
+      <a href="/projects" class="inline-block mt-4 font-mono text-sm text-text-dim hover:text-accent transition-colors">
+        all projects &rarr;
+      </a>
+    </section>
+  )}
+</Base>

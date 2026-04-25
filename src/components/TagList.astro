@@ -1,0 +1,24 @@
+---
+interface Props {
+  tags: string[];
+  activeTag?: string;
+  linked?: boolean;
+}
+
+const { tags, activeTag, linked = true } = Astro.props;
+---
+
+<div class="flex flex-wrap gap-1.5">
+  {tags.map((tag) => (
+    linked ? (
+      <a
+        href={`/blog/tags/${tag}`}
+        class:list={['tag', activeTag === tag && '!text-accent !border-accent']}
+      >
+        {tag}
+      </a>
+    ) : (
+      <span class="tag">{tag}</span>
+    )
+  ))}
+</div>
