@@ -47,13 +47,13 @@ const jsonLd = {
     <div class="flex-1 prose prose-invert max-w-none">
       <p>I'm a fullstack engineer and DevOps enthusiast based in Berlin, currently pursuing my M.Sc. in Industrial Engineering & IT at TU Berlin while working as a DevOps Engineer at Capgemini. I thrive at the intersection of software and infrastructure — whether that's migrating microservices to AWS EKS with Terraform, building AI-powered automation pipelines, or designing full-stack tooling from scratch. Before diving deep into tech, I spent six months sailing across the world's oceans, mentoring students and researching microplastic pollution. That experience shaped how I approach engineering: methodical under pressure, curious by default, and always looking at the bigger picture.</p>
     </div>
-    <div class="shrink-0">
+    <div class="shrink-0 portrait-ring">
       <Image
         src={portrait}
         alt="Marcel Heidebrecht"
         width={640}
         height={640}
-        class="rounded-lg border border-border object-cover w-40 h-40"
+        class="object-cover w-40 h-40 block relative z-0"
       />
     </div>
   </div>
@@ -63,14 +63,14 @@ const jsonLd = {
       <h2 class="font-mono text-sm font-medium text-text-muted">experience</h2>
     </div>
     <div class="flex flex-col gap-6">
-      <div class="border-l-2 border-border pl-4">
+      <div class="rail">
         <h3 class="text-base font-semibold mb-1">DevOps Engineer (Werkstudent)</h3>
         <p class="font-mono text-sm text-accent mb-1">Capgemini Deutschland GmbH</p>
         <p class="font-mono text-xs text-text-dim mb-2">Feb 2026 &mdash; present &middot; Berlin</p>
         <p class="text-sm text-text-muted">Cloud infrastructure automation and DevOps transformations in enterprise environments.</p>
       </div>
 
-      <div class="border-l-2 border-border pl-4">
+      <div class="rail">
         <h3 class="text-base font-semibold mb-1">Cloud, Data &amp; AI Consultant (Werkstudent)</h3>
         <p class="font-mono text-sm text-accent mb-1">Campana &amp; Schott GmbH</p>
         <p class="font-mono text-xs text-text-dim mb-2">Apr 2025 &mdash; Jan 2026 &middot; Berlin</p>
@@ -82,7 +82,7 @@ const jsonLd = {
         </ul>
       </div>
 
-      <div class="border-l-2 border-border pl-4">
+      <div class="rail">
         <h3 class="text-base font-semibold mb-1">Software Engineer (Werkstudent)</h3>
         <p class="font-mono text-sm text-accent mb-1">Sourcepark GmbH</p>
         <p class="font-mono text-xs text-text-dim mb-2">Nov 2021 &mdash; Apr 2025 &middot; Berlin</p>
@@ -100,13 +100,13 @@ const jsonLd = {
       <h2 class="font-mono text-sm font-medium text-text-muted">education</h2>
     </div>
     <div class="flex flex-col gap-6">
-      <div class="border-l-2 border-border pl-4">
+      <div class="rail">
         <h3 class="text-base font-semibold mb-1">M.Sc. Wirtschaftsingenieurwesen (IT)</h3>
         <p class="font-mono text-sm text-accent mb-1">Technische Universitat Berlin</p>
         <p class="font-mono text-xs text-text-dim mb-2">Oct 2023 &mdash; present</p>
         <p class="text-sm text-text-muted">Current GPA: 1.3 &middot; Focus: DevOps, Cloud Platforms, Distributed Systems</p>
       </div>
-      <div class="border-l-2 border-border pl-4">
+      <div class="rail">
         <h3 class="text-base font-semibold mb-1">B.Sc. Wirtschaftsingenieurwesen (IT)</h3>
         <p class="font-mono text-sm text-accent mb-1">Technische Universitat Berlin</p>
         <p class="font-mono text-xs text-text-dim mb-2">Oct 2019 &mdash; Sep 2023</p>
@@ -120,19 +120,19 @@ const jsonLd = {
       <h2 class="font-mono text-sm font-medium text-text-muted">skills</h2>
     </div>
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <div class="p-4 rounded-lg border border-border-subtle bg-surface-alt/50">
+      <div class="chip">
         <h3 class="font-mono text-sm text-accent mb-2">full-stack</h3>
         <p class="text-sm text-text-muted">JVM ecosystem, TypeScript, Python, Vue, Astro, Spring, FastAPI, Rust, Solana</p>
       </div>
-      <div class="p-4 rounded-lg border border-border-subtle bg-surface-alt/50">
+      <div class="chip">
         <h3 class="font-mono text-sm text-accent mb-2">devops</h3>
         <p class="text-sm text-text-muted">CI/CD systems, Terraform, Ansible, Git</p>
       </div>
-      <div class="p-4 rounded-lg border border-border-subtle bg-surface-alt/50">
+      <div class="chip">
         <h3 class="font-mono text-sm text-accent mb-2">cloud</h3>
         <p class="text-sm text-text-muted">AWS, GCP, Azure, Kubernetes, Docker, Fabric, Databricks</p>
       </div>
-      <div class="p-4 rounded-lg border border-border-subtle bg-surface-alt/50">
+      <div class="chip">
         <h3 class="font-mono text-sm text-accent mb-2">certs</h3>
         <p class="text-sm text-text-muted">ITILv4 Foundation, Azure Fundamentals AZ-900, Fabric Data Engineer DP-700</p>
       </div>
@@ -150,7 +150,7 @@ const jsonLd = {
       <span class="tag">Skiing</span>
       <span class="tag">Ocean Research</span>
     </div>
-    <div class="mt-4 p-4 rounded-lg border border-border-subtle bg-surface-alt/50">
+    <div class="mt-4 chip">
       <h3 class="font-mono text-sm text-accent mb-2">Ocean College &mdash; Global Sailing Expedition</h3>
       <p class="font-mono text-xs text-text-dim mb-2">Oct 2018 &mdash; Apr 2019</p>
       <p class="text-sm text-text-muted">Mentored 26 students during a 6-month global sailing expedition across 11 countries. Conducted scientific research on ocean microplastic pollution, published in FAZ.</p>
@@ -161,7 +161,7 @@ const jsonLd = {
     <div class="section-heading">
       <h2 class="font-mono text-sm font-medium text-text-muted">extracurricular</h2>
     </div>
-    <div class="border-l-2 border-border pl-4">
+    <div class="rail">
       <h3 class="text-base font-semibold mb-1">IT Department &mdash; Company Consulting Team</h3>
       <p class="font-mono text-xs text-text-dim mb-2">Jun 2024 &mdash; present &middot; Berlin</p>
       <ul class="text-sm text-text-muted list-disc pl-4 space-y-1">
