@@ -3,42 +3,31 @@ import { Image } from 'astro:assets';
 import portrait from '@/assets/images/marcel-heidebrecht-portrait.jpeg';
 ---
 
-<section class="py-16 sm:py-24">
-  <div class="dot-pattern absolute inset-0 opacity-30 pointer-events-none" />
-  <div class="relative flex flex-col sm:flex-row items-start gap-8">
+<section class="relative py-16 sm:py-24">
+  <div class="relative flex flex-col sm:flex-row items-start gap-10">
     <div class="flex-1">
-      <p class="font-mono text-sm text-accent mb-3">hi, i'm</p>
-      <h1 class="text-4xl sm:text-5xl font-bold tracking-tight mb-4">
-        Marcel Heidebrecht
+      <p class="term-label mb-4">whoami</p>
+      <h1 class="text-4xl sm:text-6xl font-bold tracking-tight mb-4 leading-[1.05]">
+        Marcel<br/>Heidebrecht
       </h1>
-      <p class="text-lg sm:text-xl text-text-muted max-w-xl mb-6">
-        Fullstack Engineer &amp; DevOps Enthusiast
+      <p class="text-lg sm:text-xl text-text-muted max-w-xl mb-3">
+        Fullstack Engineer <span class="text-text-faint">/</span> DevOps Enthusiast
       </p>
-      <p class="font-mono text-sm text-text-dim mb-8">
-        building resilient systems — from infra to interface
+      <p class="font-mono text-sm text-text-dim mb-10">
+        building resilient systems &mdash; from infra to interface
       </p>
       <div class="flex items-center gap-3">
-        <a
-          href="/about"
-          class="inline-flex items-center gap-2 px-4 py-2 text-sm font-mono bg-accent text-surface rounded-md hover:bg-accent-dim transition-colors"
-        >
-          about me
-        </a>
-        <a
-          href="/blog"
-          class="inline-flex items-center gap-2 px-4 py-2 text-sm font-mono border border-border text-text-muted rounded-md hover:border-text-dim hover:text-text transition-colors"
-        >
-          read blog
-        </a>
+        <a href="/about" class="btn-primary">about</a>
+        <a href="/blog" class="btn-ghost">blog</a>
       </div>
     </div>
-    <div class="shrink-0">
+    <div class="shrink-0 portrait-ring">
       <Image
         src={portrait}
         alt="Marcel Heidebrecht"
         width={640}
         height={640}
-        class="rounded-lg border border-border object-cover w-40 h-40"
+        class="object-cover w-44 h-44 block relative z-0"
       />
     </div>
   </div>

@@ -10,25 +10,29 @@ interface Props {
 const { title, description, tags = [], url, repo } = Astro.props;
 ---
 
-<article class="group p-5 rounded-lg border border-border-subtle hover:border-border bg-surface-alt/50 hover:bg-surface-alt transition-all">
+<article class="group card p-5">
+  <div class="flex items-center gap-2 mb-2">
+    <span class="inline-block w-1.5 h-1.5 rounded-full bg-accent opacity-70"></span>
+    <span class="font-mono text-[0.65rem] uppercase tracking-wider text-text-dim">project</span>
+  </div>
   <h3 class="text-lg font-semibold text-text group-hover:text-accent transition-colors mb-1">
     {title}
   </h3>
   <p class="text-sm text-text-muted mb-3">{description}</p>
-  <div class="flex flex-wrap gap-1.5 mb-3">
+  <div class="flex flex-wrap gap-1.5 mb-4">
     {tags.map((tag) => (
       <span class="tag">{tag}</span>
     ))}
   </div>
-  <div class="flex items-center gap-3">
+  <div class="flex items-center gap-4">
     {url && (
-      <a href={url} target="_blank" rel="noopener noreferrer" class="font-mono text-xs text-text-dim hover:text-accent transition-colors">
-        live &rarr;
+      <a href={url} target="_blank" rel="noopener noreferrer" class="font-mono text-xs text-text-muted hover:text-accent transition-colors">
+        &rarr; live
       </a>
     )}
     {repo && (
-      <a href={repo} target="_blank" rel="noopener noreferrer" class="font-mono text-xs text-text-dim hover:text-accent transition-colors">
-        source &rarr;
+      <a href={repo} target="_blank" rel="noopener noreferrer" class="font-mono text-xs text-text-muted hover:text-accent transition-colors">
+        &rarr; source
       </a>
     )}
   </div>

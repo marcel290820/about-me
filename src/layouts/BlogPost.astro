@@ -55,13 +55,14 @@ const readingTime = getReadingTime(Astro.slots.has('default') ? await Astro.slot
       <h1 class="text-3xl sm:text-4xl font-bold tracking-tight mb-4">{title}</h1>
       {tags.length > 0 && <TagList tags={tags} />}
       {heroImage && (
-        <img src={heroImage} alt={title} class="w-full rounded-lg border border-border mt-6" />
+        <img src={heroImage} alt={title} class="w-full rounded mt-6 shadow-[0_20px_40px_-20px_rgba(0,0,0,0.8)]" />
       )}
     </header>
     <div class="prose prose-invert max-w-none" data-pagefind-body>
       <slot />
     </div>
-    <footer class="mt-12 pt-6 border-t border-border">
+    <hr class="hr-glow mt-12 mb-6" />
+    <footer>
       <a href="/blog" class="font-mono text-sm text-text-muted hover:text-accent transition-colors">
         &larr; Back to all posts
       </a>

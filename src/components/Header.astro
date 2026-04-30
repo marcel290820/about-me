@@ -43,7 +43,7 @@ const navLinks = [
       </li>
     </ul>
 
-    <div class="sm:hidden peer-checked:flex hidden flex-col gap-3 absolute top-16 left-0 right-0 bg-surface border-b border-border px-6 py-4 z-50">
+    <div class="sm:hidden peer-checked:flex hidden flex-col gap-3 absolute top-16 left-0 right-0 bg-surface-alt/95 backdrop-blur px-6 py-4 z-50 shadow-[0_20px_40px_-20px_rgba(0,0,0,0.8)] before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-accent before:to-transparent before:opacity-50">
       {navLinks.map((link) => (
         <a
           href={link.href}
