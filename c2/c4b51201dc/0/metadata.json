@@ -1,0 +1,53 @@
+{
+  "cli_version": "0.5.6",
+  "checkpoint_id": "c2c4b51201dc",
+  "session_id": "ses_220edaba5ffepxhN9J57ZZsmNG",
+  "strategy": "manual-commit",
+  "created_at": "2026-05-01T09:06:06.094832Z",
+  "branch": "master",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "src/styles/global.css"
+  ],
+  "agent": "OpenCode",
+  "model": "z-ai/glm-5.1",
+  "turn_id": "8b5e0f8ca849",
+  "token_usage": {
+    "input_tokens": 682423,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 0,
+    "output_tokens": 3423,
+    "api_call_count": 21
+  },
+  "session_metrics": {
+    "turn_count": 2
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-05-01T09:06:06.089473Z",
+    "agent_lines": 22,
+    "agent_removed": 30,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 21,
+    "total_committed": 22,
+    "total_lines_changed": 73,
+    "agent_percentage": 71.23287671232876,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 36,
+      "user_lines_removed": 21,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        ".claude/settings.local.json": 8,
+        "src/styles/global.css": 28
+      },
+      "user_removed_per_file": {
+        "src/styles/global.css": 21
+      }
+    }
+  ]
+}
