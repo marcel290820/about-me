@@ -1,7 +1,7 @@
 ---
 title: "Skiing"
 icon: "⛷️"
-description: "Alpine skiing — from Bavarian resorts to the Austrian Alps."
+description: "Alpine skiing, from Bavarian resorts to the Austrian Alps."
 category: "sport"
 ---
 
