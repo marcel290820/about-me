@@ -3,14 +3,32 @@ import Page from '@/layouts/Page.astro';
 ---
 
 <Page title="Search" description="Search Marcel Heidebrecht's blog">
-  <h1 class="text-3xl font-bold tracking-tight mb-8">Search</h1>
-  <div id="search" class="min-h-[50vh]"></div>
+  <header class="mb-10">
+    <p class="term-label">~/search</p>
+    <h1 class="text-3xl md:text-4xl font-bold tracking-tight mt-3">find anything</h1>
+    <p class="text-sm text-[color:var(--color-text-muted)] mt-2 max-w-prose">
+      full-text index across posts, projects, and notes. powered by pagefind, runs entirely in your browser, no telemetry.
+    </p>
+  </header>
+
+  <section class="search-shell">
+    <p class="search-shell__label">grep</p>
+    <div class="search-shell__field">
+      <span class="search-shell__glyph" aria-hidden="true">$</span>
+      <div id="search" class="min-h-[40vh]"></div>
+    </div>
+  </section>
 
   <link rel="stylesheet" href="/pagefind/pagefind-ui.css" />
   <script is:inline src="/pagefind/pagefind-ui.js"></script>
   <script is:inline>
     window.addEventListener('DOMContentLoaded', () => {
-      new PagefindUI({ element: '#search', showSubResults: true });
+      new PagefindUI({
+        element: '#search',
+        showSubResults: true,
+        showImages: true,
+        placeholder: 'search posts, projects, notes...',
+      });
     });
   </script>
 </Page>
