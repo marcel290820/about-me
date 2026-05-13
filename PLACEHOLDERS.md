@@ -5,7 +5,7 @@ This file tracks all placeholders used across the site. Replace each with real c
 ## Profile / Personal Info
 | Placeholder | Location | Status | Description |
 |---|---|---|---|
-| `PLACEHOLDER_TAGLINE` | Hero component, index page | FILLED | "building resilient systems — from infra to interface" |
+| `PLACEHOLDER_TAGLINE` | Hero component, index page | FILLED | "infra, backends, interfaces. all of it." |
 | `PLACEHOLDER_BIO` | About page | FILLED | Full bio paragraph about Marcel |
 | `PLACEHOLDER_PROFILE_IMAGE` | About page, Hero | OPEN | Path to profile photo |
 | `PLACEHOLDER_GITHUB_URL` | Social links, Footer | FILLED | https://github.com/marcel290820 |
@@ -15,8 +15,8 @@ This file tracks all placeholders used across the site. Replace each with real c
 ## Content
 | Placeholder | Location | Description |
 |---|---|---|
-| Blog posts | `src/content/blog/` | 3 sample posts exist; add real articles |
-| Projects | `src/content/projects/` | 3 sample projects from CV; expand with details |
+| Blog posts | `src/content/blog/` | empty; curate real posts |
+| Projects | `src/content/projects/` | empty; curate real projects |
 | Interests | `src/content/interests/` | 4 sample interests from CV; expand with details |
 
 ## Assets
