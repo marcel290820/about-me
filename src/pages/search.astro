@@ -5,4 +5,12 @@ import Page from '@/layouts/Page.astro';
 <Page title="Search" description="Search Marcel Heidebrecht's blog">
   <h1 class="text-3xl font-bold tracking-tight mb-8">Search</h1>
   <div id="search" class="min-h-[50vh]"></div>
+
+  <link rel="stylesheet" href="/pagefind/pagefind-ui.css" />
+  <script is:inline src="/pagefind/pagefind-ui.js"></script>
+  <script is:inline>
+    window.addEventListener('DOMContentLoaded', () => {
+      new PagefindUI({ element: '#search', showSubResults: true });
+    });
+  </script>
 </Page>
