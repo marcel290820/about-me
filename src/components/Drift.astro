@@ -1008,7 +1008,7 @@ const SPECIES = [
     // `seeded` starts the contact partway through its crossing instead of at
     // the edge, so it is already in frame. See stock() for why that matters.
     function spawn(seeded) {
-      // Never two of the same thing at once. Twenty species and a cap of three
+      // Never two of the same thing at once. Twenty species and a cap of two
       // in frame means a repeat reads as a glitch rather than as a shoal.
       const bag = (BANDS[band] || []).filter(
         (s) => !live.some((c) => c.sp.id === s.id),
@@ -1103,11 +1103,15 @@ const SPECIES = [
     // empty for half a minute, and everything appeared to start at whatever
     // scroll height you happened to stop at. Stock it on arrival, seeded, and
     // let the chain take over from there.
+    //
+    // Two at a time, one on a phone. Three read as a crowd: the water is meant
+    // to be mostly empty, and a sighting only counts as one if it is alone.
+    const cap = () => (narrow() ? 1 : 2);
+
     function stock() {
-      const cap = narrow() ? 2 : 3;
-      for (let i = 0; i < cap; i++) {
+      for (let i = 0; i < cap(); i++) {
         setTimeout(() => {
-          if (!document.hidden && band && band !== 'dry' && live.length < cap) {
+          if (!document.hidden && band && band !== 'dry' && live.length < cap()) {
             spawn(true);
           }
         }, i * 380);
@@ -1118,11 +1122,11 @@ const SPECIES = [
     // page cannot build up a backlog of contacts to release at once.
     (function next() {
       setTimeout(() => {
-        if (!document.hidden && band && band !== 'dry' && live.length < (narrow() ? 2 : 3)) {
+        if (!document.hidden && band && band !== 'dry' && live.length < cap()) {
           spawn();
         }
         next();
-      }, rnd(2600, 9000));
+      }, rnd(5200, 13000));
     })();
 
     // Which band is in the frame is written on <html> by the layout. Anything

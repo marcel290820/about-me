@@ -677,7 +677,9 @@
      the layer overhangs the top by more than that fall so it never drags an
      unpainted edge into frame. */
   .drift::before,
-  .drift::after {
+  .drift::after,
+  .shallows::before,
+  .shallows::after {
     content: "";
     position: absolute;
     top: -340px;
@@ -685,9 +687,22 @@
     bottom: 0;
     left: 0;
     background-repeat: repeat;
+    transition: opacity 1s ease;
   }
 
-  .drift::before {
+  /* The surface register carries the same two fields, because this layer is
+     the only thing painting the stretch the fixed one is gated off for, and
+     without them that screen is a dark rectangle rather than water.
+
+     They hand over rather than overlap: the moment the fixed layer lights,
+     these go out. Both on at once is twice the snow. */
+  :root:not([data-depth="dry"]) .shallows::before,
+  :root:not([data-depth="dry"]) .shallows::after {
+    opacity: 0;
+  }
+
+  .drift::before,
+  .shallows::before {
     background-image: radial-gradient(
         circle at 12% 18%,
         rgba(234, 227, 211, 0.5) 0 1.2px,
@@ -722,7 +737,8 @@
     animation: snow-near 34s linear infinite;
   }
 
-  .drift::after {
+  .drift::after,
+  .shallows::after {
     background-image: radial-gradient(
         circle at 27% 9%,
         rgba(234, 227, 211, 0.26) 0 0.9px,
@@ -1089,14 +1105,12 @@
     pointer-events: none;
     overflow: hidden;
     color: var(--color-cream);
-    /* One swell moves all of it. That is the difference in register from the
-       deep, where every contact travels on its own and none of it is attached
-       to anything.
-
-       Floored, because a calm Baltic reports about 0.08 and scaling straight
-       off that stops the water moving at all. Times --motion, which the
-       reduced-motion query zeroes. */
+    /* Nothing up here travels; the water does. Both amplitudes are floored,
+       because a calm Baltic reports about 0.08 and scaling straight off that
+       stops the sea moving at all. Times --motion, which the reduced-motion
+       query zeroes. */
     --ride: calc((2.6px + var(--sea-state) * 5px) * var(--motion));
+    --heel: calc((1.6deg + var(--sea-state) * 3.4deg) * var(--motion));
   }
 
   .shallows__ceiling {
@@ -1107,53 +1121,67 @@
     height: 80px;
   }
 
-  /* Stretched to the viewport rather than tiled: it never travels, so there
-     is no seam to hide, and scaling only in x leaves the hairline a hairline. */
+  /* Two tiles wide, travelling exactly one tile per cycle, so the loop cannot
+     show a seam -- the same construction as the waterline above, and the same
+     keyframe. Amplitude tracks live wave height, which is shape rather than
+     motion, so it survives prefers-reduced-motion; only the travel stops. */
   .shallows__ceiling svg {
-    display: block;
-    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 200%;
     height: 100%;
+    transform: scaleY(var(--amp));
+    transform-origin: center;
+    animation: travel var(--period) linear infinite;
   }
 
-  /* Floating things ride; the ceiling does not. It is printed chart data, the
-     same as the soundings, and printed things stay where they are put. */
-  .shallows__ride {
-    animation: ride var(--ride-period) ease-in-out infinite alternate;
+  .shallows__ceiling svg:first-child {
+    --amp: calc(0.7 + var(--sea-state) * 0.5);
+    --period: calc(62s - var(--sea-state) * 22s);
+    opacity: 0.26;
+  }
+
+  .shallows__ceiling svg + svg {
+    --amp: calc(0.85 + var(--sea-state) * 0.7);
+    --period: calc(38s - var(--sea-state) * 15s);
+    opacity: 0.42;
+  }
+
+  /* It hangs its own waterline off the ceiling at 40px. The offset is
+     width * (waterline y / viewBox width), which falls out of the viewBox
+     alone -- the height cancels -- so it holds at every size.
+
+     Moored, so it rides and heels rather than travelling. Two independent
+     transform properties instead of one transform, so the two periods can be
+     incommensurate and the swing never repeats; the origin is the foot of the
+     figure, which is where the chain runs off the bottom. */
+  .shallows__buoy {
+    --w: clamp(72px, 7.4vw, 100px);
+    width: var(--w);
+    top: calc(40px - var(--w) * 0.4333);
+    transform-origin: 50% 100%;
+    animation:
+      ride 4.6s ease-in-out infinite alternate,
+      heel 7.3s ease-in-out infinite alternate;
   }
 
   @keyframes ride {
     from {
-      transform: translateY(calc(var(--ride) * -1));
+      translate: 0 calc(var(--ride) * -1);
     }
     to {
-      transform: translateY(var(--ride));
+      translate: 0 var(--ride);
     }
   }
 
-  /* Each figure hangs its own waterline off the ceiling at 40px. The offset
-     is width * (waterline y / viewBox width), which falls out of the viewBox
-     alone -- the height cancels -- so it holds at every size. */
-  .shallows__ship {
-    --w: clamp(230px, 33vw, 420px);
-    --ride-period: 7s;
-    width: var(--w);
-    top: calc(40px - var(--w) * 0.0167);
-  }
-
-  .shallows__buoy {
-    --w: clamp(64px, 6.6vw, 88px);
-    --ride-period: 4.6s;
-    width: var(--w);
-    top: calc(40px - var(--w) * 0.4333);
-  }
-
-  /* An animal is not a float, so it moves less than the things that are. */
-  .shallows__pod {
-    --w: clamp(150px, 20vw, 250px);
-    --ride: calc((1.6px + var(--sea-state) * 2.6px) * var(--motion));
-    --ride-period: 6.4s;
-    width: var(--w);
-    top: 180px;
+  @keyframes heel {
+    from {
+      rotate: calc(var(--heel) * -1);
+    }
+    to {
+      rotate: var(--heel);
+    }
   }
 
   /* The one warm mark up here, and it is a literal one. Two bands down before
@@ -1163,16 +1191,18 @@
     animation: blink 5s linear infinite;
   }
 
-  /* No margin on a phone, so the register sits behind the copy. Pull it back,
-     and drop the labels: a moving contact can carry one past a paragraph, but
-     these are moored and would print over the same words every visit. */
+  /* No margin on a phone, so the register sits behind the copy. */
   @media (max-width: 700px) {
     .shallows {
       opacity: 0.55;
     }
+  }
 
-    .shallows .drift__tag {
-      display: none;
+  @media (prefers-reduced-motion: reduce) {
+    .shallows__ceiling svg,
+    .shallows::before,
+    .shallows::after {
+      animation: none;
     }
   }
 
