@@ -4,12 +4,14 @@ import Base from './Base.astro';
 interface Props {
   title: string;
   description?: string;
+  /** Pass on pages that fill the `surface` slot. */
+  surface?: boolean;
 }
 
-const { title, description } = Astro.props;
+const { title, description, surface } = Astro.props;
 ---
 
-<Base title={title} description={description}>
+<Base title={title} description={description} surface={surface}>
   <slot name="surface" slot="surface" />
   <slot />
 </Base>

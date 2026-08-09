@@ -129,6 +129,10 @@
     z-index: -1;
     pointer-events: none;
     background-repeat: repeat;
+    /* A zone is content-height, the tile is not, so the last row gets cut
+       mid-curve and leaves line ends hanging in the air. Fade the last
+       stretch instead: the chart goes under rather than stopping. */
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 120px), transparent);
   }
 
   .zone-surface::before {
