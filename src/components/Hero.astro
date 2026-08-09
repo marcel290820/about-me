@@ -3,31 +3,35 @@ import { Image } from 'astro:assets';
 import portrait from '@/assets/images/marcel-heidebrecht-portrait.jpeg';
 ---
 
-<section class="relative py-6 sm:py-24">
-  <div class="relative flex flex-col sm:flex-row items-start gap-6 sm:gap-10">
-    <div class="flex-1">
-      <p class="term-label mb-4">whoami</p>
-      <h1 class="text-4xl sm:text-6xl font-bold tracking-tight mb-4 leading-[1.05]">
-        Marcel<br/>Heidebrecht
-      </h1>
-      <p class="text-lg sm:text-xl text-text-muted max-w-xl mb-3">
+<section class="relative pt-8 pb-16 sm:pt-14 sm:pb-28">
+  <p class="term-label mb-6">whoami</p>
+
+  <h1 class="display-name display-name--hero mb-10 sm:mb-12">
+    Marcel<br />Heidebrecht
+  </h1>
+
+  <div class="flex flex-col-reverse sm:flex-row sm:items-end sm:justify-between gap-8 sm:gap-10">
+    <div class="min-w-0">
+      <p class="text-lg sm:text-xl text-text-muted mb-3">
         Fullstack Engineer <span class="text-text-faint">/</span> DevOps Enthusiast
       </p>
-      <p class="font-mono text-sm text-text-dim mb-6 sm:mb-10">
+      <p class="font-mono text-sm text-text-dim mb-8">
         infra, backends, interfaces. all of it.
       </p>
+
       <div class="flex items-center gap-3">
         <a href="/about" class="btn-primary">about</a>
         <a href="/blog" class="btn-ghost">blog</a>
       </div>
     </div>
-    <div class="shrink-0 portrait-ring">
+
+    <div class="shrink-0 portrait-ring self-start sm:self-end">
       <Image
         src={portrait}
         alt="Marcel Heidebrecht"
         width={640}
         height={640}
-        class="object-cover w-44 h-44 block relative z-0"
+        class="object-cover w-28 h-28 sm:w-40 sm:h-40 block relative z-0"
       />
     </div>
   </div>

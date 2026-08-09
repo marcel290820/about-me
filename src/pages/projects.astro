@@ -10,12 +10,12 @@ const allTags = [...new Set(allProjects.flatMap((p) => p.data.tags))].sort();
 ---
 
 <Page title="Projects" description="Projects by Marcel Heidebrecht">
-  <h1 class="text-3xl sm:text-4xl font-bold tracking-tight mb-2">Projects</h1>
-  <p class="font-mono text-sm text-text-dim mb-8">things i've built &amp; contributed to</p>
+  <h1 class="display-name mb-4">Projects</h1>
+  <p class="font-mono text-xs uppercase tracking-[0.16em] text-text-dim mb-10">things i've built &amp; contributed to</p>
 
   {allTags.length > 0 && (
     <div class="mb-8">
-      <div class="flex flex-wrap gap-1.5">
+      <div class="flex flex-wrap gap-2">
         {allTags.map((tag) => (
           <span class="tag">{tag}</span>
         ))}

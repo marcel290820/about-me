@@ -11,11 +11,11 @@ const allTags = [...new Set(allPosts.flatMap((post) => post.data.tags))].sort();
 ---
 
 <Page title="Blog" description="Engineering articles by Marcel Heidebrecht">
-  <h1 class="text-3xl sm:text-4xl font-bold tracking-tight mb-2">Blog</h1>
-  <p class="font-mono text-sm text-text-dim mb-6">thoughts on engineering, infrastructure &amp; code</p>
+  <h1 class="display-name mb-4">Blog</h1>
+  <p class="font-mono text-xs uppercase tracking-[0.16em] text-text-dim mb-10">thoughts on engineering, infrastructure &amp; code</p>
 
   {allTags.length > 0 && (
-    <div class="mb-8">
+    <div class="mb-10">
       <TagList tags={allTags} linked={true} />
     </div>
   )}

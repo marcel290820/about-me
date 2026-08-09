@@ -16,12 +16,12 @@ const featuredProjects = (await getCollection('projects'))
 ---
 
 <Base title="Home">
-  <Hero />
+  <Hero slot="surface" />
 
   {allPosts.length > 0 && (
-    <section class="mb-16">
+    <section class="mb-24 sm:mb-32">
       <div class="section-heading">
-        <h2 class="font-mono text-sm font-medium text-text-muted">recent posts</h2>
+        <h2>recent posts</h2>
       </div>
       <div class="flex flex-col gap-3">
         {allPosts.map((post) => (
@@ -34,7 +34,7 @@ const featuredProjects = (await getCollection('projects'))
           />
         ))}
       </div>
-      <a href="/blog" class="inline-block mt-4 font-mono text-sm text-text-dim hover:text-accent transition-colors">
+      <a href="/blog" class="inline-block mt-6 font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-text-dim hover:text-accent transition-colors">
         all posts &rarr;
       </a>
     </section>
@@ -43,7 +43,7 @@ const featuredProjects = (await getCollection('projects'))
   {featuredProjects.length > 0 && (
     <section>
       <div class="section-heading">
-        <h2 class="font-mono text-sm font-medium text-text-muted">featured projects</h2>
+        <h2>featured projects</h2>
       </div>
       <div class="grid gap-3 sm:grid-cols-2">
         {featuredProjects.map((project) => (
@@ -56,7 +56,7 @@ const featuredProjects = (await getCollection('projects'))
           />
         ))}
       </div>
-      <a href="/projects" class="inline-block mt-4 font-mono text-sm text-text-dim hover:text-accent transition-colors">
+      <a href="/projects" class="inline-block mt-6 font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-text-dim hover:text-accent transition-colors">
         all projects &rarr;
       </a>
     </section>

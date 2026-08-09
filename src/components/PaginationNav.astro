@@ -15,11 +15,11 @@ function getPageUrl(page: number): string {
 {totalPages > 1 && (
   <nav class="flex items-center justify-center gap-2 mt-8">
     {currentPage > 1 ? (
-      <a href={getPageUrl(currentPage - 1)} class="font-mono text-sm px-3 py-1.5 border border-border rounded-md text-text-muted hover:text-text hover:border-text-dim transition-colors">
+      <a href={getPageUrl(currentPage - 1)} class="font-mono text-[0.625rem] uppercase tracking-[0.14em] px-3 py-2 border border-border rounded-[2px] text-text-muted hover:text-text hover:border-text-dim transition-colors">
         &larr;
       </a>
     ) : (
-      <span class="font-mono text-sm px-3 py-1.5 border border-border-subtle rounded-md text-text-dim cursor-not-allowed">
+      <span class="font-mono text-[0.625rem] uppercase tracking-[0.14em] px-3 py-2 border border-border-subtle rounded-[2px] text-text-dim cursor-not-allowed">
         &larr;
       </span>
     )}
@@ -27,11 +27,11 @@ function getPageUrl(page: number): string {
       {currentPage} / {totalPages}
     </span>
     {currentPage < totalPages ? (
-      <a href={getPageUrl(currentPage + 1)} class="font-mono text-sm px-3 py-1.5 border border-border rounded-md text-text-muted hover:text-text hover:border-text-dim transition-colors">
+      <a href={getPageUrl(currentPage + 1)} class="font-mono text-[0.625rem] uppercase tracking-[0.14em] px-3 py-2 border border-border rounded-[2px] text-text-muted hover:text-text hover:border-text-dim transition-colors">
         &rarr;
       </a>
     ) : (
-      <span class="font-mono text-sm px-3 py-1.5 border border-border-subtle rounded-md text-text-dim cursor-not-allowed">
+      <span class="font-mono text-[0.625rem] uppercase tracking-[0.14em] px-3 py-2 border border-border-subtle rounded-[2px] text-text-dim cursor-not-allowed">
         &rarr;
       </span>
     )}

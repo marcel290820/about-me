@@ -2,6 +2,8 @@
 import '../styles/global.css';
 import Header from '@/components/Header.astro';
 import Footer from '@/components/Footer.astro';
+import DepthRail from '@/components/DepthRail.astro';
+import Waterline from '@/components/Waterline.astro';
 
 interface Props {
   title: string;
@@ -24,10 +26,31 @@ const jsonLd = {
   url: Astro.site?.toString(),
   description,
 };
+
+// Pages without a surface block (blog, projects, search) cross the waterline
+// right after the header, so the crossing band tightens up.
+const hasSurface = Astro.slots.has('surface');
+
+// Scattered depth soundings, the way they are printed across the water on a
+// chart. Decorative only. [left%, top%, value]
+const soundings: [number, number, number][] = [
+  [8, 18, 14],
+  [23, 47, 9],
+  [37, 12, 22],
+  [46, 71, 17],
+  [58, 31, 11],
+  [67, 58, 26],
+  [74, 8, 7],
+  [83, 44, 19],
+  [91, 76, 13],
+  [16, 84, 31],
+  [52, 92, 24],
+  [95, 22, 8],
+];
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="en" data-zone="surface">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -36,9 +59,14 @@ const jsonLd = {
     <link rel="alternate" type="application/rss+xml" title="Marcel Heidebrecht" href="/rss.xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <link rel="preconnect" href="https://marine-api.open-meteo.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
     <title>{title} | Marcel Heidebrecht</title>
     <meta name="description" content={description} />
+    <meta name="theme-color" content="#06141b" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content={canonicalURL} />
     <meta property="og:title" content={title} />
@@ -51,10 +79,118 @@ const jsonLd = {
     <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
   </head>
   <body class="min-h-screen flex flex-col">
-    <Header />
-    <main class="flex-1 w-full max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-12">
-      <slot />
-    </main>
-    <Footer />
+    <div class="edge-ticks" aria-hidden="true"></div>
+    <DepthRail />
+
+    <div class="zone-surface">
+      {
+        hasSurface && (
+          <div class="soundings" aria-hidden="true">
+            {soundings.map(([left, top, value]) => (
+              <span style={`left:${left}%;top:${top}%`}>{value}</span>
+            ))}
+          </div>
+        )
+      }
+      <Header />
+      <div class="w-full max-w-3xl mx-auto px-4 sm:px-6">
+        <slot name="surface" />
+      </div>
+    </div>
+
+    <Waterline compact={!hasSurface} />
+
+    <div class="zone-deep flex-1 flex flex-col">
+      <main class="flex-1 w-full max-w-3xl mx-auto px-4 sm:px-6 py-12 sm:py-20">
+        <slot />
+      </main>
+      <Footer />
+    </div>
+
+    <script>
+      const root = document.documentElement;
+      // The rail and the mobile badge both carry these hooks, so every match
+      // gets written.
+      const depthOutputs = document.querySelectorAll('[data-depth-value]');
+      const waterline = document.querySelector<HTMLElement>('[data-waterline]');
+
+      const MAX_DEPTH = 48;
+      let queued = false;
+
+      function readDepth() {
+        queued = false;
+        const scrollable = document.body.scrollHeight - window.innerHeight;
+        const progress =
+          scrollable > 0
+            ? Math.min(1, Math.max(0, window.scrollY / scrollable))
+            : 0;
+
+        root.style.setProperty('--depth-pct', (progress * 100).toFixed(2));
+        root.style.setProperty('--attenuation', (1 - progress).toFixed(3));
+
+        const depth = String(Math.round(progress * MAX_DEPTH));
+        depthOutputs.forEach((el) => {
+          el.textContent = depth;
+        });
+
+        // The rail is fixed and spans the viewport, so its two ends can sit
+        // over different zones at once. Each end gets its own threshold,
+        // measured against where the waterline currently is.
+        const waterlineBottom = waterline
+          ? waterline.getBoundingClientRect().bottom
+          : -1;
+
+        root.dataset.zone =
+          waterlineBottom < window.innerHeight * 0.34 ? 'deep' : 'surface';
+        root.dataset.zoneLow =
+          waterlineBottom < window.innerHeight * 0.9 ? 'deep' : 'surface';
+      }
+
+      function schedule() {
+        if (!queued) {
+          queued = true;
+          requestAnimationFrame(readDepth);
+        }
+      }
+
+      window.addEventListener('scroll', schedule, { passive: true });
+      window.addEventListener('resize', schedule, { passive: true });
+      readDepth();
+
+      // Live sea state, Baltic off Rostock. No key, CORS open. If this fails
+      // for any reason the CSS defaults hold and the readout stays as "--".
+      const MARINE_URL =
+        'https://marine-api.open-meteo.com/v1/marine' +
+        '?latitude=54.25&longitude=12.10' +
+        '&current=wave_height,sea_surface_temperature';
+
+      // Baltic wave heights rarely pass 2.5m, so that is full scale.
+      const FULL_SCALE_M = 2.5;
+
+      fetch(MARINE_URL)
+        .then((res) => (res.ok ? res.json() : Promise.reject(res.status)))
+        .then((data) => {
+          const waveHeight = data?.current?.wave_height;
+          const seaTemp = data?.current?.sea_surface_temperature;
+
+          if (typeof waveHeight === 'number') {
+            root.style.setProperty(
+              '--sea-state',
+              Math.min(1, Math.max(0, waveHeight / FULL_SCALE_M)).toFixed(3),
+            );
+            document.querySelectorAll('[data-sea-hs]').forEach((el) => {
+              el.textContent = waveHeight.toFixed(1) + ' m';
+            });
+          }
+
+          if (typeof seaTemp === 'number') {
+            const el = document.querySelector('[data-sea-sst]');
+            if (el) el.textContent = seaTemp.toFixed(1) + '°';
+          }
+        })
+        .catch(() => {
+          /* defaults hold */
+        });
+    </script>
   </body>
 </html>
