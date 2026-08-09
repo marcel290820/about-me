@@ -139,31 +139,37 @@
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='900' height='700' fill='none' stroke='%23000' stroke-width='1'%3E%3Cpath d='M0 110C96 66 286 62 392 110S804 154 900 110'/%3E%3Cpath d='M0 176C120 134 300 128 430 176S780 218 900 176'/%3E%3Cpath d='M0 372C140 322 320 332 470 372S760 422 900 372'/%3E%3Cpath d='M0 578C104 538 310 524 408 578S796 618 900 578'/%3E%3C/svg%3E");
     background-size: 900px 700px;
     opacity: 0.16;
-    animation: drift calc(30s - var(--sea-state) * 16s) ease-in-out infinite
-      alternate;
+    /* Deliberately still. This is ink on paper, and holding it still is what
+       makes the water below read as moving. */
   }
 
   .zone-deep::before {
+    /* Overhangs the box so the undertow never drags an unpainted edge into
+       view. body is overflow-x: hidden, so the extra width costs nothing. */
+    inset: 0 -32px -16px -32px;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1300' height='950' fill='none' stroke='%23eae3d3' stroke-width='1'%3E%3Cpath d='M0 222C150 166 400 272 660 222S1150 278 1300 222'/%3E%3Cpath d='M0 628C180 574 460 682 700 628S1120 682 1300 628'/%3E%3C/svg%3E");
     background-size: 1300px 950px;
     opacity: 0.11;
+    animation: undertow calc(34s - var(--sea-state) * 10s) ease-in-out infinite
+      alternate;
   }
 
-  @keyframes drift {
+  /* Swell does not reach depth: what moves down here is the current, and the
+     light coming through the surface moving with it. Slower and further than
+     anything above, and it never returns on the beat it left on. */
+  @keyframes undertow {
     from {
       transform: translate3d(0, 0, 0);
+      opacity: 0.085;
     }
     to {
-      transform: translate3d(
-        calc(var(--sea-state) * var(--motion) * 7px),
-        calc(var(--sea-state) * var(--motion) * 4px),
-        0
-      );
+      transform: translate3d(-24px, 9px, 0);
+      opacity: 0.135;
     }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .zone-surface::before {
+    .zone-deep::before {
       animation: none;
     }
   }
@@ -570,15 +576,59 @@
     height: 96px;
   }
 
-  /* Amplitude tracks live wave height. Static shape, not motion, so it stays
-     on under prefers-reduced-motion. */
-  .waterline__profile {
+  /* A swell train is two tiles wide and travels exactly one tile per cycle,
+     so the loop cannot show a seam. The two trains run at incommensurate
+     periods: their crests drift in and out of phase instead of repeating.
+
+     Amplitude tracks live wave height. That is shape, not motion, so it stays
+     on under prefers-reduced-motion; only the travel stops. */
+  .waterline__train {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 200%;
+    height: 100%;
+    transform: scaleY(var(--amp));
+    transform-origin: center;
+    animation: travel var(--period) linear infinite;
+  }
+
+  /* The floor is high on purpose. A flat Baltic reports around 0.08, and
+     scaling straight off that leaves a line, not a sea. Live wave height sets
+     how rough it looks, not whether it looks like water at all. */
+  .waterline__train--far {
+    --amp: calc(0.62 + var(--sea-state) * 0.5);
+    --period: calc(44s - var(--sea-state) * 18s);
+    opacity: 0.4;
+  }
+
+  .waterline__train--near {
+    --amp: calc(0.78 + var(--sea-state) * 0.7);
+    --period: calc(26s - var(--sea-state) * 12s);
+  }
+
+  /* -50% of a double-width layer is exactly one tile, whatever the viewport. */
+  @keyframes travel {
+    from {
+      transform: scaleY(var(--amp)) translateX(0);
+    }
+    to {
+      transform: scaleY(var(--amp)) translateX(-50%);
+    }
+  }
+
+  /* Printed depth marks. Chart data, not water, so the sea moves under them. */
+  .waterline__marks {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
-    transform: scaleY(calc(0.45 + var(--sea-state) * 0.85));
-    transform-origin: center;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .waterline__train {
+      animation: none;
+    }
   }
 
   /* --- Depth rail -------------------------------------------------------- */
