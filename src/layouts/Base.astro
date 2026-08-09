@@ -9,12 +9,15 @@ interface Props {
   title: string;
   description?: string;
   ogImage?: string;
+  /** Set on pages that fill the `surface` slot. See hasSurface below. */
+  surface?: boolean;
 }
 
 const {
   title,
   description = 'Marcel Heidebrecht, Fullstack Engineer & DevOps Enthusiast',
   ogImage = '/og-default.png',
+  surface = false,
 } = Astro.props;
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
@@ -29,7 +32,11 @@ const jsonLd = {
 
 // Pages without a surface block (blog, projects, search) cross the waterline
 // right after the header, so the crossing band tightens up.
-const hasSurface = Astro.slots.has('surface');
+//
+// This has to be a prop. Astro.slots.has('surface') reads the compiled slot
+// table, not what a page actually passed, so a layout that forwards the slot
+// makes it true everywhere -- including behind a conditional.
+const hasSurface = surface;
 
 // Scattered depth soundings, the way they are printed across the water on a
 // chart. Decorative only. [left%, top%, value]

@@ -15,7 +15,7 @@ const featuredProjects = (await getCollection('projects'))
   .slice(0, 3);
 ---
 
-<Base title="Home">
+<Base title="Home" surface>
   <Hero slot="surface" />
 
   {allPosts.length > 0 && (
