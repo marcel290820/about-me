@@ -1064,6 +1064,118 @@
     }
   }
 
+  /* --- The surface, from just under it ------------------------------------
+
+     The water column is a fixed layer that loops for as long as the page
+     runs, and it has to stay dark until the waterline has left the frame:
+     it is painted after the paper, so anything sooner swims indoors. That
+     gate is exactly one screen of water long, and this is what fills it.
+
+     Absolute rather than fixed, because nothing here is passing through.
+     Everything at the surface is moored to it or floating on it, so it is
+     drawn once at the top of the water and scrolls away behind you. */
+  .shallows {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: clamp(430px, 74vh, 700px);
+    /* A short page cannot let the layer out of the bottom of the zone, and a
+       zone shorter than the layer would otherwise cut a figure in half. Fade
+       the last stretch instead: the water goes on, the register stops. */
+    max-height: 100%;
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 90px), transparent);
+    z-index: -1;
+    pointer-events: none;
+    overflow: hidden;
+    color: var(--color-cream);
+    /* One swell moves all of it. That is the difference in register from the
+       deep, where every contact travels on its own and none of it is attached
+       to anything.
+
+       Floored, because a calm Baltic reports about 0.08 and scaling straight
+       off that stops the water moving at all. Times --motion, which the
+       reduced-motion query zeroes. */
+    --ride: calc((2.6px + var(--sea-state) * 5px) * var(--motion));
+  }
+
+  .shallows__ceiling {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 80px;
+  }
+
+  /* Stretched to the viewport rather than tiled: it never travels, so there
+     is no seam to hide, and scaling only in x leaves the hairline a hairline. */
+  .shallows__ceiling svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Floating things ride; the ceiling does not. It is printed chart data, the
+     same as the soundings, and printed things stay where they are put. */
+  .shallows__ride {
+    animation: ride var(--ride-period) ease-in-out infinite alternate;
+  }
+
+  @keyframes ride {
+    from {
+      transform: translateY(calc(var(--ride) * -1));
+    }
+    to {
+      transform: translateY(var(--ride));
+    }
+  }
+
+  /* Each figure hangs its own waterline off the ceiling at 40px. The offset
+     is width * (waterline y / viewBox width), which falls out of the viewBox
+     alone -- the height cancels -- so it holds at every size. */
+  .shallows__ship {
+    --w: clamp(230px, 33vw, 420px);
+    --ride-period: 7s;
+    width: var(--w);
+    top: calc(40px - var(--w) * 0.0167);
+  }
+
+  .shallows__buoy {
+    --w: clamp(64px, 6.6vw, 88px);
+    --ride-period: 4.6s;
+    width: var(--w);
+    top: calc(40px - var(--w) * 0.4333);
+  }
+
+  /* An animal is not a float, so it moves less than the things that are. */
+  .shallows__pod {
+    --w: clamp(150px, 20vw, 250px);
+    --ride: calc((1.6px + var(--sea-state) * 2.6px) * var(--motion));
+    --ride-period: 6.4s;
+    width: var(--w);
+    top: 180px;
+  }
+
+  /* The one warm mark up here, and it is a literal one. Two bands down before
+     anything else takes the accent. */
+  .shallows__light {
+    color: var(--color-buoy);
+    animation: blink 5s linear infinite;
+  }
+
+  /* No margin on a phone, so the register sits behind the copy. Pull it back,
+     and drop the labels: a moving contact can carry one past a paragraph, but
+     these are moored and would print over the same words every visit. */
+  @media (max-width: 700px) {
+    .shallows {
+      opacity: 0.55;
+    }
+
+    .shallows .drift__tag {
+      display: none;
+    }
+  }
+
   /* --- Depth rail -------------------------------------------------------- */
 
   .depth-rail {

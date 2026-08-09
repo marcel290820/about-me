@@ -6,6 +6,7 @@ import DepthRail from '@/components/DepthRail.astro';
 import Waterline from '@/components/Waterline.astro';
 import ChartMarks from '@/components/ChartMarks.astro';
 import Drift from '@/components/Drift.astro';
+import Shallows from '@/components/Shallows.astro';
 
 interface Props {
   title: string;
@@ -114,6 +115,7 @@ const soundings: [number, number, number][] = [
 
     <div class="zone-deep flex-1 flex flex-col">
       <Drift />
+      <Shallows />
       <main class="flex-1 w-full max-w-3xl mx-auto px-4 sm:px-6 py-12 sm:py-20">
         <slot />
       </main>
