@@ -56,7 +56,7 @@ Two fields of marine snow on `.drift::before` / `::after`, plus a library of twe
 
 The layer is `position: fixed` and costs one viewport however long the page runs. It sits at `z-index: -1` inside `.zone-deep`: above the zone background and the contours, behind every word. The whole layer is gated to `opacity: 0` while `data-depth` is `dry`, because it is painted after the paper and would otherwise snow indoors. That gate reads `--lit`, so the narrow-screen rule can pull the layer back without out-specifying it.
 
-**Contacts are spawned in the browser, not authored in CSS.** The `SPECIES` table carries band, mode, size, lane, duration, settled opacity and reaction; the script clones a template, assigns a lane and a heading, and removes the contact on `animationend`. Two rules keep it from reading as a loop: no species may be live twice at once, and lanes stay 15% apart (risers exempt both ways). Cap is three contacts, two under 760px.
+**Contacts are spawned in the browser, not authored in CSS.** The `SPECIES` table carries band, mode, size, lane, duration, settled opacity and reaction; the script clones a template, assigns a lane and a heading, and removes the contact on `animationend`. Two rules keep it from reading as a loop: no species may be live twice at once, and lanes stay 15% apart (risers exempt both ways). The lane rule takes the roomiest of eight draws rather than the last one — where two species share most of their band, using whatever the final throw happened to be puts them in one lane. Cap is three contacts, two under 760px.
 
 Every figure in the library is **drawn facing right**, and heading is `--flip` on `.drift__body`. That is the only reason nothing swims backwards — it is one rule in one place rather than a fact about twenty drawings. Any new figure must face right too.
 
@@ -68,11 +68,20 @@ Colour is load-bearing: `--color-foam` is telemetry and only telemetry (the ROV 
 
 Figures are drawn hairline and unfilled, like a sounder or a field notebook records something rather than how an illustration pictures it. Anything with a curve comes out of `src/lib/curves.ts` (`spine` → `shell`/`ridge`/`rays`), because hand-fitting a silhouette is how the manta that used to swim here kept coming out an umbrella, and how the dumbo octopus that replaced it came out a lamb. If a new figure has parts that must line up, sample them from one source.
 
+Four failure modes have each cost more than one attempt, and every one of them is a shape that is *too regular* for what it depicts:
+
+- **Symmetry reads as manufacture.** A rock spire zigzagged evenly on both sides is a fir tree; the smoker only became a smoker when the two edges stopped matching and a second stump appeared beside it. Living and geological things are lopsided.
+- **A closed rectangle is a box.** The ROV read as a briefcase until the frame became posts and rails with the middle bay left open, and the skids became two runners instead of one full-width plinth. You must be able to see through an open frame.
+- **Tapering both ends of a body loses the front.** The oarfish read as swimming backwards for exactly this reason, and the turtle read as a surfboard. Give the head end its own profile: blunt, deeper, or walled.
+- **A join that has to be hidden should not be drawn.** The carapace is two open edges rather than `shell()`, because the closing wall across the front cut through the head. Where a part emerges from another, leave the outline open and let them overlap.
+
 ### Chart marginalia (`ChartMarks.astro`)
 
 Charts carry two registers and so does this: the notation (variation rose, wreck symbol, tidal diamond, GNSS note, a three-bearing fix on Berlin with its cocked hat) and everything cartographers drew in the empty water to sell the chart (a sea serpent wrapped round a telegraph cable, a fleet action, somebody's cache). Eight marks, five printed per visit in five of six margin slots, picked in the browser.
 
 Paper does not move, so none of it animates. It is hidden below 1180px, where the content column takes the whole page and there is no margin to print in.
+
+A mark prints 118px wide, so each of the two ships in the fleet action lands at about 30px. At that size a suit of sail has to be **one bellied shape per mast** with the yards ruled across it: six separate sails read as crates stacked on a raft, and thin arcs hung on spars read as bunting. Size the detail to where it is seen, not to the viewBox.
 
 ## Search
 

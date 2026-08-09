@@ -19,10 +19,20 @@
 import { type Node, spine, shell, ridge, rays } from '@/lib/curves';
 
 // --- School ---------------------------------------------------------------
-// Head at x=15, forked tail behind it. Small enough that anything more than a
-// body and a tail turns to mud at the size these are actually seen.
+// Nose at x=21, forked tail behind the origin. These render about 20px long,
+// so the list of what still reads is short: a body that is deeper forward than
+// aft, a fork, one dorsal, one eye. Everything past that turns to mud.
 const FISH =
-  'M0 5C4 0.6 11 0.6 15 5C11 9.4 4 9.4 0 5ZM0 5-5.6 1-3.4 5-5.6 9Z';
+  // Body. Deepest a third back from the nose, which is what separates a fish
+  // from the symmetrical lens shape that reads as clipart.
+  'M0 5C3 1.3 7.6-0.8 12.6 0.2c4.4 0.9 7.2 2.5 8.4 4.8-1.2 2.3-4 3.9-8.4 4.8C7.6 10.8 3 8.7 0 5Z' +
+  // Forked caudal.
+  'M0 5-6.6 0.4-4.1 5-6.6 9.6Z' +
+  // Dorsal, then a small anal fin under it.
+  'M5 2C6.2-0.5 8.6-1.7 11.2-1.3L9.8 1.4' +
+  'M6.4 8.4c0.7 2 1.8 3 3.4 3.2L9 9.2' +
+  // Eye. A ring this small closes up into a dot at the size it is seen.
+  'M16.2 4.2a0.85 0.85 0 1 0 0.01 0';
 
 const SCHOOL: [number, number, number][] = [
   [4, 16, 0.9],
@@ -60,8 +70,31 @@ const oar = spine({
   ],
 });
 
-const oarFin = (p: Node) => 4 + Math.max(0, (p.t - 0.55) / 0.45) ** 1.3 * 34;
+// The dorsal fin runs the whole animal and stays low. Letting it swell toward
+// the head instead is what turned the crest into a flag last time round.
+const oarFin = (p: Node) => 4 + p.t * 5;
 const oarHead = oar[oar.length - 1];
+
+// The crest is a separate thing: the first ten or so dorsal rays, standing
+// well clear of the fin behind them and trailing aft. Nothing joins their tips
+// -- a line across them is a sail, and a sail is a different fish.
+const oarCrest = (() => {
+  const mane = oar.filter((p) => p.t >= 0.84);
+  return mane
+    .map((p, i) => {
+      const f = i / (mane.length - 1);
+      const h = 17 + f * 27;
+      const base = p.y - p.u - 2;
+      const top = base - h;
+      return (
+        `M${p.x.toFixed(1)} ${base.toFixed(1)}` +
+        `C${(p.x - 3).toFixed(1)} ${(top + h * 0.55).toFixed(1)}` +
+        ` ${(p.x - 6).toFixed(1)} ${(top + h * 0.28).toFixed(1)}` +
+        ` ${(p.x - 8 - f * 5).toFixed(1)} ${top.toFixed(1)}`
+      );
+    })
+    .join('');
+})();
 
 // --- Thresher shark -------------------------------------------------------
 // The upper tail lobe is as long as the rest of the animal. It uses it to
@@ -132,18 +165,18 @@ const whale = spine({
     [0.08, 6],
     [0.34, 18],
     [0.6, 22],
-    [0.72, 23.5],
-    [0.95, 23.5],
-    [1, 15],
+    [0.72, 24],
+    [0.95, 24],
+    [1, 22],
   ],
   down: [
     [0, 2],
     [0.08, 6],
     [0.36, 17],
     [0.62, 17],
-    [0.76, 14],
-    [0.9, 9],
-    [1, 3],
+    [0.78, 15],
+    [0.92, 13],
+    [1, 11],
   ],
 });
 
@@ -240,49 +273,68 @@ const tripod = spine({
 // Jets apex first, arms streaming behind, which is the shape it makes when it
 // is going somewhere rather than hunting.
 const squid = spine({
-  from: 74,
-  to: 176,
+  from: 70,
+  to: 180,
   y: () => 48,
   up: [
-    [0, 12],
-    [0.22, 14.5],
-    [0.58, 11],
-    [0.86, 4.5],
-    [1, 0.6],
+    [0, 11],
+    [0.18, 13.5],
+    [0.5, 11.5],
+    [0.8, 6],
+    [1, 0.8],
   ],
 });
 
-// Eight arms, then the two long tentacles that do the catching.
+// Eight arms held in a bundle, which is the shape they make when the animal is
+// travelling rather than hunting. Spread them out and it turns into a mop.
 const ARMS = [
-  'M74 40C58 34 40 33 22 38',
-  'M74 43C58 40 38 42 24 48',
-  'M74 46C56 47 38 52 26 58',
-  'M74 50C58 54 42 62 32 68',
-  'M74 53C60 60 48 70 42 78',
-  'M74 56C64 64 58 74 56 84',
+  'M52 45C42 42 30 41 18 40',
+  'M52 47C40 45 26 44 12 44',
+  'M52 49C38 48 22 48 8 49',
+  'M52 51C40 51 26 53 14 55',
+  'M52 53C42 55 32 58 22 62',
 ];
-const TENTACLES = ['M74 44C48 36 20 30-8 32', 'M74 52C50 56 22 66 0 74'];
+
+// The two long tentacles do the catching, and the paddle on the end of each is
+// the only part with suckers on it.
+const TENTACLES = ['M54 43C34 34 14 28-6 26', 'M54 51C32 54 12 62-4 72'];
+const CLUBS =
+  'M-6 26c-6-1-11 0-13 3 5 2 10 1 13-3ZM-4 72c-6 1-10 4-11 8 5-1 9-4 11-8Z';
 
 // --- Turtle ---------------------------------------------------------------
+// A carapace in profile runs about two and a half times as long as it is deep,
+// comes to a point over the tail and stops in a blunt wall at the front where
+// the neck comes out. Taper it at both ends and it reads as a surfboard.
 const shellNodes = spine({
-  from: 14,
-  to: 100,
-  y: () => 46,
+  from: 34,
+  to: 112,
+  y: () => 50,
   up: [
-    [0, 1.5],
-    [0.14, 13],
-    [0.48, 19],
-    [0.84, 13.5],
-    [1, 2.5],
+    [0, 1],
+    [0.14, 12],
+    [0.36, 20],
+    [0.56, 22],
+    [0.76, 21],
+    [0.92, 18],
+    [1, 14],
   ],
   down: [
-    [0, 1.5],
-    [0.16, 6],
-    [0.5, 8],
-    [0.84, 6],
-    [1, 2.5],
+    [0, 1],
+    [0.14, 6],
+    [0.4, 10],
+    [0.7, 10],
+    [0.9, 9],
+    [1, 7],
   ],
 });
+
+// Two open edges rather than a closed shell: a carapace has no wall across the
+// front, it has an opening, and the neck comes out of it.
+const carapace =
+  'M' +
+  shellNodes.map((p) => `${p.x.toFixed(1)} ${(p.y - p.u).toFixed(1)}`).join('L') +
+  'M' +
+  shellNodes.map((p) => `${p.x.toFixed(1)} ${(p.y + p.d).toFixed(1)}`).join('L');
 
 // --- Hulls ----------------------------------------------------------------
 // Three built things share one profile family: a pressure hull is a pressure
@@ -330,16 +382,20 @@ const subHull = shell(
 // --- Siphonophore ---------------------------------------------------------
 // A colony, not an animal: a gas float at the top, a stack of swimming bells
 // under it that beat together, then metres of feeding stem.
+// Packed, overlapping and alternating. Spaced out they read as lampshades
+// threaded on a string; a real nectosome is a stack that beats as one thing.
 const BELLS: [number, number, number][] = [
-  [26, 30, 1],
-  [31, 54, 0.94],
-  [22, 78, 0.88],
-  [30, 102, 0.8],
-  [23, 126, 0.72],
-  [29, 150, 0.64],
-  [24, 174, 0.56],
+  [26, 32, 1],
+  [30, 41, 0.97],
+  [22, 50, 0.95],
+  [30, 59, 0.92],
+  [22, 68, 0.88],
+  [29, 77, 0.85],
+  [23, 86, 0.8],
+  [28, 95, 0.76],
+  [24, 104, 0.72],
 ];
-const BELL = 'M-10 4-5.5-11H5.5L10 4Q0 10-10 4Z';
+const BELL = 'M-8 3-4.5-9H4.5L8 3Q0 8-8 3Z';
 
 // --- Moon jellies ---------------------------------------------------------
 // Four horseshoes in the bell are the gonads, and they are the only reliable
@@ -348,31 +404,45 @@ const BELL = 'M-10 4-5.5-11H5.5L10 4Q0 10-10 4Z';
 // stays a hairline whichever bell it belongs to.
 const JELLY = (x: number, y: number, r: number) => {
   const n = (v: number) => v.toFixed(1);
-  const step = (r * 2) / 5;
+  const scallop = (r * 2) / 8;
+
+  // Ribbons, not threads. Two near-parallel edges per arm is the cheapest
+  // thing that reads as a ribbon and not as a tassel.
+  const arm = (o: number) => {
+    const sx = x + o * r;
+    const dx = o * r * 0.9;
+    const dy = r * 1.35;
+    const seg = `c${n(dx * 0.2)} ${n(dy * 0.4)} ${n(dx * 0.7)} ${n(dy * 0.72)} ${n(dx)} ${n(dy)}`;
+    return (
+      `M${n(sx - r * 0.07)} ${n(y + r * 0.06)}${seg}` +
+      `M${n(sx + r * 0.07)} ${n(y + r * 0.06)}${seg}`
+    );
+  };
+
   return {
-    bell: `M${n(x - r)} ${n(y)}A${n(r)} ${n(r * 0.84)} 0 0 1 ${n(x + r)} ${n(y)}`,
+    // A saucer, not a dome. Anything taller than about two thirds of its own
+    // radius stops being a jellyfish and becomes an umbrella.
+    bell: `M${n(x - r)} ${n(y)}A${n(r)} ${n(r * 0.66)} 0 0 1 ${n(x + r)} ${n(y)}`,
     rim:
       `M${n(x - r)} ${n(y)}` +
-      Array(5).fill(`q${n(step / 2)} ${n(r * 0.3)} ${n(step)} 0`).join(''),
-    gonads: [-0.54, -0.18, 0.18, 0.54]
+      Array(8).fill(`q${n(scallop / 2)} ${n(r * 0.15)} ${n(scallop)} 0`).join(''),
+    gonads: [-0.5, -0.17, 0.17, 0.5]
       .map(
         (o) =>
-          `M${n(x + o * r - r * 0.14)} ${n(y - r * 0.34)}a${n(r * 0.14)} ${n(r * 0.2)} 0 1 0 ${n(r * 0.28)} 0`,
+          `M${n(x + o * r - r * 0.17)} ${n(y - r * 0.2)}a${n(r * 0.17)} ${n(r * 0.24)} 0 1 0 ${n(r * 0.34)} 0`,
       )
       .join(''),
-    fringe: Array.from({ length: 11 }, (_, i) =>
-      `M${n(x - r + (i * 2 * r) / 10)} ${n(y + r * 0.05)}v${n(r * 0.3)}`,
-    ).join(''),
-    arms: [-0.4, -0.14, 0.14, 0.4]
-      .map(
-        (o) =>
-          `M${n(x + o * r)} ${n(y + r * 0.14)}c${n(o * r * 0.25)} ${n(r * 0.5)} ${n(o * r * 0.45)} ${n(r * 0.95)} ${n(o * r * 0.6)} ${n(r * 1.4)}`,
-      )
-      .join(''),
+    // Marginal tentacles: many, fine and uneven. Evenly spaced ticks of one
+    // length read as a fringe sewn on.
+    fringe: Array.from({ length: 25 }, (_, i) => {
+      const f = i / 24;
+      return `M${n(x - r + f * 2 * r)} ${n(y + r * 0.13 * Math.sin(f * Math.PI))}v${n(r * (0.14 + 0.22 * Math.abs(Math.sin(i * 2.1))))}`;
+    }).join(''),
+    arms: [-0.46, -0.16, 0.16, 0.46].map(arm).join(''),
   };
 };
 
-const JELLIES = [JELLY(40, 30, 19), JELLY(24, 92, 12), JELLY(54, 130, 9)];
+const JELLIES = [JELLY(40, 30, 20), JELLY(23, 94, 12), JELLY(55, 134, 9)];
 
 // --- Contacts -------------------------------------------------------------
 // mode  cross: enters one edge, leaves the other. rise: climbs out of frame.
@@ -422,29 +492,40 @@ const SPECIES = [
         real field kit, and it is the only thing down here still reporting. */}
     <g transform="translate(84 12) scale(1.25)">
       <path d={FISH} />
-      <path d="M4.6 1.1h6.2v2.7H4.6z" stroke-width="0.7" />
-      <path d="M10.8 1.1 15-3.4" stroke-width="0.7" />
-      <path d="M15.4-5.6a4.6 4.6 0 0 1 2.8 3.6" class="drift__ping" />
-      <path d="M17.2-8.2a7.8 7.8 0 0 1 4.7 6" class="drift__ping drift__ping--late" />
-      <circle cx="7.7" cy="2.4" r="1" fill="currentColor" class="drift__telemetry" />
+      {/* Clipped to the dorsal base, which is where one actually goes. */}
+      <path d="M5.2-0.8h5.4v2.4H5.2z" stroke-width="0.7" />
+      <path d="M10.6-0.8 14.8-5.2" stroke-width="0.7" />
+      <path d="M15.2-7.4a4.6 4.6 0 0 1 2.8 3.6" class="drift__ping" />
+      <path d="M17-10a7.8 7.8 0 0 1 4.7 6" class="drift__ping drift__ping--late" />
+      <circle cx="7.9" cy="0.4" r="1" fill="currentColor" class="drift__telemetry" />
     </g>
   </svg>
 </template>
 
 <template data-species="turtle">
-  <svg viewBox="0 0 132 92" fill="none" stroke="currentColor" stroke-width="1">
-    <path d={shell(shellNodes)} />
-    {/* Scutes. A loggerhead carries five down the midline. */}
-    <path d="M32 28v25M50 25v29M68 26v28M86 30v22" stroke-width="0.5" opacity="0.7" />
-    <path d="M16 43C40 36 76 36 98 43" stroke-width="0.5" opacity="0.7" />
-    {/* Short neck, wedge head, hooked beak. A loggerhead is mostly head. */}
-    <path d="M99 37c2 0 4-1 5-2M100 45c2 0 4-1 6-2" stroke-width="0.7" />
-    <path d="M104 43c-1-8 4-13 11-13 6 0 10 3 11 6 1 3-2 6-5 7-6 2-13 2-17 0Z" />
-    <path d="M126 36c2 2 2 4 0 6" stroke-width="0.6" />
-    <circle cx="114" cy="36" r="1.2" fill="currentColor" />
-    {/* Front flipper on the downstroke, rear one trailing. */}
-    <path d="M76 52c12 8 16 24 10 36-10-6-14-22-13-34Z" stroke-width="0.8" />
-    <path d="M30 51c-2 10-9 17-19 19 1-10 7-16 14-19Z" stroke-width="0.8" />
+  <svg viewBox="26 26 114 68" fill="none" stroke="currentColor" stroke-width="1">
+    {/* Far flipper first, so the near one paints over it. */}
+    <path d="M96 58C91 66 82 74 70 80" stroke-width="0.6" opacity="0.4" />
+    {/* Head. A fifth of the shell long, no more, and the hook on the beak is
+        most of the recognition. Open at the back, so the neck runs into the
+        shell opening instead of stopping against a wall. */}
+    <path d="M108 38C116 33 127 32 133 35c3 2 4 5 2 7-3 3-10 4-16 4-6 0-10-1-13-4" />
+    <path d="M135 42c-3 1-5 1-8 0" stroke-width="0.6" />
+    <circle cx="124" cy="39" r="1.3" fill="currentColor" />
+    <path d={carapace} />
+    {/* Vertebral seams down the midline, and the line that separates them from
+        the costal scutes on the flank. */}
+    <path d="M52 36v20M68 30v29M84 29v30M98 31v28" stroke-width="0.5" opacity="0.55" />
+    <path d="M36 46C56 34 92 34 110 42" stroke-width="0.5" opacity="0.55" />
+    {/* Marginals, which is the row that gives the shell its sawn edge. */}
+    <path d="M48 57l-1 3M64 60v3M80 60v3M96 60l1 3" stroke-width="0.5" opacity="0.5" />
+    {/* The near front flipper on the downstroke: a long narrow blade, not a
+        leaf. Its length is what makes this a sea turtle rather than a tortoise
+        doing something unusual. */}
+    <path d="M104 56C96 68 80 80 62 88c-4 2-7 0-5-3 6-10 22-24 38-32Z" stroke-width="0.9" />
+    <path d="M99 58C92 68 78 78 62 85" stroke-width="0.4" opacity="0.5" />
+    {/* Rear flipper, trailing as a rudder. */}
+    <path d="M48 57c-2 8-7 14-14 17 0-7 4-13 9-16Z" stroke-width="0.8" />
   </svg>
 </template>
 
@@ -479,18 +560,24 @@ const SPECIES = [
 </template>
 
 <template data-species="probe">
-  <svg viewBox="0 0 72 300" fill="none" stroke="currentColor" stroke-width="1">
+  <svg viewBox="0 0 72 312" fill="none" stroke="currentColor" stroke-width="1">
     {/* The wire is the one vertical line in the whole layer, and a vertical
         hairline through a paragraph reads as a rendering fault rather than as
         rigging. Held well under the instrument's weight. */}
     <path d="M36 0v236" stroke-width="0.6" opacity="0.45" />
     <path d="M20 248 36 236l16 12" stroke-width="0.7" />
-    <path d="M16 248h40l-5 44H21z" />
-    <path d="M25 254v34M36 252v38M47 254v34" stroke-width="0.6" />
-    <path d="M19 266h34M20 278h32" stroke-width="0.6" />
-    <path d="M36 292v8" />
-    <circle cx="36" cy="298" r="2" fill="currentColor" class="drift__telemetry" />
-    <circle cx="36" cy="270" r="14" class="drift__ring" />
+    {/* A rosette is a cylinder of water bottles round a frame, not a basket.
+        Straight sides and two rings are what say cylinder. */}
+    <path d="M16 248h40v46H16z" />
+    <path d="M16 248a20 5 0 0 0 40 0M16 294a20 5 0 0 0 40 0" stroke-width="0.5" opacity="0.7" />
+    <path d="M26 249v45M46 249v45" stroke-width="0.5" opacity="0.55" />
+    <path d="M22 254h10v32H22zM40 254h10v32H40z" stroke-width="0.7" />
+    <path d="M22 259h10M40 259h10" stroke-width="0.5" opacity="0.7" />
+    {/* Sensor package slung underneath, which is the part that is actually a
+        CTD. The bottles are only there to bring some of the water back. */}
+    <path d="M28 298h16v9H28z" stroke-width="0.8" />
+    <circle cx="36" cy="302" r="1.8" fill="currentColor" class="drift__telemetry" />
+    <circle cx="36" cy="272" r="16" class="drift__ring" />
   </svg>
   <span class="drift__tag">CTD 03</span>
 </template>
@@ -520,60 +607,75 @@ const SPECIES = [
     <path d={shell(oar)} />
     <path d={ridge(oar, oarFin)} stroke-width="0.5" opacity="0.7" />
     <path d={rays(oar, oarFin, 3, 0)} stroke-width="0.5" opacity="0.65" />
-    {/* The crest is a mane of the first dorsal rays, and on a live one it is
-        scarlet. Buoy is the one warm mark down here. */}
-    <path d={rays(oar, oarFin, 2, 0.8)} stroke-width="0.9" class="drift__crest" />
-    {/* The face is near vertical, and the mouth shoots forward off it to feed. */}
-    <circle cx={oarHead.x - 12} cy={oarHead.y - 4} r="3.4" stroke-width="0.7" />
-    <path d={`M${oarHead.x - 2} ${oarHead.y + 1}h-11M${oarHead.x - 4} ${oarHead.y + 7}c6 0 8-3 8-6`} stroke-width="0.6" />
-    <path d={`M${oarHead.x - 30} ${oarHead.y - 13}c8 5 13 10 15 17`} stroke-width="0.5" opacity="0.5" />
-    {/* Two pelvic fins trail like oars, which is where the name comes from. */}
-    <path d="M260 76c-10 22-32 34-56 35M252 77c-8 26-30 42-54 44" stroke-width="0.5" opacity="0.8" />
-    <path d="M204 111c-5 1-8 6-6 10 5-1 8-6 6-10ZM199 120c-5 1-8 6-6 10 5-1 8-6 6-10Z" stroke-width="0.5" opacity="0.8" />
+    {/* On a live one the crest is scarlet. Buoy is the one warm mark down here. */}
+    <path d={oarCrest} stroke-width="0.9" class="drift__crest" />
+    {/* The face is near vertical and the eye is enormous, which is what a fish
+        that lives on the edge of the light ends up with. */}
+    <circle cx={oarHead.x - 13} cy={oarHead.y - 5} r="4.4" stroke-width="0.7" />
+    <circle cx={oarHead.x - 13} cy={oarHead.y - 5} r="1.6" fill="currentColor" stroke="none" />
+    {/* The mouth is protrusible: it shoots forward off that face to feed. */}
+    <path d={`M${oarHead.x} ${oarHead.y + 3}c5 0 8 2 9 5-4 0-7-1-9-3Z`} stroke-width="0.7" />
+    <path d={`M${oarHead.x} ${oarHead.y}h-4M${oarHead.x - 6} ${oarHead.y - 9}c3 3 4 6 4 9`} stroke-width="0.5" opacity="0.6" />
+    <path d={`M${oarHead.x - 26} ${oarHead.y - 12}c3 6 4 12 3 18`} stroke-width="0.5" opacity="0.5" />
+    {/* Two pelvic fins trail like oars, each one ray with a blade on the end.
+        That is where the name came from. */}
+    <path d="M266 74C258 92 242 104 225 110M262 75C254 96 238 110 219 118" stroke-width="0.6" opacity="0.8" />
+    <path d="M225 110c-6 2-10 6-10 10 6-1 10-5 11-9ZM219 118c-6 2-10 6-10 10 6-1 10-5 11-9Z" stroke-width="0.5" opacity="0.8" />
   </svg>
 </template>
 
 <template data-species="rov">
-  <svg viewBox="-8 0 176 116" fill="none" stroke="currentColor" stroke-width="1">
-    {/* Tether, on to a lift bail. Everything useful at depth still needs its
+  <svg viewBox="-2 -10 204 120" fill="none" stroke="currentColor" stroke-width="1">
+    {/* Tether on to a lift bail. Everything useful at depth still needs its
         link home, and something has to take the weight of it. */}
-    <path d="M60 20C54 12 50 6 46 0" stroke-width="0.6" opacity="0.5" />
-    <path d="M52 26v-6h16v6" stroke-width="0.7" />
-    {/* Syntactic foam on top, open frame under it, skids on the bottom. */}
-    <path d="M32 26h96v14H32z" />
-    <path d="M78 26v14" stroke-width="0.5" opacity="0.6" />
-    <g stroke-width="0.7">
-      <path d="M40 29h20v8H40zM86 29h20v8H86z" />
-      <circle cx="50" cy="33" r="3.4" />
-      <circle cx="96" cy="33" r="3.4" />
-    </g>
-    {/* Open frame: uprights and one diagonal brace each side, which is what
-        stops it reading as a solid box. */}
-    <path d="M28 40h104v48H28z" />
-    <path d="M28 66h104" stroke-width="0.5" opacity="0.55" />
-    <path d="M58 40v48M102 40v48" stroke-width="0.5" opacity="0.5" />
-    <path d="M40 88v10M120 88v10M34 98h92" stroke-width="0.8" />
-    {/* Two ducted thrusters aft. */}
+    <path d="M86 4C80-3 76-6 70-9" stroke-width="0.6" opacity="0.5" />
+    <path d="M74 12V4h24v8" stroke-width="0.7" />
+    {/* Syntactic foam on top, in blocks. It is the buoyancy the rest hangs
+        under, and it is the one solid thing on the whole vehicle. */}
+    <path d="M32 12h108a9 9 0 0 1 0 18H32a9 9 0 0 1 0-18z" />
+    <path d="M52 12v18M82 12v18M112 12v18" stroke-width="0.4" opacity="0.45" />
+    {/* Posts and rails rather than a closed box: an ROV is a cage you can see
+        straight through, and an outlined rectangle is a briefcase. */}
+    <path d="M24 32h124M24 90h124" stroke-width="0.9" />
+    <path d="M24 32v58M60 32v58M112 32v58M148 32v58" stroke-width="0.9" />
+    {/* Braced at the ends, open through the middle where the kit rides. A rail
+        all the way across turns the frame into a window with six panes. */}
+    <path d="M24 62h36M112 62h36" stroke-width="0.7" />
+    <path d="M24 62 60 32M148 62 112 32" stroke-width="0.5" opacity="0.45" />
+    {/* Pressure housings. Round ends, because anything that holds one
+        atmosphere against four hundred is a cylinder. */}
+    <path d="M68 42h28a7 7 0 0 1 0 14H68a7 7 0 0 1 0-14z" stroke-width="0.6" opacity="0.7" />
+    <path d="M68 66h18a6 6 0 0 1 0 12H68a6 6 0 0 1 0-12z" stroke-width="0.6" opacity="0.7" />
+    {/* Two ducted thrusters aft. The duct is the part that says thruster; a
+        bare circle says porthole. */}
     <g stroke-width="0.8">
-      <circle cx="20" cy="52" r="9" />
-      <circle cx="20" cy="52" r="3" />
-      <circle cx="20" cy="76" r="9" />
-      <circle cx="20" cy="76" r="3" />
+      <path d="M2 38h22v20H2zM2 66h22v20H2z" />
+      <circle cx="13" cy="48" r="7" />
+      <circle cx="13" cy="48" r="2.4" />
+      <circle cx="13" cy="76" r="7" />
+      <circle cx="13" cy="76" r="2.4" />
     </g>
-    {/* Camera on its pan and tilt, one lamp above it and one below, and what
-        the three of them together can actually see. */}
-    <path d="M112 48h16v18h-16z" stroke-width="0.8" />
-    <circle cx="134" cy="57" r="5.5" stroke-width="0.8" />
-    <circle cx="135" cy="57" r="2" stroke-width="0.6" />
-    <circle cx="126" cy="44" r="3.4" stroke-width="0.7" />
-    <circle cx="126" cy="80" r="3.4" stroke-width="0.7" />
-    <path d="M132 40 160 30M132 84 160 94M141 57h22" stroke-width="0.5" stroke-dasharray="3 4" opacity="0.5" />
-    {/* Manipulator, folded the way it is stowed between jobs. */}
-    <path d="M132 72h12v12h10" stroke-width="0.8" />
-    <path d="m154 84 8-4M154 84l7 5" stroke-width="0.7" />
-    <path d="M44 46h20v10H44z" stroke-width="0.5" opacity="0.55" />
-    <circle cx="92" cy="54" r="2.4" fill="currentColor" class="drift__telemetry" />
-    <circle cx="92" cy="54" r="30" class="drift__ring" />
+    {/* Camera on its pan and tilt, a lamp above and below on their own booms,
+        and what the three of them together can actually see. */}
+    <path d="M150 52h16v16h-16z" stroke-width="0.8" />
+    <circle cx="171" cy="60" r="5.5" stroke-width="0.8" />
+    <circle cx="172" cy="60" r="2" stroke-width="0.6" />
+    <path d="M148 38h8M148 84h8" stroke-width="0.7" />
+    <circle cx="160" cy="38" r="4" stroke-width="0.7" />
+    <circle cx="160" cy="84" r="4" stroke-width="0.7" />
+    <path d="M164 34 190 24M164 88 190 98M178 60h14" stroke-width="0.5" stroke-dasharray="3 4" opacity="0.5" />
+    {/* Manipulator, out where it works rather than folded away. Three straight
+        segments and a jaw; a curve here reads as a hose. */}
+    <circle cx="148" cy="88" r="3" stroke-width="0.8" />
+    <path d="M148 88 168 98 188 90" stroke-width="0.9" />
+    <path d="m188 90 9-5M188 90l8 6" stroke-width="0.7" />
+    {/* Two skids rather than one plinth: a runner the full width closes the
+        frame off into a box again. */}
+    <path d="M40 90v12M64 90v12M108 90v12M132 90v12" stroke-width="0.7" />
+    <path d="M32 102h40M100 102h40" stroke-width="0.8" />
+    <path d="m32 102-7-5M140 102l7-5" stroke-width="0.7" />
+    <circle cx="86" cy="60" r="2.4" fill="currentColor" class="drift__telemetry" />
+    <circle cx="86" cy="60" r="36" class="drift__ring" />
   </svg>
   <span class="drift__tag">ROV-01 &middot; Fl(2) 5s</span>
 </template>
@@ -600,7 +702,9 @@ const SPECIES = [
     {/* No propeller anywhere on it. It changes how much it weighs and falls
         forward, over and over, for months. */}
     <path d={gliderHull} />
-    <path d="M74 46 120 62 96 64 70 52Z" stroke-width="0.8" />
+    {/* One swept blade crossing the hull. Drawn as a wide quad it reads as a
+        paper dart wedged inside the body. */}
+    <path d="M96 44 56 60 44 60 76 45Z" stroke-width="0.8" />
     <path d="M30 34 6 6" stroke-width="0.8" />
     <circle cx="5" cy="4" r="2.6" stroke-width="0.7" />
     <path d="M110 30v16M124 31v14" stroke-width="0.5" opacity="0.55" />
@@ -613,33 +717,44 @@ const SPECIES = [
 </template>
 
 <template data-species="squid">
-  <svg viewBox="-14 0 208 100" fill="none" stroke="currentColor" stroke-width="1">
+  <svg viewBox="-22 14 216 76" fill="none" stroke="currentColor" stroke-width="1">
     {/* Ink first in the paint order, so it puffs behind everything else. */}
-    <circle cx="72" cy="48" r="13" class="drift__ink" />
+    <circle cx="58" cy="52" r="13" class="drift__ink" />
     <path d={shell(squid)} />
-    <path d="M146 40 176 30 168 46ZM146 56 176 66 168 50Z" stroke-width="0.8" />
-    <path d="M74 36c-8 2-12 6-12 12s4 10 12 12" stroke-width="0.8" />
-    <circle cx="70" cy="43" r="2.6" stroke-width="0.8" />
+    {/* One pair of fins at the apex, flaring off the mantle. Drawn as two loose
+        triangles they read as fletching on an arrow. */}
+    <path d="M128 38C146 28 162 22 170 20c4 8 7 16 8 24Z" stroke-width="0.8" />
+    <path d="M128 58C146 68 162 74 170 76c4-8 7-16 8-24Z" stroke-width="0.8" />
+    {/* Head at the mantle opening, and an eye out of all proportion to it. */}
+    <path d="M70 37C60 38 52 42 52 48s8 10 18 11" stroke-width="0.9" />
+    <path d="M70 37c-6 3-9 7-9 11s3 8 9 11" stroke-width="0.5" opacity="0.6" />
+    <circle cx="62" cy="46" r="4.2" stroke-width="0.8" />
+    <circle cx="62" cy="46" r="1.5" fill="currentColor" stroke="none" />
+    {/* Funnel. Everything the animal does for speed comes out of this. */}
+    <path d="M66 56c-5 2-9 5-11 9 4-1 8-3 11-6Z" stroke-width="0.7" />
     <path d={ARMS.join('')} stroke-width="0.7" opacity="0.85" />
     <path d={TENTACLES.join('')} stroke-width="0.6" opacity="0.7" />
-    <path d="M-8 28c-5 1-7 4-6 7 5-1 7-4 6-7ZM0 70c-5 2-6 6-4 8 4-2 6-5 4-8Z" stroke-width="0.6" opacity="0.7" />
-    <path d="M104 40h26M100 54h30" stroke-width="0.5" opacity="0.45" />
+    <path d={CLUBS} stroke-width="0.6" opacity="0.7" />
+    <path d="M104 40h30M100 56h34" stroke-width="0.5" opacity="0.4" />
   </svg>
 </template>
 
 <template data-species="whale">
-  <svg viewBox="0 0 292 116" fill="none" stroke="currentColor" stroke-width="1">
+  <svg viewBox="-10 24 310 82" fill="none" stroke="currentColor" stroke-width="1">
     <path d={shell(whale)} />
-    {/* Blowhole at the front left corner of the head, offset, which is why the
-        spout goes forward and to one side. */}
-    <path d="M258 34c4-3 8-3 10-1" stroke-width="0.7" />
-    {/* Jaw: narrow, underslung and always a little open. */}
-    <path d="M204 68c14 6 34 8 52 5" stroke-width="0.7" />
-    <path d="M216 71c10 3 24 4 36 3" stroke-width="0.5" opacity="0.7" />
-    <circle cx="212" cy="52" r="2" fill="currentColor" opacity="0.8" />
-    {/* Knuckles down the back instead of a dorsal fin. */}
-    <path d="M80 36c6-6 10-6 14 0M98 34c6-5 10-5 14 1M116 34c5-5 9-5 13 0" stroke-width="0.7" />
-    <path d="M168 74c8 12 8 22 4 28-8-6-12-16-12-26Z" stroke-width="0.8" />
+    {/* Blowhole, sitting on the outline at the front left corner of the head,
+        which is why a sperm whale's spout goes forward and to one side. */}
+    <path d="M250 34.6c2-2.4 5-2.4 7 0" stroke-width="0.7" />
+    {/* The lower jaw is a rod slung under all that head: narrow, set back, and
+        the only part of the animal with teeth in it. */}
+    <path d="M206 73C226 74 246 73 259 70v3c-13 3-33 5-51 4Z" stroke-width="0.8" />
+    <path d="M218 73.4v2.6M226 73.6v2.6M234 73.4v2.6M242 73v2.6M250 72.4v2.6" stroke-width="0.5" opacity="0.7" />
+    <circle cx="214" cy="58" r="1.9" fill="currentColor" opacity="0.85" />
+    {/* A hump two thirds back and knuckles running aft from it, in place of the
+        dorsal fin it does not have. */}
+    <path d="M140 41c4-5 9-6 14-2" stroke-width="0.8" />
+    <path d="M124 43c4-4 8-4 11-1M108 45c3-3 7-3 10 0M94 47c3-3 6-3 9 0" stroke-width="0.7" />
+    <path d="M196 72c-2 12-8 20-16 24 0-10 5-19 12-24Z" stroke-width="0.8" />
     {/* Fluke, on the downstroke. */}
     <path d="M46 60C30 44 8 34-6 36c12 10 18 18 18 24 0 7-6 16-20 28 16 2 36-10 52-26Z" />
     <path d="M40 56C26 46 12 42 2 42" stroke-width="0.5" opacity="0.55" />
@@ -710,9 +825,9 @@ const SPECIES = [
     {/* Lamps and their throw, then the manipulator folded under the sphere. */}
     <path d="M152 74h12v8h-12z" stroke-width="0.7" />
     <path d="M164 76 190 66M164 82 190 92M165 79h25" stroke-width="0.5" stroke-dasharray="3 4" opacity="0.5" />
-    <path d="M126 78c10 1 16 5 20 12" stroke-width="0.8" />
-    <path d="M146 90c6 0 10-2 13-6" stroke-width="0.8" />
-    <path d="m159 84 8-4M159 84l7 5" stroke-width="0.7" />
+    <circle cx="126" cy="80" r="2.6" stroke-width="0.7" />
+    <path d="M126 80 146 92 166 84" stroke-width="0.9" />
+    <path d="m166 84 8-4M166 84l7 5" stroke-width="0.7" />
     <path d="M46 84v12M118 84v12M38 96h88" stroke-width="0.7" />
     <circle cx="150" cy="56" r="3" fill="currentColor" class="drift__telemetry" />
     <circle cx="110" cy="56" r="36" class="drift__ring" />
@@ -725,12 +840,15 @@ const SPECIES = [
     <path d={shell(barrel)} />
     {/* The head is a clear fluid-filled dome. It was photographed intact for
         the first time in 2004; every specimen before that arrived collapsed. */}
-    <path d="M84 44C86 24 104 18 116 26c8 6 11 14 9 20-3 6-10 9-18 9" stroke-width="0.6" opacity="0.7" />
-    {/* Two barrels, pointed straight up through the roof of its own head. */}
+    <path d="M86 47C88 26 106 17 118 22c10 5 12 17 8 26" stroke-width="0.6" opacity="0.7" />
+    {/* Two barrels, pointed straight up through the roof of its own head. The
+        lens on top is what makes them eyes rather than two doorways. */}
+    {/* Tall and narrow. Squat and wide they come out as two doorways. */}
     <g class="drift__telemetry">
-      <path d="M96 45V34a4.6 4.6 0 0 1 9.2 0v11z" stroke-width="0.9" />
-      <path d="M110 45V36a4.4 4.4 0 0 1 8.8 0v9z" stroke-width="0.9" />
-      <path d="M96 34h9.2M110 36h8.8" stroke-width="1.2" />
+      <path d="M97 48V34a3.5 3.5 0 0 1 7 0v14z" stroke-width="0.9" />
+      <circle cx="100.5" cy="34" r="1.3" fill="currentColor" stroke="none" />
+      <path d="M109 48V37a3.2 3.2 0 0 1 6.4 0v11z" stroke-width="0.9" />
+      <circle cx="112.2" cy="37" r="1.2" fill="currentColor" stroke="none" />
     </g>
     {/* And the two spots on the front of the face, which are not eyes. */}
     <circle cx="119" cy="53" r="1.6" fill="currentColor" opacity="0.8" />
@@ -763,76 +881,99 @@ const SPECIES = [
 
 <template data-species="colony">
   <svg viewBox="0 0 56 300" fill="none" stroke="currentColor" stroke-width="1">
-    <path d="M26 14c8 30-8 54 0 84s-8 54 0 84-6 56 0 104" stroke-width="0.8" />
-    <path d="M20 12a7 9 0 0 1 13 0 9 9 0 0 1-13 0Z" stroke-width="0.9" />
+    <path d="M26 26c5 22-5 40 0 62s-5 40 0 62 4 40 0 62 3 40 0 88" stroke-width="0.8" />
+    {/* Gas float at the top. Everything under it hangs from this one bubble. */}
+    <path d="M26 6c4 1 6 4 6 8s-2 7-6 7-6-3-6-7 2-7 6-8Z" stroke-width="0.9" />
+    <path d="M24 9c1-1 3-1 4 0" stroke-width="0.5" opacity="0.7" />
     {BELLS.map(([x, y, s]) => (
       <path d={BELL} stroke-width={(0.9 / s).toFixed(2)} transform={`translate(${x} ${y}) scale(${s})`} />
     ))}
+    {/* Feeding stem: one pair of tentacles per body, at a regular interval, the
+        whole way down. The regularity is the tell that it is a colony. */}
     <g stroke-width="0.5" opacity="0.8">
-      <path d="M24 190c-4 14-1 22 4 30M28 214c-4 12-1 18 4 26M23 240c-3 12 0 18 5 24M27 262c-3 10 0 16 4 22" />
-      <path d="M30 196c3 12 1 18-3 24M21 224c3 10 1 16-3 22M29 252c3 10 1 14-3 20" />
+      <path d="M24 146c-8 4-10 11-7 18M28 160c8 4 10 11 7 18M24 174c-8 4-10 11-7 18M28 188c8 4 10 11 7 18M24 202c-8 4-10 11-7 18M28 216c8 4 10 11 7 18M24 230c-8 4-10 11-7 18M28 244c8 4 10 11 7 18M24 258c-8 4-10 11-7 18M28 272c8 4 10 11 7 18" />
     </g>
   </svg>
 </template>
 
 <template data-species="wreck">
-  <svg viewBox="-10 -12 168 104" fill="none" stroke="currentColor" stroke-width="1">
-    {/* Broken amidships. The two halves settled at different angles, which is
-        how you tell a wreck from a ship sitting on the bottom. */}
-    <g transform="rotate(-15 40 42)">
-      <path d="M4 40C18 28 40 22 56 21l3 8-4 7 5 7-4 6 3 7C40 56 16 50 4 40Z" />
-      <path d="M11 38c13-8 30-12 45-13" stroke-width="0.5" opacity="0.7" />
-      <path d="M34 22 28 2M24 8h11" stroke-width="0.7" />
-      <path d="M10 58 4 70" stroke-width="0.5" opacity="0.55" />
+  <svg viewBox="-14 -22 190 104" fill="none" stroke="currentColor" stroke-width="1">
+    {/* One ship, broken amidships and settled in two pieces at different
+        angles. The break edges are cut to match each other, so the two halves
+        read as parts of the same hull rather than as two smaller ships. */}
+    <g transform="rotate(-13 60 50)">
+      <path d="M8 30 96 27 90 34 98 40 90 46 96 52 86 58 34 60C20 57 11 50 8 38Z" />
+      <path d="M12 33 94 30" stroke-width="0.5" opacity="0.6" />
+      {/* Bridge and funnel. */}
+      <path d="M52 27V11h32v16" stroke-width="0.8" />
+      <path d="M56 16h4M64 16h4M72 16h4" stroke-width="0.5" opacity="0.8" />
+      <path d="M65 11V-8h10v19" stroke-width="0.8" />
+      <path d="M64-8h12" stroke-width="0.6" />
+      {/* Main mast, with the one yard that is still on it. */}
+      <path d="M42 27V-12M34-6h16" stroke-width="0.7" />
+      {/* Rudder, and the screw she is not turning any more. */}
+      <path d="M12 47 8 57" stroke-width="0.7" />
+      <circle cx="17" cy="53" r="1.8" stroke-width="0.6" />
+      <path d="m17 53-6-4M17 53l6-3M17 53l-1 6" stroke-width="0.6" />
     </g>
-    <g transform="rotate(-4 108 40)">
-      <path d="M66 26c26 0 50 4 62 9l-4 17c-15 6-40 8-61 8l4-7-5-7 4-6-4-7Z" />
-      <path d="M74 30c20 0 38 3 50 7" stroke-width="0.5" opacity="0.7" />
-      <path d="M84 26V14h20v12" stroke-width="0.8" />
-      <path d="M88 19h4M96 19h4" stroke-width="0.5" />
-      <path d="M92 14V6h8v8" stroke-width="0.7" />
-      <path d="M118 30v-9" stroke-width="0.6" />
-      <path d="M116 56l4 12" stroke-width="0.5" opacity="0.55" />
+    <g transform="rotate(5 128 44)">
+      <path d="M100 27 150 25C154 30 152 38 148 42L142 58 112 60 104 52 112 46 104 40 112 34Z" />
+      <path d="M104 30 148 28" stroke-width="0.5" opacity="0.6" />
+      {/* Foremast, hawse pipe, and the anchor still catted at the bow. */}
+      <path d="M128 26V-14M120-8h16" stroke-width="0.7" />
+      <circle cx="142" cy="33" r="1.8" stroke-width="0.6" />
+      <path d="M144 36v6M141 42h6" stroke-width="0.6" opacity="0.8" />
     </g>
     {/* Debris field downslope, and the sand she is sitting in. */}
-    <path d="M-6 76c18 4 44 6 74 5 30-1 56-4 74-9" stroke-width="0.5" opacity="0.4" />
-    <path d="M18 72h6M40 74h4M112 70h5M132 68h4" stroke-width="0.5" opacity="0.5" />
+    <path d="M-14 66c22 5 48 7 80 6 34-1 62-4 84-9" stroke-width="0.5" opacity="0.4" />
+    <path d="M14 63h6M38 66h4M118 62h5M142 59h4" stroke-width="0.5" opacity="0.5" />
     {/* Sonar reticle. What moves down here is the sweep finding her again. */}
     <g stroke-width="0.8" opacity="0.6">
-      <path d="M-8-10h10M-8-10v10M156-10h-10M156-10v10M-8 90h10M-8 90v-10M156 90h-10M156 90v-10" />
+      <path d="M-12-20h10M-12-20v10M166-20h-10M166-20v10M-12 78h10M-12 78v-10M166 78h-10M166 78v-10" />
     </g>
-    <circle cx="74" cy="40" r="46" class="drift__ring" />
+    <circle cx="76" cy="30" r="62" class="drift__ring" />
   </svg>
   <span class="drift__tag drift__tag--dim">WRECK &middot; SONAR</span>
 </template>
 
 <template data-species="vent">
-  <svg viewBox="0 -30 196 152" fill="none" stroke="currentColor" stroke-width="1">
+  <svg viewBox="0 -38 196 160" fill="none" stroke="currentColor" stroke-width="1">
     {/* A black smoker runs at 350 degrees and still cannot boil the water
-        around it, because down here water has nowhere to expand to. */}
+        around it, because down here water has nowhere to expand to. The plume
+        has to billow: four thin threads over a tapered cone is a candle. */}
     <g class="drift__plume" stroke-width="0.5">
-      <path d="M54 20C42 4 58-8 44-26M62 18c8-16-6-26 6-44M58 16c-6-14 6-22-2-34M70 24c10-12 0-22 10-32" />
+      <path d="M50 12C34-2 48-16 32-32M62 12C78-2 64-16 80-32M54 10C46-4 58-16 48-30M60 10C68-4 58-16 68-30M57 10C55-6 59-18 57-28" />
+      <path d="M40-10c-7-3-7-10 0-13M72-14c7-3 7-10 0-13M52-24c-5-2-5-7 0-9" stroke-width="0.4" opacity="0.7" />
     </g>
-    <path d="M40 106c4-16 0-26 6-34-5-9-1-16 3-22-4-8-1-14 3-20l8-8 7 9c3 6 6 13 3 19 6 8 8 15 5 22 6 10 5 18 8 34Z" />
-    <path d="M44 84c8 3 18 3 26 0M48 62c6 2 13 2 18 0" stroke-width="0.4" opacity="0.45" />
-    <path d="M52 22c4-5 12-5 16 0" stroke-width="0.7" />
-    <path d="M39 96h8M73 92h8M45 52h6M69 56h7" stroke-width="0.5" opacity="0.45" />
+    {/* The chimney is a mineral pile: every edge is a fracture and the whole
+        thing leans, because it grew wherever the flow happened to be. Drawn
+        with smooth curves it comes out a candle; drawn symmetrically it comes
+        out a fir tree. */}
+    <path d="M28 108 32 99 27 92 31 84 25 76 33 68 30 58 36 50 33 40 40 32 44 23 50 15 58 12 63 20 67 30 63 38 71 46 68 55 77 62 72 70 80 78 75 88 84 96 80 108Z" />
+    <path d="M44 23 50 15 58 12" stroke-width="0.8" />
+    {/* A dead stump beside it. Vents come in fields, and one spire on its own
+        in the middle of a frame is a fir tree. */}
+    <path d="M4 108 8 98 2 90 9 82 6 74 12 68 18 74 15 84 21 92 16 100 22 108Z" stroke-width="0.8" opacity="0.75" />
+    {/* Flanges, where an older orifice sealed over and the flow moved. */}
+    <path d="M25 76 17 78 24 81M77 62 86 64 78 67M33 40 25 41 32 44" stroke-width="0.5" opacity="0.6" />
     {/* Tube worms. No mouth and no gut: they farm bacteria inside themselves,
         and they are the reason anyone still argues about where life started. */}
     <g stroke-width="0.7">
-      <path d="M86 106V72M92 106V60M98 106V78M104 106V64M110 106V82M116 106V70" />
-      <path d="M83 72a3 4 0 0 1 6 0M89 60a3 4 0 0 1 6 0M95 78a3 4 0 0 1 6 0M101 64a3 4 0 0 1 6 0M107 82a3 4 0 0 1 6 0M113 70a3 4 0 0 1 6 0" stroke-width="0.5" opacity="0.75" />
+      <path d="M88 108C87 94 90 82 88 76M93 108C94 92 91 78 94 64M98 108C97 94 100 86 98 80M103 108C104 92 101 80 104 68M108 108C107 96 110 90 108 85M113 108C114 94 111 84 114 74M118 108C117 96 120 88 118 82M123 108C124 92 121 82 124 70" />
+      <path d="M85 76a3 4 0 0 1 6 0M91 64a3 4 0 0 1 6 0M95 80a3 4 0 0 1 6 0M101 68a3 4 0 0 1 6 0M105 85a3 4 0 0 1 6 0M111 74a3 4 0 0 1 6 0M115 82a3 4 0 0 1 6 0M121 70a3 4 0 0 1 6 0" stroke-width="0.5" opacity="0.75" />
     </g>
-    <path d="M0 106h196" stroke-width="0.6" opacity="0.5" />
-    <path d="M22 106c10-8 24-11 40-9M124 100c14-3 28-1 38 6" stroke-width="0.5" opacity="0.35" />
+    <path d="M0 108h196" stroke-width="0.6" opacity="0.5" />
+    <path d="M24 108c8-4 16-5 24-4M128 106c6-2 12-3 18-2" stroke-width="0.5" opacity="0.35" />
     {/* And the thing watching it, wired back to a shore station. */}
-    <path d="M140 104V88h30v16z" stroke-width="0.8" />
-    <path d="M144 88V78h22v10" stroke-width="0.7" />
-    <path d="M150 78a5 5 0 0 1 10 0" stroke-width="0.7" />
-    <path d="M170 98c10 2 16 6 26 7" stroke-width="0.5" opacity="0.5" />
-    <path d="M144 104v6M166 104v6" stroke-width="0.6" />
-    <circle cx="155" cy="94" r="1.8" fill="currentColor" class="drift__telemetry" />
-    <circle cx="155" cy="94" r="30" class="drift__ring" />
+    <path d="M136 104V88h40v16z" stroke-width="0.8" />
+    <path d="M136 97h40" stroke-width="0.5" opacity="0.6" />
+    <path d="M131 92h5M131 100h5" stroke-width="0.6" opacity="0.8" />
+    <path d="M150 88a8 8 0 0 1 16 0" stroke-width="0.7" />
+    <path d="M172 88V77" stroke-width="0.6" />
+    <path d="M138 104v6M174 104v6M132 110h48" stroke-width="0.7" />
+    <path d="M176 96c8 2 12 5 20 6" stroke-width="0.5" opacity="0.5" />
+    <circle cx="172" cy="75" r="1.8" fill="currentColor" class="drift__telemetry" />
+    <circle cx="156" cy="94" r="32" class="drift__ring" />
   </svg>
   <span class="drift__tag">NODE 07</span>
 </template>
@@ -881,9 +1022,20 @@ const SPECIES = [
       let top = rnd(sp.top[0], sp.top[1]);
       if (sp.mode !== 'rise') {
         const taken = live.filter((c) => c.mode !== 'rise');
-        for (let i = 0; i < 6; i++) {
-          if (!taken.some((c) => Math.abs(c.top - top) < 15)) break;
-          top = rnd(sp.top[0], sp.top[1]);
+        // Keep the roomiest draw rather than the last one. Where two species
+        // share most of their band, giving up on the final try and using
+        // whatever it happened to be lands them in the same lane.
+        let best = -1;
+        for (let i = 0; i < 8; i++) {
+          const t = rnd(sp.top[0], sp.top[1]);
+          const gap = taken.length
+            ? Math.min(...taken.map((c) => Math.abs(c.top - t)))
+            : Infinity;
+          if (gap > best) {
+            best = gap;
+            top = t;
+          }
+          if (gap >= 15) break;
         }
       }
 

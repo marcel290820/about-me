@@ -60,15 +60,47 @@ const serpent = spine({
 const serpentHead = serpent[serpent.length - 1];
 
 // --- Ships ----------------------------------------------------------------
-// One rig, drawn once around its own origin and placed where it is needed.
-const HULL = 'M-25 0h50l-8 10H-17Z';
-const RIG =
-  'M-14 0V-30M0 0V-36M14 0V-28' +
-  'M-21-9h14M-19-19h10M-7-12h14M-6-24h12M8-11h12M9-20h10';
-const SAILS =
-  'M-21-9c4 5 10 5 14 0M-19-19c3 4 7 4 10 0M-7-12c5 5 9 5 14 0M-6-24c4 4 8 4 12 0M8-11c4 5 8 5 12 0M9-20c3 4 7 4 10 0';
-const BOWSPRIT = 'M25 0 37-6';
-const ENSIGN = 'M0-36 11-33 0-30';
+// One rig, drawn once about its own waterline and placed where it is needed.
+//
+// A mark prints about 118px wide, so each ship lands around 30px. At that size
+// a sail has to be a shape with area: drawn as a thin arc hung on a spar it
+// reads as bunting on a pole, which is exactly how the last pair came out.
+// Bow to the right: raised stem, raised stern, deck between them.
+const HULL = 'M-27-10-22-8 18-8 30-12 26 8C10 11-10 11-22 8Z';
+
+// Mizzen, main, fore -- shortest at the stern, tallest amidships.
+const MASTS = 'M-13-8V-30M0-8V-44M14-8V-38';
+
+// The whole suit on a mast as one bellied shape, with the yards ruled across
+// it. Each ship prints about 30px wide: individual sails at that size stop
+// being canvas and become a stack of crates, which is how the last two
+// attempts came out.
+const SAIL = (x: number, top: number, hw: number, h: number) =>
+  `M${x} ${top}` +
+  `C${x + hw * 0.5} ${(top + h * 0.25).toFixed(1)} ${x + hw} ${(top + h * 0.55).toFixed(1)} ${x + hw * 0.92} ${top + h}` +
+  `L${x - hw * 0.92} ${top + h}` +
+  `C${x - hw} ${(top + h * 0.55).toFixed(1)} ${x - hw * 0.5} ${(top + h * 0.25).toFixed(1)} ${x} ${top}Z`;
+
+const YARDS = (x: number, top: number, hw: number, h: number) =>
+  [0.42, 0.72]
+    .map((f) => {
+      const w = hw * f ** 0.8;
+      return `M${(x - w).toFixed(1)} ${(top + h * f).toFixed(1)}h${(w * 2).toFixed(1)}`;
+    })
+    .join('');
+
+const RIG_SETS: [number, number, number, number][] = [
+  [-13, -27, 8, 19],
+  [0, -40, 12, 30],
+  [14, -33, 10, 24],
+];
+
+const SAILS = RIG_SETS.map((s) => SAIL(...s)).join('');
+const SPARS = RIG_SETS.map((s) => YARDS(...s)).join('');
+
+const BOWSPRIT = 'M30-12 44-18';
+const JIB = 'M41-17 26-28 30-13Z';
+const ENSIGN = 'M-27-10V-24M-27-24-17-21-27-18';
 ---
 
 <div class="chart-marks" aria-hidden="true">
@@ -109,27 +141,31 @@ const ENSIGN = 'M0-36 11-33 0-30';
       where a fleet action happened long after anyone cared who won. */}
   <div class="chart-mark" data-mark hidden>
     <svg viewBox="0 0 116 76" fill="none" stroke="currentColor" stroke-width="0.7">
-      <g transform="translate(26 62) scale(0.62)">
+      <g transform="translate(27 68) scale(0.55)">
         <path d={HULL} />
-        <path d={RIG} stroke-width="0.9" />
-        <path d={SAILS} stroke-width="0.7" opacity="0.75" />
+        <path d={SAILS} stroke-width="0.9" />
+        <path d={SPARS} stroke-width="0.7" opacity="0.8" />
+        <path d={MASTS} stroke-width="1.1" />
         <path d={BOWSPRIT} stroke-width="0.9" />
-        <path d={ENSIGN} stroke-width="0.7" />
+        <path d={JIB} stroke-width="0.8" />
+        <path d={ENSIGN} stroke-width="0.9" />
       </g>
-      <g transform="translate(92 66) scale(-0.54 0.54)">
+      <g transform="translate(91 70) scale(-0.5 0.5)">
         <path d={HULL} />
-        <path d={RIG} stroke-width="0.9" />
-        <path d={SAILS} stroke-width="0.7" opacity="0.75" />
+        <path d={SAILS} stroke-width="0.9" />
+        <path d={SPARS} stroke-width="0.7" opacity="0.8" />
+        <path d={MASTS} stroke-width="1.1" />
         <path d={BOWSPRIT} stroke-width="0.9" />
+        <path d={JIB} stroke-width="0.8" />
       </g>
       <path
-        d="M40 52C54 42 64 42 76 50M42 58C56 50 66 50 78 56"
+        d="M44 57C54 51 66 51 76 56M46 63C56 58 68 58 78 62"
         stroke-width="0.5"
         stroke-dasharray="2 3"
         opacity="0.8"
       />
-      <path d="m58 40 3-6 1 7 5-4-2 6 6 1-6 3 4 5-6-3v6l-3-6-4 4 1-6-6 1 5-4-5-3Z" stroke-width="0.5" />
-      <path d="M6 70h104" stroke-width="0.5" opacity="0.35" />
+      <path d="m53 26 3-6 1 7 5-4-2 6 6 1-6 3 4 5-6-3v6l-3-6-4 4 1-6-6 1 5-4-5-3Z" stroke-width="0.5" />
+      <path d="M6 73h104" stroke-width="0.5" opacity="0.35" />
     </svg>
     <span class="chart-mark__label">engagement 1712</span>
   </div>
@@ -170,13 +206,16 @@ const ENSIGN = 'M0-36 11-33 0-30';
   {/* A tidal diamond: the letter refers you to a table of what the stream is
       doing at that spot at every hour of the tide. */}
   <div class="chart-mark" data-mark hidden>
-    <svg viewBox="0 0 104 56" fill="none" stroke="currentColor" stroke-width="0.7">
+    <svg viewBox="0 0 104 62" fill="none" stroke="currentColor" stroke-width="0.7">
       <path d="M22 8 36 28 22 48 8 28Z" stroke-width="0.9" />
-      <path d="M15 36 30 19" stroke-width="0.8" />
-      <path d="m30 19-6 0 2 5" stroke-width="0.7" />
+      {/* The letter is the whole point of the symbol: it is the key into the
+          table beside it. */}
+      <path d="M18 35 22 20 26 35M19.4 30.2h5.2" stroke-width="0.8" />
       <path d="M44 10h56M44 20h56M44 30h56M44 40h56" stroke-width="0.4" opacity="0.45" />
       <path d="M44 6v38M62 6v38M82 6v38" stroke-width="0.4" opacity="0.45" />
       <path d="M48 15h9M66 15h11M86 15h10M48 25h10M66 25h9M86 25h11M48 35h8M66 35h11M86 35h9" stroke-width="1.1" opacity="0.33" />
+      {/* Which way the stream sets at the hour the label gives. */}
+      <path d="M8 57h26M34 57l-6-3M34 57l-6 3" stroke-width="0.6" opacity="0.8" />
     </svg>
     <span class="chart-mark__label">&lt;A&gt; 3.1kn 048&deg;</span>
   </div>
