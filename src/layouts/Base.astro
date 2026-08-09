@@ -170,19 +170,24 @@ const soundings: [number, number, number][] = [
         root.dataset.zoneLow =
           waterlineBottom < window.innerHeight * 0.9 ? 'deep' : 'surface';
 
-        // Which contacts are awake in the water column. Banded by scroll
-        // progress rather than by page offset, so a short page is a shallow
-        // dive instead of a cramped one. Nothing is in the water until the
-        // waterline has left the top of the frame entirely -- the drift layer
-        // is fixed, so anything sooner would swim over the paper.
-        root.dataset.depth =
-          waterlineBottom > 0
-            ? 'dry'
-            : progress < 0.42
-              ? 'shallow'
-              : progress < 0.74
-                ? 'mid'
-                : 'abyss';
+        // Which contacts are awake in the water column.
+        //
+        // Nothing is in the water until the waterline has left the top of the
+        // frame entirely -- the drift layer is fixed, so anything sooner would
+        // swim over the paper. The three bands then split what is left evenly,
+        // measured from where the water starts rather than from the top of the
+        // document: a page with a tall header would otherwise spend most of its
+        // scroll dry and give the shallow band a sliver to live in.
+        const wetStart = window.scrollY + waterlineBottom;
+        const wetSpan = scrollable - wetStart;
+
+        if (waterlineBottom > 0 || wetSpan <= 0) {
+          root.dataset.depth = 'dry';
+        } else {
+          const wet = (window.scrollY - wetStart) / wetSpan;
+          root.dataset.depth =
+            wet < 0.34 ? 'shallow' : wet < 0.7 ? 'mid' : 'abyss';
+        }
       }
 
       function schedule() {
