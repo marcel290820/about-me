@@ -46,8 +46,25 @@ Three layers, animated with transform and opacity only so they stay on the compo
 - **Paper (`.zone-surface`) is deliberately still.** It is ink on a chart, and holding it still is what makes the water below read as moving. Do not animate it.
 - **`.waterline` carries two swell trains** at incommensurate periods, so their crests drift in and out of phase instead of looping. Each train is two tiles wide and travels exactly one tile per cycle (`translateX(-50%)`), which is what makes the loop seamless at any viewport width. The profiles are sums of sines with **integer** wave numbers over the tile, so `y(0) === y(TILE)` by construction — keep them that way or the wrap will jog. Soundings are printed chart data and stay put; the sea moves under them.
 - **`.zone-deep::before` has a slow undertow**, further and slower than anything above, with a paired opacity breath standing in for light through moving surface water. Its `inset` is negative so the drift never drags an unpainted edge into view.
+- **`.drift` carries marine snow and the contacts.** See below.
 
 `data-zone` and `data-zone-low` on `<html>` track which zone sits behind the top and bottom of the fixed rail. Fixed-position chrome that crosses the waterline needs one of these, not a static colour.
+
+### The water column (`Drift.astro`)
+
+Two fields of marine snow on `.drift::before` / `::after`, plus seven contacts. Snow is what makes the deep read as water with volume instead of a dark background, so keep both fields: one alone reads as dust on the lens. Each field falls **exactly one tile** per cycle (`background-size` y == the keyframe's `translate3d` y) or the loop seams, and `top` overhangs by more than the longest fall so it never drags an unpainted edge into frame.
+
+The layer is `position: fixed` and costs one viewport however long the page runs. It sits at `z-index: -1` inside `.zone-deep`: above the zone background and the contours, behind every word.
+
+`data-depth` on `<html>` (written in `Base.astro`) picks the band: `dry | shallow | mid | abyss`. It is **banded by scroll progress, not page offset**, so a short page is a shallow dive rather than a cramped one. It stays `dry` until the waterline's bottom leaves the top of the frame — the layer is fixed, so anything sooner swims over the paper. Figures cross in the first 38% of their cycle and wait off frame for the rest; that dwell is what makes a sighting a sighting, so lengthen the period rather than adding delay.
+
+Colour is load-bearing: `--color-foam` is telemetry and only telemetry (the ROV light, the CTD sensor, the tagged fish's ping). `--color-buoy` is the one warm mark — the anglerfish lure and the oarfish crest, which sit two bands apart and never share a frame.
+
+Figures are drawn hairline and unfilled, like a sounder or a field notebook records something rather than how an illustration pictures it. Two are generated from sampled maths rather than hand-authored (the oarfish ribbon, the colony's bells) because hand-fitting a silhouette is how the manta that preceded the oarfish kept coming out an umbrella. If a new figure has parts that must line up, sample them from one source.
+
+### Chart marginalia (`ChartMarks.astro`)
+
+Real chart vocabulary printed in the surface margins: a variation rose, a plotted fix on Berlin, a submarine cable run, a light characteristic. Paper does not move, so none of it animates. It is hidden below 1180px, where the content column takes the whole page and there is no margin to print in.
 
 ## Search
 
