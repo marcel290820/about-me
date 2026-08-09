@@ -25,6 +25,10 @@ const {
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 
+// Absolute, because every scraper that matters resolves og:image against
+// nothing at all: a root-relative path is fetched as-is and 404s.
+const ogImageURL = new URL(ogImage, Astro.site);
+
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebSite',
@@ -78,11 +82,11 @@ const soundings: [number, number, number][] = [
     <meta property="og:url" content={canonicalURL} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:image" content={ogImage} />
+    <meta property="og:image" content={ogImageURL} />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
-    <meta name="twitter:image" content={ogImage} />
+    <meta name="twitter:image" content={ogImageURL} />
     <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
   </head>
   <body class="min-h-screen flex flex-col">

@@ -1,4 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
-  <rect width="32" height="32" rx="6" fill="#0ea5e9"/>
-  <text x="16" y="22" text-anchor="middle" font-family="monospace" font-size="18" font-weight="bold" fill="#0a0a0a">M</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- The monogram and the sea are the same mark: two stems standing in chart
+       paper with one swell running between them. Read as an M at 16px, read as
+       water at any size above that.
+
+       Deliberately heavier than anything on the site itself. The page is drawn
+       in hairlines, and a hairline is gone by the time a favicon is rendered. -->
+  <rect width="32" height="32" fill="#f1ecdf"/>
+  <g fill="none" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 28V10M28 28V10" stroke="#10222e"/>
+    <path d="M4 8C8.5 8 12.8 20 16 20C19.2 20 23.5 8 28 8" stroke="#e4572e"/>
+  </g>
 </svg>
