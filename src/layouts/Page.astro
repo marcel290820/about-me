@@ -10,5 +10,6 @@ const { title, description } = Astro.props;
 ---
 
 <Base title={title} description={description}>
+  <slot name="surface" slot="surface" />
   <slot />
 </Base>

@@ -1,0 +1,46 @@
+---
+// Sticky instrument column. Reads scroll position as depth (0-48m) and shows
+// live sea state from the Baltic off Rostock. Both are wired up in Base.astro.
+const ticks = [0, 12, 24, 36, 48];
+---
+
+<aside class="depth-rail" data-depth-rail>
+  <div class="depth-rail__scale" aria-hidden="true">
+    {
+      ticks.map((depth, i) => (
+        <span
+          class="depth-rail__tick"
+          style={`top: ${(i / (ticks.length - 1)) * 100}%`}
+        >
+          {depth}
+        </span>
+      ))
+    }
+    <div class="depth-rail__marker">
+      <span class="depth-rail__depth"
+        ><em data-depth-value style="font-style: normal">0</em> <span>M</span></span
+      >
+    </div>
+  </div>
+
+  <dl class="depth-rail__live">
+    <dt class="depth-rail__place">
+      Rostock<br />54.25N 12.10E
+    </dt>
+    <div class="flex gap-2">
+      <dt>Hs</dt>
+      <dd data-sea-hs>&ndash;&ndash;</dd>
+    </div>
+    <div class="flex gap-2">
+      <dt>SST</dt>
+      <dd data-sea-sst>&ndash;&ndash;</dd>
+    </div>
+  </dl>
+</aside>
+
+<!-- Below 1024px the rail is hidden, so the instrument condenses to this. -->
+<div class="depth-badge" aria-hidden="true">
+  <span class="depth-badge__depth"><em data-depth-value style="font-style: normal">0</em>m</span>
+  <span class="depth-badge__rule"></span>
+  <span data-sea-hs>&ndash;&ndash;</span>
+</div>

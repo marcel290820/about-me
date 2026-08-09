@@ -12,25 +12,24 @@ const { title, description, pubDate, tags = [], slug, readingTime } = Astro.prop
 ---
 
 <article class="group">
-  <a href={`/blog/${slug}`} class="card block p-5">
-    <div class="flex items-center gap-2 text-xs font-mono text-text-dim mb-2">
-      <span class="text-accent/70">&gt;</span>
+  <a href={`/blog/${slug}`} class="card block p-6">
+    <div class="flex items-center gap-3 text-[0.625rem] uppercase tracking-[0.14em] font-mono text-text-dim mb-3">
       <time datetime={pubDate.toISOString()}>
         {pubDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
       </time>
       {readingTime && (
         <>
-          <span class="text-text-faint">::</span>
+          <span class="w-3 h-px bg-border-bright"></span>
           <span>{readingTime} min</span>
         </>
       )}
     </div>
-    <h3 class="text-lg font-semibold text-text group-hover:text-accent transition-colors mb-1">
+    <h3 class="text-lg font-semibold text-text group-hover:text-accent transition-colors mb-1.5">
       {title}
     </h3>
-    <p class="text-sm text-text-muted line-clamp-2 mb-3">{description}</p>
+    <p class="text-sm text-text-muted line-clamp-2 mb-4">{description}</p>
     {tags.length > 0 && (
-      <div class="flex flex-wrap gap-1.5">
+      <div class="flex flex-wrap gap-2">
         {tags.map((tag) => (
           <span class="tag">{tag}</span>
         ))}

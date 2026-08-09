@@ -10,29 +10,29 @@ interface Props {
 const { title, description, tags = [], url, repo } = Astro.props;
 ---
 
-<article class="group card p-5">
-  <div class="flex items-center gap-2 mb-2">
-    <span class="inline-block w-1.5 h-1.5 rounded-full bg-accent opacity-70"></span>
-    <span class="font-mono text-[0.65rem] uppercase tracking-wider text-text-dim">project</span>
+<article class="group card p-6">
+  <div class="flex items-center gap-2.5 mb-3">
+    <span class="inline-block w-1.5 h-1.5 rounded-full bg-accent"></span>
+    <span class="font-mono text-[0.625rem] uppercase tracking-[0.16em] text-text-dim">project</span>
   </div>
-  <h3 class="text-lg font-semibold text-text group-hover:text-accent transition-colors mb-1">
+  <h3 class="text-lg font-semibold text-text group-hover:text-accent transition-colors mb-1.5">
     {title}
   </h3>
-  <p class="text-sm text-text-muted mb-3">{description}</p>
-  <div class="flex flex-wrap gap-1.5 mb-4">
+  <p class="text-sm text-text-muted mb-4">{description}</p>
+  <div class="flex flex-wrap gap-2 mb-5">
     {tags.map((tag) => (
       <span class="tag">{tag}</span>
     ))}
   </div>
-  <div class="flex items-center gap-4">
+  <div class="flex items-center gap-5">
     {url && (
-      <a href={url} target="_blank" rel="noopener noreferrer" class="font-mono text-xs text-text-muted hover:text-accent transition-colors">
-        &rarr; live
+      <a href={url} target="_blank" rel="noopener noreferrer" class="font-mono text-[0.625rem] uppercase tracking-[0.14em] text-text-muted hover:text-accent transition-colors">
+        live &rarr;
       </a>
     )}
     {repo && (
-      <a href={repo} target="_blank" rel="noopener noreferrer" class="font-mono text-xs text-text-muted hover:text-accent transition-colors">
-        &rarr; source
+      <a href={repo} target="_blank" rel="noopener noreferrer" class="font-mono text-[0.625rem] uppercase tracking-[0.14em] text-text-muted hover:text-accent transition-colors">
+        source &rarr;
       </a>
     )}
   </div>

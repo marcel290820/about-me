@@ -23,14 +23,14 @@ const { tag, posts } = Astro.props;
 
 <Page title={`Posts tagged "${tag}"`} description={`Blog posts about ${tag} by Marcel Heidebrecht`}>
   <div class="mb-8">
-    <a href="/blog" class="font-mono text-sm text-text-muted hover:text-accent transition-colors">
+    <a href="/blog" class="font-mono text-[0.625rem] uppercase tracking-[0.14em] text-text-muted hover:text-accent transition-colors">
       &larr; all posts
     </a>
   </div>
-  <h1 class="text-3xl font-bold tracking-tight mb-2">
+  <h1 class="display-name mb-4">
     <span class="text-accent">#</span>{tag}
   </h1>
-  <p class="font-mono text-sm text-text-dim mb-8">{posts.length} post{posts.length !== 1 ? 's' : ''}</p>
+  <p class="font-mono text-xs uppercase tracking-[0.16em] text-text-dim mb-10">{posts.length} post{posts.length !== 1 ? 's' : ''}</p>
 
   <div class="flex flex-col gap-3">
     {posts.map((post: any) => (

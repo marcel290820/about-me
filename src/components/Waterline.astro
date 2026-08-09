@@ -1,0 +1,50 @@
+---
+// The single crossing from chart paper into deep water.
+// Not a wave divider: a seabed transect, printed the way soundings are.
+// Its vertical amplitude tracks live wave height via --sea-state.
+const profile =
+  'M0 74 L58 84 L112 66 L174 92 L238 76 L302 98 L364 68 L428 90 L494 74 L558 102 L622 70 L688 88 L752 64 L818 94 L884 72 L948 100 L1014 68 L1080 86 L1146 70 L1200 90';
+
+interface Props {
+  compact?: boolean;
+}
+
+const { compact = false } = Astro.props;
+
+const soundings = [
+  [70, 118],
+  [196, 130],
+  [330, 122],
+  [468, 134],
+  [604, 120],
+  [742, 132],
+  [878, 124],
+  [1016, 136],
+  [1148, 122],
+];
+---
+
+<div
+  class:list={['waterline', compact && 'waterline--compact']}
+  data-waterline
+  aria-hidden="true"
+>
+  <svg
+    class="waterline__profile"
+    viewBox="0 0 1200 160"
+    preserveAspectRatio="none"
+    fill="none"
+  >
+    <path
+      d={profile}
+      stroke="var(--color-buoy)"
+      stroke-width="1"
+      vector-effect="non-scaling-stroke"
+    />
+    {
+      soundings.map(([x, y]) => (
+        <circle cx={x} cy={y} r="1.6" fill="var(--color-buoy)" opacity="0.55" />
+      ))
+    }
+  </svg>
+</div>

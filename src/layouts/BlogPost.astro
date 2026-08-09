@@ -39,8 +39,8 @@ const readingTime = getReadingTime(Astro.slots.has('default') ? await Astro.slot
 <Base title={title} description={description}>
   <article>
     <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
-    <header class="mb-8">
-      <div class="flex items-center gap-2 text-sm font-mono text-text-muted mb-3">
+    <header class="mb-10">
+      <div class="flex items-center gap-3 text-[0.625rem] uppercase tracking-[0.14em] font-mono text-text-muted mb-4">
         <time datetime={pubDate.toISOString()}>
           {pubDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
         </time>
@@ -52,18 +52,18 @@ const readingTime = getReadingTime(Astro.slots.has('default') ? await Astro.slot
         <span class="text-text-dim">&middot;</span>
         <span>{readingTime} min read</span>
       </div>
-      <h1 class="text-3xl sm:text-4xl font-bold tracking-tight mb-4">{title}</h1>
+      <h1 class="display-name mb-6">{title}</h1>
       {tags.length > 0 && <TagList tags={tags} />}
       {heroImage && (
-        <img src={heroImage} alt={title} class="w-full rounded mt-6 shadow-[0_20px_40px_-20px_rgba(0,0,0,0.8)]" />
+        <img src={heroImage} alt={title} class="w-full rounded-[2px] border border-border-subtle mt-8" />
       )}
     </header>
-    <div class="prose prose-invert max-w-none" data-pagefind-body>
+    <div class="prose max-w-none" data-pagefind-body>
       <slot />
     </div>
-    <hr class="hr-glow mt-12 mb-6" />
+    <hr class="hr-glow mt-16 mb-8" />
     <footer>
-      <a href="/blog" class="font-mono text-sm text-text-muted hover:text-accent transition-colors">
+      <a href="/blog" class="font-mono text-[0.625rem] uppercase tracking-[0.14em] text-text-muted hover:text-accent transition-colors">
         &larr; Back to all posts
       </a>
     </footer>

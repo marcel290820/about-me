@@ -2,32 +2,40 @@
 const currentPath = Astro.url.pathname;
 
 const navLinks = [
-  { href: '/', label: '~' },
+  { href: '/', label: 'home' },
   { href: '/about', label: 'about' },
   { href: '/blog', label: 'blog' },
   { href: '/projects', label: 'projects' },
 ];
+
+function isActive(href: string) {
+  return currentPath === href || (href !== '/' && currentPath.startsWith(href));
+}
 ---
 
-<header class="w-full max-w-3xl mx-auto px-4 sm:px-6 pt-6 pb-4 sm:py-6">
+<header class="w-full max-w-3xl mx-auto px-4 sm:px-6 pt-7 pb-4 sm:pt-9 sm:pb-6">
   <input type="checkbox" id="nav-toggle" class="hidden peer" />
   <nav class="flex items-center justify-between">
-    <a href="/" class="font-mono text-sm font-medium text-text hover:text-accent transition-colors">
-      marcel<span class="text-accent">@</span>heidebrecht<span class="text-text-dim">:~</span>
+    <a href="/" class="label text-sm text-text hover:text-accent transition-colors">
+      Marcel Heidebrecht
     </a>
 
-    <label for="nav-toggle" class="sm:hidden cursor-pointer text-text-muted hover:text-text transition-colors p-1 -m-1" aria-label="Toggle navigation">
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="peer-checked:hidden block"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    <label
+      for="nav-toggle"
+      class="sm:hidden cursor-pointer text-text-muted hover:text-text transition-colors p-1 -m-1"
+      aria-label="Toggle navigation"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" class="peer-checked:hidden block"><line x1="3" y1="7" x2="21" y2="7"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="17" x2="21" y2="17"/></svg>
     </label>
 
-    <ul class="hidden sm:flex items-center gap-6">
+    <ul class="hidden sm:flex items-center gap-7">
       {navLinks.map((link) => (
         <li>
           <a
             href={link.href}
             class:list={[
-              'font-mono text-sm transition-colors',
-              currentPath === link.href || (link.href !== '/' && currentPath.startsWith(link.href))
+              'font-mono text-[0.6875rem] uppercase tracking-[0.16em] transition-colors',
+              isActive(link.href)
                 ? 'text-accent'
                 : 'text-text-muted hover:text-text',
             ]}
@@ -37,27 +45,25 @@ const navLinks = [
         </li>
       ))}
       <li>
-        <a href="/search" class="text-text-muted hover:text-text transition-colors" aria-label="Search">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <a href="/search" class="block text-text-muted hover:text-accent transition-colors" aria-label="Search">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
         </a>
       </li>
     </ul>
   </nav>
 
-  <div class="sm:hidden peer-checked:flex hidden flex-col mt-4 pt-3 border-t border-border-subtle">
+  <div class="sm:hidden peer-checked:flex hidden flex-col mt-5 pt-4 border-t border-border-subtle">
     {navLinks.map((link) => (
       <a
         href={link.href}
         class:list={[
-          'font-mono text-sm py-2 transition-colors',
-          currentPath === link.href || (link.href !== '/' && currentPath.startsWith(link.href))
-            ? 'text-accent'
-            : 'text-text-muted hover:text-text',
+          'font-mono text-[0.6875rem] uppercase tracking-[0.16em] py-2.5 transition-colors',
+          isActive(link.href) ? 'text-accent' : 'text-text-muted hover:text-text',
         ]}
       >
         {link.label}
       </a>
     ))}
-    <a href="/search" class="font-mono text-sm py-2 text-text-muted hover:text-text transition-colors">search</a>
+    <a href="/search" class="font-mono text-[0.6875rem] uppercase tracking-[0.16em] py-2.5 text-text-muted hover:text-text transition-colors">search</a>
   </div>
 </header>
