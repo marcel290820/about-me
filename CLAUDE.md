@@ -47,6 +47,7 @@ Three layers, animated with transform and opacity only so they stay on the compo
 - **`.waterline` carries two swell trains** at incommensurate periods, so their crests drift in and out of phase instead of looping. Each train is two tiles wide and travels exactly one tile per cycle (`translateX(-50%)`), which is what makes the loop seamless at any viewport width. The profiles are sums of sines with **integer** wave numbers over the tile, so `y(0) === y(TILE)` by construction — keep them that way or the wrap will jog. Soundings are printed chart data and stay put; the sea moves under them.
 - **`.zone-deep::before` has a slow undertow**, further and slower than anything above, with a paired opacity breath standing in for light through moving surface water. Its `inset` is negative so the drift never drags an unpainted edge into view.
 - **`.drift` carries marine snow and the contacts.** See below.
+- **`.shallows` rides the swell.** One `ride` keyframe moves everything at the surface together, at different periods. See below.
 
 `data-zone` and `data-zone-low` on `<html>` track which zone sits behind the top and bottom of the fixed rail. Fixed-position chrome that crosses the waterline needs one of these, not a static colour.
 
@@ -57,6 +58,8 @@ Two fields of marine snow on `.drift::before` / `::after`, plus a library of twe
 The layer is `position: fixed` and costs one viewport however long the page runs. It sits at `z-index: -1` inside `.zone-deep`: above the zone background and the contours, behind every word. The whole layer is gated to `opacity: 0` while `data-depth` is `dry`, because it is painted after the paper and would otherwise snow indoors. That gate reads `--lit`, so the narrow-screen rule can pull the layer back without out-specifying it.
 
 **Contacts are spawned in the browser, not authored in CSS.** The `SPECIES` table carries band, mode, size, lane, duration, settled opacity and reaction; the script clones a template, assigns a lane and a heading, and removes the contact on `animationend`. Two rules keep it from reading as a loop: no species may be live twice at once, and lanes stay 15% apart (risers exempt both ways). The lane rule takes the roomiest of eight draws rather than the last one — where two species share most of their band, using whatever the final throw happened to be puts them in one lane. Cap is three contacts, two under 760px.
+
+**A band stocks on arrival, seeded.** Leaving it to the spawn chain put the first contact up to nine seconds out, and a crossing then spends its first quarter beyond the left edge before it is visible at all, so a band you scrolled into stayed empty for half a minute and the water appeared to start at whatever scroll height you happened to stop at. `stock()` fills to the cap on every band change and at load, and `spawn(true)` gives the animation a negative delay so the contact is already in frame. The fractions passed to `lead()` are the part of each keyframe that is actually on screen; they need recomputing if the `drift-cross-*` or `drift-rise` distances change.
 
 Every figure in the library is **drawn facing right**, and heading is `--flip` on `.drift__body`. That is the only reason nothing swims backwards — it is one rule in one place rather than a fact about twenty drawings. Any new figure must face right too.
 
@@ -74,6 +77,21 @@ Four failure modes have each cost more than one attempt, and every one of them i
 - **A closed rectangle is a box.** The ROV read as a briefcase until the frame became posts and rails with the middle bay left open, and the skids became two runners instead of one full-width plinth. You must be able to see through an open frame.
 - **Tapering both ends of a body loses the front.** The oarfish read as swimming backwards for exactly this reason, and the turtle read as a surfboard. Give the head end its own profile: blunt, deeper, or walled.
 - **A join that has to be hidden should not be drawn.** The carapace is two open edges rather than `shell()`, because the closing wall across the front cut through the head. Where a part emerges from another, leave the outline open and let them overlap.
+
+### The surface (`Shallows.astro`)
+
+The `dry` gate above is one screen of water long, and this is what fills it. `.shallows` is `position: absolute` at the top of `.zone-deep` rather than fixed: nothing here is passing through, it is moored to the surface or floating on it, so it is drawn once and scrolls away behind you. Three figures and a ceiling: a coaster overhead, the wave buoy on its mooring, a harbour porpoise and her calf.
+
+That split is the point. Below, every contact travels on its own and none of it is attached to anything. Up here **one swell moves all of it**: a single `ride` keyframe at three different periods, floored the same way everything else is because a calm Baltic reports 0.08. The ceiling does not ride. It is printed chart data, like the soundings, and the floating things move against it.
+
+Each figure hangs its own waterline off the ceiling at 40px with `top: calc(40px - var(--w) * k)`, where `k` is the waterline's y divided by the **viewBox width**. The height cancels out of that ratio, so one constant holds at every size. Changing a viewBox means recomputing `k`.
+
+Two traps, both already paid for:
+
+- **`mask-image` clips to the border box.** `mask-clip` defaults to `border-box`, so a mask on a figure silently deletes anything positioned outside it, which is where the labels sit. The mooring line fades through an SVG `linearGradient` on its own stroke instead. The mask on `.shallows` itself is fine: everything is inside that box.
+- **`Drift.astro`'s script is inline, not a module.** `define:vars` implies `is:inline`, so it runs where it sits in the document, before this component exists. The poke system collects the moored figures on the first `pointermove` rather than at startup. Anything else in that script that reaches out of `Drift.astro` needs the same treatment.
+
+Figures reuse `.drift__figure` / `.drift__body` / `.drift__tag` and carry `data-poke`, which is all it takes to join the water column's poke system. `data-jitter="lo hi"` sets the left range, `data-flip` allows a mirrored heading, and both are rolled in the browser; a figure is held back off the right edge by its own width, because the layer clips and a porpoise with its nose cut off reads as a bug.
 
 ### Chart marginalia (`ChartMarks.astro`)
 

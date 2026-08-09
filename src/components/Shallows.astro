@@ -1,0 +1,401 @@
+---
+// The first few metres, from just under them.
+//
+// The deep is a fixed layer that loops for as long as the page runs. This is
+// not: everything at the surface is moored to it or riding on it, so it is
+// drawn once at the top of the water and scrolls away behind you, which is
+// what leaving the surface actually looks like.
+//
+// That split is also what makes the two registers read differently. Down
+// there every contact moves on its own and none of it is attached to
+// anything. Up here one swell moves all of it, and everything hangs from the
+// same ceiling.
+//
+// Same drawing rules as the water column: hairline, unfilled, drawn facing
+// right, heading is --flip. Same classes too, so a poke works the same way.
+
+import { type Prof, spine } from '@/lib/curves';
+
+// --- The ceiling ----------------------------------------------------------
+// The underside of the swell, printed as a datum rather than animated. It is
+// chart data: the floating things move against it, not with it.
+const TILE = 1200;
+const CEIL_STEPS = 72;
+
+function surface(mid: number) {
+  const pts: string[] = [];
+  for (let i = 0; i <= CEIL_STEPS; i++) {
+    const t = (i / CEIL_STEPS) * Math.PI * 2;
+    const y =
+      mid + Math.sin(t + 1.2) * 5 + Math.sin(t * 2 + 0.4) * 2.6 + Math.sin(t * 5 + 2.1) * 1.2;
+    pts.push(`${((i / CEIL_STEPS) * TILE).toFixed(1)} ${y.toFixed(1)}`);
+  }
+  return 'M' + pts.join('L');
+}
+
+// Two lines a few units apart: a surface seen from below has thickness, and
+// one line on its own is a rule drawn across the page.
+const CEILING = surface(40);
+const CEILING_SKIN = surface(45.5);
+
+// --- The ship overhead ----------------------------------------------------
+// A coaster in the Kadetrinne, in profile, cut off at her waterline because
+// that is all of her there is from down here. Bow right.
+//
+// The bow tapers and the stern does not: a hull with both ends alike loses
+// which way it is going, and a square transom is most of what says which end
+// is which at this size.
+const HULL =
+  'M22 8L22 46' +
+  'L34 52' +
+  'C42 60 54 65 76 66' +
+  'L282 66' +
+  'C316 66 336 56 346 40' +
+  'C352 28 356 16 358 8Z';
+
+// The bulb runs ahead of the stem underwater, which is the whole point of it.
+// Open at both ends where it merges, rather than drawing a join to hide.
+const BULB = 'M334 36C348 31 370 35 371 44C372 52 356 56 344 53';
+
+// Propeller wash: bubbles trailing aft and rising, not a V. A V is the plan
+// view, and everything else in this layer is a profile.
+const WASH = Array.from({ length: 18 }, (_, i) => {
+  const f = i / 17;
+  const x = 12 - f * 92;
+  const y = 58 - f * 42 + Math.sin(i * 2.7) * 6;
+  const r = 1.8 - f * 1.2;
+  return (
+    `M${(x - r).toFixed(1)} ${y.toFixed(1)}` +
+    `a${r.toFixed(2)} ${r.toFixed(2)} 0 1 0 ${(r * 2).toFixed(2)} 0` +
+    `a${r.toFixed(2)} ${r.toFixed(2)} 0 1 0 ${(-r * 2).toFixed(2)} 0`
+  );
+}).join('');
+
+// --- The buoy -------------------------------------------------------------
+// The station this page reads from. Open-Meteo is asked for 54.25N 12.10E,
+// which is 54-15N 012-06E, so the thing reporting the wave height the whole
+// page is animating from is drawn floating at the top of it.
+//
+// A yellow special mark with a St Andrew's cross topmark: that is the chart
+// grammar for a data buoy specifically, and the X is the one part of it still
+// legible at thirty pixels.
+
+// Real chain, not a line. Links alternate face-on and edge-on, which is how
+// chain looks and how a chart draws it.
+const CHAIN = Array.from({ length: 13 }, (_, i) => {
+  const y = 120 + i * 8;
+  const rx = i % 2 ? 3.6 : 1.2;
+  return (
+    `M${(60 - rx).toFixed(1)} ${y}` +
+    `a${rx} 5 0 0 1 ${rx * 2} 0` +
+    `a${rx} 5 0 0 1 ${-rx * 2} 0`
+  );
+}).join('');
+
+// The stretch section below the chain. A mooring that could not give would
+// snatch itself apart in the first gale.
+const CORD = Array.from({ length: 6 }, (_, i) => {
+  const y = 240 + i * 14;
+  const a = i % 2 ? 52 : 68;
+  const b = i % 2 ? 74 : 46;
+  return `M${a} ${y}C${b} ${y + 4} ${b} ${y + 10} ${a} ${y + 14}`;
+}).join('');
+
+// Weed and mussels on everything below the waterline, which is what a season
+// on station leaves on a hull.
+const GROWTH =
+  'M36 78c-3 6-2 11 1 15M44 82c-2 7 0 12 3 15M52 84c-3 6-3 12 0 16' +
+  'M60 84c-1 7 1 12 4 15M68 83c-3 6-3 11 0 15M76 79c-2 6-1 11 2 14';
+
+// --- Harbour porpoise -----------------------------------------------------
+// The only whale that breeds in the Baltic, and the one that has nearly
+// stopped: a few hundred left in the Baltic Proper. It has to breathe every
+// half minute, so this band is where it lives.
+//
+// Chunky, blunt and small. The differences from a dolphin are all here: no
+// beak at all, and a low triangular dorsal on a wide base instead of a tall
+// swept one.
+// Stocky: a porpoise is about five times as long as it is deep, against eight
+// or nine for a fish this size, and drawn any slimmer it turns into one.
+const POR_UP: Prof = [
+  [0, 1.6],
+  [0.06, 5],
+  [0.24, 13.5],
+  [0.46, 16.5],
+  [0.68, 15.6],
+  [0.85, 12.6],
+  [0.95, 9.6],
+  [1, 7.6],
+];
+
+const POR_DOWN: Prof = [
+  [0, 1.6],
+  [0.06, 5.4],
+  [0.24, 15],
+  [0.46, 18.5],
+  [0.68, 17.4],
+  [0.85, 13.6],
+  [0.95, 10.4],
+  [1, 8.4],
+];
+
+function porpoise(x0: number, y0: number, len: number, breathing: boolean) {
+  const s = len / 190;
+  const at = (p: Prof): Prof => p.map(([t, v]) => [t, v * s] as [number, number]);
+  const f = (v: number) => v.toFixed(1);
+
+  const n = spine({
+    from: x0,
+    to: x0 + len,
+    steps: 40,
+    // Rolling, so the back is the high point and both ends run down from it.
+    y: (t) => y0 - Math.sin(t * Math.PI) ** 0.9 * 10 * s,
+    up: at(POR_UP),
+    down: at(POR_DOWN),
+  });
+
+  const head = n[n.length - 1];
+
+  // Two open edges with a cap across the front rather than shell(), because
+  // shell() closes with a flat wall and this animal's head is the roundest
+  // part of it.
+  const top = n.map((p) => `${f(p.x)} ${f(p.y - p.u)}`);
+  const bot = n.map((p) => `${f(p.x)} ${f(p.y + p.d)}`).reverse();
+  const body =
+    `M${top.join('L')}` +
+    `C${f(head.x + 10 * s)} ${f(head.y - head.u)} ${f(head.x + 11 * s)} ${f(head.y + head.d)} ${bot[0]}` +
+    `L${bot.slice(1).join('L')}Z`;
+
+  const fwd = n[24];
+  const aft = n[16];
+  const apexX = aft.x + (fwd.x - aft.x) * 0.34;
+  const apexY = Math.min(aft.y - aft.u, fwd.y - fwd.u) - 12 * s;
+  const dorsal =
+    `M${f(fwd.x)} ${f(fwd.y - fwd.u)}` +
+    `C${f(fwd.x - 5 * s)} ${f(fwd.y - fwd.u - 7 * s)} ${f(apexX + 6 * s)} ${f(apexY + 2 * s)} ${f(apexX)} ${f(apexY)}` +
+    `C${f(apexX - 3 * s)} ${f(apexY + 5 * s)} ${f(aft.x + 3 * s)} ${f(aft.y - aft.u - 5 * s)} ${f(aft.x)} ${f(aft.y - aft.u)}Z`;
+
+  const fin = n[30];
+  const finY = fin.y + fin.d;
+  const flipper =
+    `M${f(fin.x + 4 * s)} ${f(finY - s)}` +
+    `C${f(fin.x - 4 * s)} ${f(finY + 8 * s)} ${f(fin.x - 13 * s)} ${f(finY + 12 * s)} ${f(fin.x - 19 * s)} ${f(finY + 12 * s)}` +
+    `C${f(fin.x - 14 * s)} ${f(finY + 5 * s)} ${f(fin.x - 5 * s)} ${f(finY + s)} ${f(fin.x + 4 * s)} ${f(finY - s)}Z`;
+
+  // Flukes, not a caudal fin, and the whole difference is the aspect: a fish
+  // fans its tail taller than it is long and notches it shallowly, a whale
+  // sweeps its wider than it is tall behind a deeply cut trailing edge. Drawn
+  // the other way round this animal came out a herring.
+  const tail = n[0];
+  const px = (v: number) => f(tail.x + v * s);
+  // Tilted, because flukes are horizontal and a profile catches them mid
+  // stroke. Level and evenly forked is a herring's tail, whatever else is
+  // drawn on the animal in front of it.
+  const py = (v: number) => f(tail.y + (v + 6) * s);
+  const flukes =
+    `M${f(tail.x)} ${f(tail.y - 1.6 * s)}` +
+    `C${px(-10)} ${py(-9)} ${px(-22)} ${py(-12)} ${px(-34)} ${py(-11)}` +
+    `C${px(-27)} ${py(-6)} ${px(-19)} ${py(-3)} ${px(-12)} ${py(-1)}` +
+    `C${px(-20)} ${py(3)} ${px(-28)} ${py(7)} ${px(-34)} ${py(12)}` +
+    `C${px(-24)} ${py(9)} ${px(-12)} ${py(4)} ${f(tail.x)} ${f(tail.y + 1.6 * s)}Z`;
+
+  const blow = n[35];
+  const blowhole =
+    `M${f(blow.x - 2.6 * s)} ${f(blow.y - blow.u)}` +
+    `a${f(2.6 * s)} ${f(2 * s)} 0 0 0 ${f(5.2 * s)} 0`;
+
+  // The breath drifts aft as it rises, because the animal keeps going and the
+  // air does not.
+  const breath = breathing
+    ? Array.from({ length: 8 }, (_, i) => {
+        const k = i / 7;
+        const bx = blow.x - k * 20 * s + Math.sin(i * 2.1) * 3 * s;
+        const by = blow.y - blow.u - (5 + k * 52) * s;
+        const r = (2.2 - k * 1.4) * s;
+        return (
+          `M${f(bx - r)} ${f(by)}` +
+          `a${r.toFixed(2)} ${r.toFixed(2)} 0 1 0 ${(r * 2).toFixed(2)} 0` +
+          `a${r.toFixed(2)} ${r.toFixed(2)} 0 1 0 ${(-r * 2).toFixed(2)} 0`
+        );
+      }).join('')
+    : '';
+
+  return {
+    body,
+    dorsal,
+    flipper,
+    flukes,
+    blowhole,
+    breath,
+    gape: `M${f(head.x + 5 * s)} ${f(head.y + 3 * s)}L${f(head.x - 13 * s)} ${f(head.y + 5.5 * s)}`,
+    eye: { cx: f(head.x - 13 * s), cy: f(head.y - 3.5 * s), r: f(1.5 * s) },
+  };
+}
+
+// A calf stays with its mother a year, and swims just aft of her and a little
+// under, in the water she has already moved.
+const COW = porpoise(20, 96, 186, true);
+const CALF = porpoise(4, 130, 106, false);
+---
+
+<div class="shallows" data-shallows aria-hidden="true">
+  <div class="shallows__ceiling">
+    <svg
+      viewBox="0 0 1200 80"
+      preserveAspectRatio="none"
+      fill="none"
+      stroke="currentColor"
+    >
+      <path d={CEILING} stroke-width="0.9" opacity="0.38" />
+      <path d={CEILING_SKIN} stroke-width="0.6" opacity="0.18" />
+    </svg>
+  </div>
+
+  <div
+    class="drift__figure shallows__ship shallows__ride"
+    style="opacity:.27"
+    data-jitter="36 52"
+    data-flip
+    data-poke="ping"
+  >
+    <div class="drift__body">
+      <svg viewBox="-90 0 480 82" fill="none" stroke="currentColor" stroke-width="1.1">
+        <path d={WASH} stroke-width="0.5" opacity="0.5" />
+        <path d="M16 11-84 14" stroke-width="0.5" stroke-dasharray="4 6" opacity="0.35" />
+        <path d={HULL} />
+        <path d={BULB} stroke-width="0.8" />
+        {/* Loaded waterline, and the draught marks up the stem. */}
+        <path d="M24 13 356 12" stroke-width="0.5" opacity="0.5" />
+        <path d="M348 16h6M345 22h6M342 28h6M340 34h6" stroke-width="0.5" opacity="0.55" />
+        {/* Bilge keel and a sea chest, which are the two things you would
+            actually see on a hull bottom. */}
+        <path d="M112 68h108" stroke-width="0.6" opacity="0.6" />
+        <path d="M160 66h14v3h-14z" stroke-width="0.5" opacity="0.7" />
+        <path d="M164 66v3M168 66v3" stroke-width="0.4" opacity="0.5" />
+        {/* Bow thruster. A tunnel through the hull, right forward. */}
+        <circle cx="318" cy="50" r="6" stroke-width="0.7" />
+        <path d="M318 44v12M313 47l10 6M313 53l10-6" stroke-width="0.5" opacity="0.7" />
+        {/* Shaft, boss and four blades edge on, then the rudder abaft it. */}
+        <path d="M66 62 42 56" stroke-width="0.8" />
+        <circle cx="40" cy="56" r="2.8" stroke-width="0.8" />
+        <path d="M40 56 29 46M40 56 31 66M40 56 48 67M40 56 49 46" stroke-width="0.9" />
+        <path d="M30 51 20 53 19 72 29 70Z" stroke-width="0.8" />
+        <path d="M28 51v-4" stroke-width="0.6" />
+        <circle cx="200" cy="10" r="2" fill="currentColor" class="drift__telemetry" />
+        <circle cx="180" cy="34" r="118" class="drift__ring" />
+      </svg>
+    </div>
+    <span class="drift__tag">AIS &middot; 11.4 KN</span>
+  </div>
+
+  <div
+    class="drift__figure shallows__buoy shallows__ride"
+    style="opacity:.34"
+    data-jitter="4 12"
+    data-poke="ping"
+  >
+    <div class="drift__body">
+      <svg viewBox="0 0 120 560" fill="none" stroke="currentColor" stroke-width="1">
+        {/* The line has to go out rather than stop, and the fade belongs on
+            the line itself. Masking the figure would have been shorter, but
+            mask-clip is border-box by default and it took the label with it. */}
+        <defs>
+          <linearGradient id="moor-fade" gradientUnits="userSpaceOnUse" x1="60" y1="352" x2="60" y2="548">
+            <stop offset="0" stop-color="currentColor" stop-opacity="0.7" />
+            <stop offset="1" stop-color="currentColor" stop-opacity="0" />
+          </linearGradient>
+        </defs>
+        {/* Above the surface, and dimmed for it: you are underneath, looking
+            up through moving water at the part that is not. */}
+        <g opacity="0.5">
+          <path d="M50 4 70 20M70 4 50 20" stroke-width="0.9" />
+          <path d="M52 52V28M68 52V28" stroke-width="0.7" />
+          <path d="M52 48 68 42 52 36 68 30" stroke-width="0.45" opacity="0.7" />
+          <circle cx="60" cy="25" r="2.4" fill="currentColor" class="shallows__light" />
+        </g>
+        {/* Discus hull. Low freeboard and most of it under, which is why one
+            of these rides a gale out instead of over. */}
+        <path d="M26 46C26 70 41 84 60 84C79 84 94 70 94 46Z" />
+        <path d="M27 58h66" stroke-width="0.5" opacity="0.5" />
+        <path d={GROWTH} stroke-width="0.5" opacity="0.6" />
+        <path d="M34 70l3 2M42 76l3 2M70 76l3 2M80 68l3 2" stroke-width="0.6" opacity="0.5" />
+        {/* The instrument well slung under the hull. The hull only floats it. */}
+        <path d="M52 84h16v16h-16z" stroke-width="0.8" />
+        <path d="M52 100C52 106 56 110 60 110C64 110 68 106 68 100" stroke-width="0.8" />
+        <circle cx="60" cy="92" r="2.2" fill="currentColor" class="drift__telemetry" />
+        {/* Mooring eye, then chain, a swivel, and the stretch section. */}
+        <path d="M60 110v4" stroke-width="0.6" />
+        <circle cx="60" cy="117" r="4" stroke-width="0.8" />
+        <path d={CHAIN} stroke-width="0.6" />
+        <circle cx="60" cy="224" r="2.4" stroke-width="0.6" />
+        <path d="M57 228h6v10h-6z" stroke-width="0.6" />
+        <path d={CORD} stroke-width="0.55" opacity="0.85" />
+        {/* A float partway down holds the scope clear of the ground. */}
+        <path d="M60 324v6" stroke-width="0.6" />
+        <circle cx="60" cy="341" r="11" stroke-width="0.8" />
+        <path d="M53 336a10 10 0 0 1 9-4" stroke-width="0.4" opacity="0.6" />
+        {/* And it keeps going. The anchor is further down than this page. */}
+        <path d="M60 352V560" stroke="url(#moor-fade)" stroke-width="0.6" />
+        <path d="M55 396h10M55 448h10M55 500h10" stroke="url(#moor-fade)" stroke-width="0.5" opacity="0.6" />
+        <circle cx="60" cy="66" r="62" class="drift__ring" />
+      </svg>
+    </div>
+    <span class="drift__tag" style="top:12%;left:106%;margin-top:0"
+      >ODAS 54-15N 012-06E</span
+    >
+  </div>
+
+  <div
+    class="drift__figure shallows__pod shallows__ride"
+    style="opacity:.36"
+    data-jitter="68 79"
+    data-flip
+    data-poke="flee"
+  >
+    <div class="drift__body">
+      <svg viewBox="-22 30 246 116" fill="none" stroke="currentColor" stroke-width="1">
+        <g stroke-width="0.8" opacity="0.72">
+          <path d={CALF.flukes} />
+          <path d={CALF.body} />
+          <path d={CALF.dorsal} />
+          <path d={CALF.flipper} />
+          <path d={CALF.blowhole} stroke-width="0.5" />
+          <path d={CALF.gape} stroke-width="0.5" opacity="0.7" />
+          <circle cx={CALF.eye.cx} cy={CALF.eye.cy} r={CALF.eye.r} fill="currentColor" />
+        </g>
+        <path d={COW.breath} stroke-width="0.5" opacity="0.5" />
+        <path d={COW.flukes} />
+        <path d={COW.body} />
+        <path d={COW.dorsal} />
+        <path d={COW.flipper} />
+        <path d={COW.blowhole} stroke-width="0.6" />
+        <path d={COW.gape} stroke-width="0.5" opacity="0.7" />
+        <circle cx={COW.eye.cx} cy={COW.eye.cy} r={COW.eye.r} fill="currentColor" />
+      </svg>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Where each of these sits is decided in the browser, the same as the water
+  // column, so two visits do not open on the same picture. Only position and
+  // heading vary: what is here does not, because it is moored.
+  const layer = document.querySelector('[data-shallows]');
+
+  if (layer) {
+    const room = layer.getBoundingClientRect().width;
+
+    for (const el of layer.querySelectorAll<HTMLElement>('[data-jitter]')) {
+      const [lo, hi] = el.dataset.jitter!.split(' ').map(Number);
+      // Held back off the right edge by its own width. The layer clips, and a
+      // porpoise with its nose cut off reads as a rendering fault rather than
+      // as one swimming out of frame.
+      const fits = Math.max(0, 100 - (el.offsetWidth / room) * 100 - 1);
+      el.style.left = `${Math.min(lo + Math.random() * (hi - lo), fits).toFixed(1)}%`;
+
+      if ('flip' in el.dataset && Math.random() < 0.5) {
+        el.querySelector<HTMLElement>('.drift__body')?.style.setProperty('--flip', '-1');
+      }
+    }
+  }
+</script>

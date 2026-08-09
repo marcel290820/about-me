@@ -1005,7 +1005,9 @@ const SPECIES = [
       setTimeout(() => c.el.remove(), 1500);
     }
 
-    function spawn() {
+    // `seeded` starts the contact partway through its crossing instead of at
+    // the edge, so it is already in frame. See stock() for why that matters.
+    function spawn(seeded) {
       // Never two of the same thing at once. Twenty species and a cap of three
       // in frame means a repeat reads as a glitch rather than as a shoal.
       const bag = (BANDS[band] || []).filter(
@@ -1057,13 +1059,18 @@ const SPECIES = [
       if (tag) el.appendChild(tag);
 
       const dur = rnd(sp.dur[0], sp.dur[1]);
+      // A negative delay starts the animation already run that far. The
+      // fractions are the part of each keyframe that is actually on screen:
+      // a crossing spends its first quarter out beyond the left edge.
+      const lead = (a, b) => (seeded ? `${(-dur * rnd(a, b)).toFixed(1)}s` : '0s');
+
       if (sp.mode === 'cross') {
         const heading = Math.random() < 0.5 ? 1 : -1;
         body.style.setProperty('--flip', heading);
-        el.style.animation = `drift-cross-${heading > 0 ? 'r' : 'l'} ${dur}s linear 1 forwards`;
+        el.style.animation = `drift-cross-${heading > 0 ? 'r' : 'l'} ${dur}s linear ${lead(0.3, 0.78)} 1 forwards`;
       } else if (sp.mode === 'rise') {
         el.style.left = `${rnd(8, 78)}%`;
-        el.style.animation = `drift-rise ${dur}s linear 1 forwards`;
+        el.style.animation = `drift-rise ${dur}s linear ${lead(0.12, 0.46)} 1 forwards`;
       } else {
         el.style.left = `${rnd(sp.left[0], sp.left[1])}%`;
       }
@@ -1089,6 +1096,24 @@ const SPECIES = [
       }
     }
 
+    // Arriving somewhere in the sea should show you what lives there. Waiting
+    // for the chain instead put every band's first contact up to nine seconds
+    // out, and a crossing then spends another quarter of its run off the edge
+    // before it is visible at all -- so a band you scrolled into was reliably
+    // empty for half a minute, and everything appeared to start at whatever
+    // scroll height you happened to stop at. Stock it on arrival, seeded, and
+    // let the chain take over from there.
+    function stock() {
+      const cap = narrow() ? 2 : 3;
+      for (let i = 0; i < cap; i++) {
+        setTimeout(() => {
+          if (!document.hidden && band && band !== 'dry' && live.length < cap) {
+            spawn(true);
+          }
+        }, i * 380);
+      }
+    }
+
     // Spawning is a chain rather than an interval, so a hidden tab or a dry
     // page cannot build up a backlog of contacts to release at once.
     (function next() {
@@ -1108,7 +1133,12 @@ const SPECIES = [
       for (const c of live.slice()) {
         if (c.sp.band !== band) despawn(c);
       }
+      stock();
     }).observe(root, { attributes: true, attributeFilter: ['data-depth'] });
+
+    // Loading straight into a band -- a deep link, or a restored scroll
+    // position -- is an arrival too.
+    stock();
 
     // --- Poking -----------------------------------------------------------
     // The layer takes no pointer events and sits behind every word, so this is
@@ -1118,23 +1148,41 @@ const SPECIES = [
     let py = 0;
     let queued = false;
 
+    // The surface register is drawn once and moored, so it never spawns and
+    // never appears in `live` -- but it is in the same water and answers a
+    // poke the same way, off the same markup contract.
+    //
+    // Collected on the first poke rather than at startup: define:vars makes
+    // this script inline, so it runs where it sits in the document and the
+    // register further down does not exist yet.
+    let moored = null;
+
     function scan() {
       queued = false;
       const now = performance.now();
-      for (const c of live) {
-        if (now - c.poked < 2600) continue;
-        const r = c.el.getBoundingClientRect();
-        if (!r.width) continue;
-        const dx = px - (r.left + r.width / 2);
-        const dy = py - (r.top + r.height / 2);
-        // Against the figure's own box rather than a circle round it, or a
-        // 40px probe on a 300px wire answers from halfway across the page.
-        const ex = dx / (r.width / 2 + 26);
-        const ey = dy / (r.height / 2 + 26);
-        if (ex * ex + ey * ey > 1) continue;
-        c.poked = now;
-        react(c, dx, dy);
-      }
+      moored ??= [...document.querySelectorAll('[data-poke]')].map((el) => ({
+        el,
+        body: el.querySelector('.drift__body'),
+        sp: { react: el.dataset.poke },
+        poked: 0,
+      }));
+      for (const c of live) probe(c, now);
+      for (const c of moored) probe(c, now);
+    }
+
+    function probe(c, now) {
+      if (now - c.poked < 2600) return;
+      const r = c.el.getBoundingClientRect();
+      if (!r.width) return;
+      const dx = px - (r.left + r.width / 2);
+      const dy = py - (r.top + r.height / 2);
+      // Against the figure's own box rather than a circle round it, or a
+      // 40px probe on a 300px wire answers from halfway across the page.
+      const ex = dx / (r.width / 2 + 26);
+      const ey = dy / (r.height / 2 + 26);
+      if (ex * ex + ey * ey > 1) return;
+      c.poked = now;
+      react(c, dx, dy);
     }
 
     function react(c, dx, dy) {
