@@ -115,7 +115,12 @@
   }
 
   /* Isobath contours. Tiled so they never stretch on a long page. Sparser
-     below the waterline: the deep cannot be sounded. */
+     below the waterline: the deep cannot be sounded.
+
+     Every path must start at x=0 and end at x=tile width on the SAME y, with
+     the same tangent, or the repeat shows a jog. Both hold when the closing
+     S control mirrors the opening C control: for a path `M0 Y C ax ay ...`
+     the S control is `(W - ax) (2Y - ay)`. Check that before editing one. */
   .zone-surface::before,
   .zone-deep::before {
     content: "";
@@ -127,7 +132,7 @@
   }
 
   .zone-surface::before {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='900' height='700' fill='none' stroke='%23000' stroke-width='1'%3E%3Cpath d='M-50 120C150 62 300 182 480 132S780 62 950 120'/%3E%3Cpath d='M-50 168C160 112 305 228 486 180S786 112 950 168'/%3E%3Cpath d='M-50 360C120 306 262 420 432 378S760 300 950 360'/%3E%3Cpath d='M-50 566C180 512 322 632 502 586S800 506 950 566'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='900' height='700' fill='none' stroke='%23000' stroke-width='1'%3E%3Cpath d='M0 110C96 66 286 62 392 110S804 154 900 110'/%3E%3Cpath d='M0 176C120 134 300 128 430 176S780 218 900 176'/%3E%3Cpath d='M0 372C140 322 320 332 470 372S760 422 900 372'/%3E%3Cpath d='M0 578C104 538 310 524 408 578S796 618 900 578'/%3E%3C/svg%3E");
     background-size: 900px 700px;
     opacity: 0.16;
     animation: drift calc(30s - var(--sea-state) * 16s) ease-in-out infinite
@@ -135,7 +140,7 @@
   }
 
   .zone-deep::before {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1300' height='950' fill='none' stroke='%23eae3d3' stroke-width='1'%3E%3Cpath d='M-50 220C220 150 430 300 690 230S1120 130 1350 220'/%3E%3Cpath d='M-50 620C240 545 470 700 730 630S1140 530 1350 620'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1300' height='950' fill='none' stroke='%23eae3d3' stroke-width='1'%3E%3Cpath d='M0 222C150 166 400 272 660 222S1150 278 1300 222'/%3E%3Cpath d='M0 628C180 574 460 682 700 628S1120 682 1300 628'/%3E%3C/svg%3E");
     background-size: 1300px 950px;
     opacity: 0.11;
   }
@@ -637,10 +642,22 @@
 
   .depth-rail__tick::before {
     content: "";
+    flex: none;
     width: 7px;
     height: 1px;
     background: var(--rail-line);
     transition: background 0.4s ease;
+  }
+
+  .depth-rail__tick > span {
+    transition: opacity 0.2s ease;
+  }
+
+  /* The marker carries the same numeral one size up. When it lands on a tick
+     the small digit nests inside the big one's counter and reads as a broken
+     glyph, so the scale gives up its numeral and keeps only its dash. */
+  .depth-rail__tick.is-covered > span {
+    opacity: 0;
   }
 
   .depth-rail__marker {
@@ -676,14 +693,16 @@
     }
   }
 
+  /* Must advance exactly as far as .depth-rail__tick::before (7px) or the
+     live readout sits off the scale it is reading. */
   .depth-rail__marker::before {
     content: "";
+    flex: none;
     width: 0;
     height: 0;
     border-top: 4px solid transparent;
     border-bottom: 4px solid transparent;
-    border-left: 6px solid var(--rail-live);
-    margin-left: -1px;
+    border-left: 7px solid var(--rail-live);
     transition: border-color 0.4s ease;
   }
 

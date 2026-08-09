@@ -10,9 +10,10 @@ const ticks = [0, 12, 24, 36, 48];
       ticks.map((depth, i) => (
         <span
           class="depth-rail__tick"
+          data-tick-depth={depth}
           style={`top: ${(i / (ticks.length - 1)) * 100}%`}
         >
-          {depth}
+          <span>{depth}</span>
         </span>
       ))
     }
