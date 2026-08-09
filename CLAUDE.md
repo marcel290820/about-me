@@ -35,7 +35,17 @@ Astro 6 static site, no JS framework islands (no React/Vue/Svelte). Pages are `.
 
 ### Live sea state
 
-`Base.astro` fetches Open-Meteo Marine (no key, CORS open) for the Baltic off Rostock and sets `--sea-state` (0-1). Scroll sets `--attenuation` (1 at the surface, 0 at 48m) and `--depth-pct`. Anything animated multiplies by `var(--motion)`, which a `prefers-reduced-motion` query zeroes. If the fetch fails the CSS defaults hold and readouts stay `--`, so never make layout depend on the response.
+`Base.astro` fetches Open-Meteo Marine (no key, CORS open) for the Baltic off Rostock and sets `--sea-state` (0-1). Scroll sets `--attenuation` (1 at the surface, 0 at 48m) and `--depth-pct`. If the fetch fails the CSS defaults hold and readouts stay `--`, so never make layout depend on the response.
+
+`--sea-state` drives how rough the water looks, never whether it looks like water: a calm Baltic reports about 0.08, so every amplitude needs a floor under it. Every animation must also survive `prefers-reduced-motion` — either multiply the moving term by `var(--motion)` (which the query zeroes) or set `animation: none` in the query, whichever the keyframe allows. Shape is not motion: the waterline keeps its live amplitude when the travel stops.
+
+### Where the water moves
+
+Three layers, animated with transform and opacity only so they stay on the compositor. Motion is graded by depth, which is also the rule for anything added later.
+
+- **Paper (`.zone-surface`) is deliberately still.** It is ink on a chart, and holding it still is what makes the water below read as moving. Do not animate it.
+- **`.waterline` carries two swell trains** at incommensurate periods, so their crests drift in and out of phase instead of looping. Each train is two tiles wide and travels exactly one tile per cycle (`translateX(-50%)`), which is what makes the loop seamless at any viewport width. The profiles are sums of sines with **integer** wave numbers over the tile, so `y(0) === y(TILE)` by construction — keep them that way or the wrap will jog. Soundings are printed chart data and stay put; the sea moves under them.
+- **`.zone-deep::before` has a slow undertow**, further and slower than anything above, with a paired opacity breath standing in for light through moving surface water. Its `inset` is negative so the drift never drags an unpainted edge into view.
 
 `data-zone` and `data-zone-low` on `<html>` track which zone sits behind the top and bottom of the fixed rail. Fixed-position chrome that crosses the waterline needs one of these, not a static colour.
 
