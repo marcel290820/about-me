@@ -52,19 +52,27 @@ Three layers, animated with transform and opacity only so they stay on the compo
 
 ### The water column (`Drift.astro`)
 
-Two fields of marine snow on `.drift::before` / `::after`, plus seven contacts. Snow is what makes the deep read as water with volume instead of a dark background, so keep both fields: one alone reads as dust on the lens. Each field falls **exactly one tile** per cycle (`background-size` y == the keyframe's `translate3d` y) or the loop seams, and `top` overhangs by more than the longest fall so it never drags an unpainted edge into frame.
+Two fields of marine snow on `.drift::before` / `::after`, plus a library of twenty species in `<template>` elements. Snow is what makes the deep read as water with volume instead of a dark background, so keep both fields: one alone reads as dust on the lens. Each field falls **exactly one tile** per cycle (`background-size` y == the keyframe's `translate3d` y) or the loop seams, and `top` overhangs by more than the longest fall so it never drags an unpainted edge into frame.
 
-The layer is `position: fixed` and costs one viewport however long the page runs. It sits at `z-index: -1` inside `.zone-deep`: above the zone background and the contours, behind every word.
+The layer is `position: fixed` and costs one viewport however long the page runs. It sits at `z-index: -1` inside `.zone-deep`: above the zone background and the contours, behind every word. The whole layer is gated to `opacity: 0` while `data-depth` is `dry`, because it is painted after the paper and would otherwise snow indoors. That gate reads `--lit`, so the narrow-screen rule can pull the layer back without out-specifying it.
 
-`data-depth` on `<html>` (written in `Base.astro`) picks the band: `dry | shallow | mid | abyss`. It is **banded by scroll progress, not page offset**, so a short page is a shallow dive rather than a cramped one. It stays `dry` until the waterline's bottom leaves the top of the frame — the layer is fixed, so anything sooner swims over the paper. Figures cross in the first 38% of their cycle and wait off frame for the rest; that dwell is what makes a sighting a sighting, so lengthen the period rather than adding delay.
+**Contacts are spawned in the browser, not authored in CSS.** The `SPECIES` table carries band, mode, size, lane, duration, settled opacity and reaction; the script clones a template, assigns a lane and a heading, and removes the contact on `animationend`. Two rules keep it from reading as a loop: no species may be live twice at once, and lanes stay 15% apart (risers exempt both ways). Cap is three contacts, two under 760px.
 
-Colour is load-bearing: `--color-foam` is telemetry and only telemetry (the ROV light, the CTD sensor, the tagged fish's ping). `--color-buoy` is the one warm mark — the anglerfish lure and the oarfish crest, which sit two bands apart and never share a frame.
+Every figure in the library is **drawn facing right**, and heading is `--flip` on `.drift__body`. That is the only reason nothing swims backwards — it is one rule in one place rather than a fact about twenty drawings. Any new figure must face right too.
 
-Figures are drawn hairline and unfilled, like a sounder or a field notebook records something rather than how an illustration pictures it. Two are generated from sampled maths rather than hand-authored (the oarfish ribbon, the colony's bells) because hand-fitting a silhouette is how the manta that preceded the oarfish kept coming out an umbrella. If a new figure has parts that must line up, sample them from one source.
+`data-depth` on `<html>` (written in `Base.astro`) picks the band: `dry | shallow | mid | abyss`. It stays `dry` until the waterline's bottom leaves the top of the frame — the layer is fixed, so anything sooner swims over the paper — and the three bands then split **what is left after that point** into even thirds. Do not band on raw scroll progress: a page with a tall surface block spends a third of its scroll dry and leaves the shallow band a sliver.
+
+Poking is proximity, not hit testing: the layer takes no pointer events, so `pointermove` measures against each live figure's box (an ellipse test, not a radius, or a 40px probe on a 300px wire answers from across the page). Reactions are per species and there are five: `flee`, `lunge` (the anglerfish comes to look), `pulse`, `jet` (ink), `ping` (machines answer instead of running). `.drift__body` transitions out in 0.42s and back in 2.4s — the dart is the reaction, the long drift back is it settling.
+
+Colour is load-bearing: `--color-foam` is telemetry and only telemetry (the ROV light, the CTD sensor, the tagged fish's ping, the barreleye's eyes). `--color-buoy` is the one warm mark — the anglerfish lure and the oarfish crest, which sit two bands apart and never share a frame.
+
+Figures are drawn hairline and unfilled, like a sounder or a field notebook records something rather than how an illustration pictures it. Anything with a curve comes out of `src/lib/curves.ts` (`spine` → `shell`/`ridge`/`rays`), because hand-fitting a silhouette is how the manta that used to swim here kept coming out an umbrella, and how the dumbo octopus that replaced it came out a lamb. If a new figure has parts that must line up, sample them from one source.
 
 ### Chart marginalia (`ChartMarks.astro`)
 
-Real chart vocabulary printed in the surface margins: a variation rose, a plotted fix on Berlin, a submarine cable run, a light characteristic. Paper does not move, so none of it animates. It is hidden below 1180px, where the content column takes the whole page and there is no margin to print in.
+Charts carry two registers and so does this: the notation (variation rose, wreck symbol, tidal diamond, GNSS note, a three-bearing fix on Berlin with its cocked hat) and everything cartographers drew in the empty water to sell the chart (a sea serpent wrapped round a telegraph cable, a fleet action, somebody's cache). Eight marks, five printed per visit in five of six margin slots, picked in the browser.
+
+Paper does not move, so none of it animates. It is hidden below 1180px, where the content column takes the whole page and there is no margin to print in.
 
 ## Search
 

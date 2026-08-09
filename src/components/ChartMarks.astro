@@ -1,61 +1,247 @@
 ---
-// Printed marginalia for the chart paper. Real chart vocabulary, real
-// notation, printed the way a chart prints it: hairline, grey, unexplained.
+// Marginalia for the chart paper.
 //
-// Two of the four say something. The fix is plotted on Berlin, and a chart
-// calls a fibre run a submarine cable, which is a joke that only lands if you
-// have run one.
+// Charts have always carried two registers at once. There is the notation --
+// wreck symbols, tidal diamonds, light characteristics, a fix worked from three
+// bearings -- and there is everything the cartographer drew in the empty water
+// because empty water sells no charts: battles, monsters, the place somebody
+// swore the money went down. Both are real chart vocabulary. Both are here.
 //
-// Paper does not move, so none of this animates. It lives in the outer margin
-// and is hidden below the width where that margin exists.
+// Eight marks, five printed per visit, in slots picked in the browser, so the
+// margin is not the same margin twice.
+//
+// Paper does not move, so none of it animates.
+
+import { spine, shell, rays } from '@/lib/curves';
+
+// --- Windrose -------------------------------------------------------------
+// Thirty-two points, generated rather than drawn, because a rose hand-fitted
+// point by point comes out lopsided and a lopsided rose is worse than none.
+const ROSE = (() => {
+  const cx = 50;
+  const cy = 50;
+  const pt = (a: number, r: number) =>
+    `${(cx + Math.sin(a) * r).toFixed(1)} ${(cy - Math.cos(a) * r).toFixed(1)}`;
+
+  const point = (i: number, r: number, w: number) => {
+    const a = (i * Math.PI) / 8;
+    return `M${cx} ${cy}L${pt(a - Math.PI / 2, w)}L${pt(a, r)}L${pt(a + Math.PI / 2, w)}Z`;
+  };
+
+  return {
+    major: [0, 2, 4, 6, 8, 10, 12, 14].map((i) => point(i, 42, 5)).join(''),
+    minor: [1, 3, 5, 7, 9, 11, 13, 15].map((i) => point(i, 28, 3.2)).join(''),
+    rhumbs: Array.from({ length: 16 }, (_, i) => {
+      const a = (i * Math.PI) / 8 + Math.PI / 16;
+      return `M${pt(a, 43)}L${pt(a, 49)}`;
+    }).join(''),
+  };
+})();
+
+// --- Sea serpent ----------------------------------------------------------
+// Cartographers drew these in the blank water. What it is wrapped around is a
+// telegraph cable, and the labelled break is 1929: a slide off the Grand Banks
+// snapped twelve of them in sequence, and the order they went in is how anyone
+// worked out how fast a turbidity current travels.
+const serpent = spine({
+  from: 4,
+  to: 92,
+  steps: 44,
+  y: (t) => 32 + Math.sin(t * Math.PI * 3) * 12,
+  up: [
+    [0, 0.5],
+    [0.28, 2.8],
+    [0.62, 4.4],
+    [0.88, 4.6],
+    [1, 3],
+  ],
+});
+
+const serpentHead = serpent[serpent.length - 1];
+
+// --- Ships ----------------------------------------------------------------
+// One rig, drawn once around its own origin and placed where it is needed.
+const HULL = 'M-25 0h50l-8 10H-17Z';
+const RIG =
+  'M-14 0V-30M0 0V-36M14 0V-28' +
+  'M-21-9h14M-19-19h10M-7-12h14M-6-24h12M8-11h12M9-20h10';
+const SAILS =
+  'M-21-9c4 5 10 5 14 0M-19-19c3 4 7 4 10 0M-7-12c5 5 9 5 14 0M-6-24c4 4 8 4 12 0M8-11c4 5 8 5 12 0M9-20c3 4 7 4 10 0';
+const BOWSPRIT = 'M25 0 37-6';
+const ENSIGN = 'M0-36 11-33 0-30';
 ---
 
 <div class="chart-marks" aria-hidden="true">
-  {/* Variation rose: the solid arrow is true north, the dashed one is where a
-      compass actually points, and the label is the angle between them. */}
-  <div class="chart-mark" style="top:9%;left:2.5%">
-    <svg viewBox="0 0 72 62" fill="none" stroke="currentColor" stroke-width="0.8">
-      <circle cx="36" cy="30" r="22" opacity="0.45" />
-      <path
-        d="M36 8V3M51.6 14.4 55.1 10.9M58 30h5M51.6 45.6 55.1 49.1M36 52v5M20.4 45.6 16.9 49.1M14 30H9M20.4 14.4 16.9 10.9"
-        stroke-width="0.6"
-      />
-      <path d="M36 50V13" />
-      <path d="m31 21 5-9 5 9" />
-      <path d="M36 30 41.5 8.6" stroke-width="0.6" stroke-dasharray="2 2" opacity="0.8" />
+  {/* Variation rose. The dashed point is where a compass actually points, and
+      the label is the angle between that and true. */}
+  <div class="chart-mark" data-mark hidden>
+    <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="0.7">
+      <circle cx="50" cy="50" r="43" opacity="0.5" />
+      <circle cx="50" cy="50" r="28" opacity="0.35" />
+      <path d={ROSE.rhumbs} stroke-width="0.5" opacity="0.6" />
+      <path d={ROSE.minor} stroke-width="0.5" opacity="0.75" />
+      <path d={ROSE.major} />
+      <circle cx="50" cy="50" r="3.2" />
+      <path d="M50 50 60.6 8.7" stroke-width="0.6" stroke-dasharray="2 2" />
+      <path d="m46 14 4-8 4 8" stroke-width="0.8" />
     </svg>
     <span class="chart-mark__label">var 4&deg;10'E</span>
   </div>
 
-  {/* A plotted fix: two bearing lines crossed on a position, which is how you
-      know where you are without being told. */}
-  <div class="chart-mark chart-mark--right" style="top:24%;right:3%">
-    <svg viewBox="-2 -2 92 56" fill="none" stroke="currentColor" stroke-width="0.8">
-      <path d="M2 2 74 44M88 6 30 50" opacity="0.55" />
-      <circle cx="52" cy="30" r="4.5" stroke-width="1" />
-      <path d="M52 21v-6M52 39v6M43 30h-6M61 30h6" stroke-width="0.6" />
+  {/* Sea serpent on the cable. */}
+  <div class="chart-mark" data-mark hidden>
+    <svg viewBox="0 0 120 70" fill="none" stroke="currentColor" stroke-width="0.7">
+      <path d="M0 44h118" stroke-width="0.7" opacity="0.75" />
+      <path d="M28 40v8M32 40v8" stroke-width="0.5" opacity="0.8" />
+      <path d={shell(serpent)} fill="var(--color-paper)" />
+      <path d={rays(serpent, () => 3.6, 2, 0.06)} stroke-width="0.45" opacity="0.8" />
+      {/* Head, jaws open, one horn. Nobody drew these politely. */}
+      <path d="M89 27c8-4 17-2 21 3-6 3-13 4-20 2Z" fill="var(--color-paper)" />
+      <path d="M89 35c7 4 15 4 20 0-5 5-13 6-20 4Z" fill="var(--color-paper)" />
+      <path d="M93 26c0-5 3-9 8-10-3 4-4 7-4 10" stroke-width="0.6" />
+      <path d="M107 34c3 3 7 4 10 2" stroke-width="0.5" />
+      <circle cx="96" cy="29" r="0.9" fill="currentColor" stroke="none" />
     </svg>
-    <span class="chart-mark__label">52&deg;31'N 013&deg;24'E</span>
+    <span class="chart-mark__label">subm cable, rep 1929</span>
   </div>
 
-  {/* Chart symbol for a submarine cable. */}
-  <div class="chart-mark" style="top:57%;left:3.5%">
-    <svg viewBox="-2 -8 96 32" fill="none" stroke="currentColor" stroke-width="0.8">
+  {/* Two ships engaged, and the shot between them. Charts marked the water
+      where a fleet action happened long after anyone cared who won. */}
+  <div class="chart-mark" data-mark hidden>
+    <svg viewBox="0 0 116 76" fill="none" stroke="currentColor" stroke-width="0.7">
+      <g transform="translate(26 62) scale(0.62)">
+        <path d={HULL} />
+        <path d={RIG} stroke-width="0.9" />
+        <path d={SAILS} stroke-width="0.7" opacity="0.75" />
+        <path d={BOWSPRIT} stroke-width="0.9" />
+        <path d={ENSIGN} stroke-width="0.7" />
+      </g>
+      <g transform="translate(92 66) scale(-0.54 0.54)">
+        <path d={HULL} />
+        <path d={RIG} stroke-width="0.9" />
+        <path d={SAILS} stroke-width="0.7" opacity="0.75" />
+        <path d={BOWSPRIT} stroke-width="0.9" />
+      </g>
       <path
-        d="M0 8h10c4 0 4-8 8-8s4 16 8 16 4-16 8-16 4 16 8 16 4-16 8-16 4 16 8 16 4-8 8-8h16"
+        d="M40 52C54 42 64 42 76 50M42 58C56 50 66 50 78 56"
+        stroke-width="0.5"
+        stroke-dasharray="2 3"
+        opacity="0.8"
       />
+      <path d="m58 40 3-6 1 7 5-4-2 6 6 1-6 3 4 5-6-3v6l-3-6-4 4 1-6-6 1 5-4-5-3Z" stroke-width="0.5" />
+      <path d="M6 70h104" stroke-width="0.5" opacity="0.35" />
     </svg>
-    <span class="chart-mark__label">subm cable</span>
+    <span class="chart-mark__label">engagement 1712</span>
   </div>
 
-  {/* Light characteristic: three flashes, white, every ten seconds. The same
-      grammar the ROV blinks in, far below this. */}
-  <div class="chart-mark chart-mark--right" style="top:74%;right:5%">
-    <svg viewBox="-10 -10 72 40" fill="none" stroke="currentColor" stroke-width="0.8">
-      <path d="M8 20V6" />
-      <circle cx="8" cy="4" r="3" stroke-width="1" />
-      <path d="M13 0 24-6M13 4h12M13 8l11 6" stroke-width="0.6" opacity="0.7" />
+  {/* Somebody's cache, still marked. The chart is not saying it is there, only
+      that the story is old enough to print. */}
+  <div class="chart-mark" data-mark hidden>
+    <svg viewBox="0 0 104 74" fill="none" stroke="currentColor" stroke-width="0.7">
+      <path d="M20 62V40h44v22z" />
+      <path d="M20 40a22 11 0 0 1 44 0" />
+      <path d="M20 46h44" stroke-width="0.5" opacity="0.7" />
+      <path d="M32 30v12M52 30v12" stroke-width="0.5" opacity="0.7" />
+      <path d="M39 44h6v8h-6z" stroke-width="0.8" />
+      {/* The pile beside it. One of them is a platter, which is the only part
+          of this that is actually true. */}
+      <circle cx="76" cy="58" r="5" stroke-width="0.6" />
+      <circle cx="76" cy="58" r="1.4" stroke-width="0.5" />
+      <circle cx="84" cy="61" r="4" stroke-width="0.6" />
+      <path d="M70 64h14M71 67h12" stroke-width="0.6" />
+      <ellipse cx="54" cy="46" rx="49" ry="25" stroke-width="0.5" stroke-dasharray="2 3" opacity="0.55" />
+      <path d="m80 20 9 9M89 20l-9 9" stroke-width="0.9" />
     </svg>
-    <span class="chart-mark__label">Fl(3)W 10s 18m</span>
+    <span class="chart-mark__label">cache 4 TB</span>
+  </div>
+
+  {/* The chart symbol for a wreck whose masts still break the surface, which
+      is the only kind a chart has to warn you about. */}
+  <div class="chart-mark" data-mark hidden>
+    <svg viewBox="0 0 100 60" fill="none" stroke="currentColor" stroke-width="0.7">
+      <path d="M4 38h92" stroke-width="0.9" />
+      <path d="M20 38c8 12 52 12 60 0" stroke-width="0.6" opacity="0.6" />
+      <path d="M34 38V16M27 21h14M50 38V10M42 15h16M66 38V20M59 25h14" stroke-width="0.9" />
+      <ellipse cx="50" cy="34" rx="45" ry="20" stroke-width="0.5" stroke-dasharray="1 3" opacity="0.55" />
+    </svg>
+    <span class="chart-mark__label">Wk 32m</span>
+  </div>
+
+  {/* A tidal diamond: the letter refers you to a table of what the stream is
+      doing at that spot at every hour of the tide. */}
+  <div class="chart-mark" data-mark hidden>
+    <svg viewBox="0 0 104 56" fill="none" stroke="currentColor" stroke-width="0.7">
+      <path d="M22 8 36 28 22 48 8 28Z" stroke-width="0.9" />
+      <path d="M15 36 30 19" stroke-width="0.8" />
+      <path d="m30 19-6 0 2 5" stroke-width="0.7" />
+      <path d="M44 10h56M44 20h56M44 30h56M44 40h56" stroke-width="0.4" opacity="0.45" />
+      <path d="M44 6v38M62 6v38M82 6v38" stroke-width="0.4" opacity="0.45" />
+      <path d="M48 15h9M66 15h11M86 15h10M48 25h10M66 25h9M86 25h11M48 35h8M66 35h11M86 35h9" stroke-width="1.1" opacity="0.33" />
+    </svg>
+    <span class="chart-mark__label">&lt;A&gt; 3.1kn 048&deg;</span>
+  </div>
+
+  {/* The modern way to know the same thing the rose was for. */}
+  <div class="chart-mark" data-mark hidden>
+    <svg viewBox="0 0 104 72" fill="none" stroke="currentColor" stroke-width="0.7">
+      <path d="M44 10h16v12H44z" stroke-width="0.9" />
+      <path d="M44 12 26 8v16l18-4zM60 12l18-4v16l-18-4z" stroke-width="0.7" />
+      <path d="M30 10v12M34 9v14M70 9v14M74 10v12" stroke-width="0.4" opacity="0.6" />
+      <path d="M52 22v6" stroke-width="0.7" />
+      <path d="M52 28 24 62M52 28l28 34" stroke-width="0.5" stroke-dasharray="2 3" opacity="0.7" />
+      <path d="M28 62h48" stroke-width="0.4" opacity="0.4" />
+      <circle cx="52" cy="62" r="3" stroke-width="0.9" />
+      <path d="M52 55v-3M52 69v3M45 62h-3M59 62h3" stroke-width="0.5" />
+    </svg>
+    <span class="chart-mark__label">GNSS 12 sv</span>
+  </div>
+
+  {/* Three bearings never quite cross at a point. The little triangle they
+      leave instead has a name, and you are somewhere inside it. */}
+  <div class="chart-mark" data-mark hidden>
+    <svg viewBox="0 0 104 60" fill="none" stroke="currentColor" stroke-width="0.7">
+      <path d="M2 6 84 48M100 12 22 54M56 0 44 58" opacity="0.5" />
+      <path d="m53 27 5 3-6 4z" stroke-width="0.9" />
+      <circle cx="53" cy="30" r="8" stroke-width="0.5" stroke-dasharray="1 3" />
+      <path d="M53 18v-5M53 42v5M41 30h-5M65 30h5" stroke-width="0.5" />
+    </svg>
+    <span class="chart-mark__label">0412 &middot; 52&deg;31'N 013&deg;24'E</span>
   </div>
 </div>
+
+<script>
+  // Five of the eight, in five of the six margin slots, drawn fresh each load.
+  // [top%, side, offset%]
+  const SLOTS: [number, 'left' | 'right', number][] = [
+    [7, 'left', 2.5],
+    [19, 'right', 3],
+    [35, 'left', 3.5],
+    [51, 'right', 2.5],
+    [66, 'left', 2.5],
+    [79, 'right', 4],
+  ];
+
+  const shuffle = <T,>(a: T[]) => {
+    const out = a.slice();
+    for (let i = out.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [out[i], out[j]] = [out[j], out[i]];
+    }
+    return out;
+  };
+
+  const marks = shuffle(
+    Array.from(document.querySelectorAll<HTMLElement>('[data-mark]')),
+  );
+
+  shuffle(SLOTS)
+    .slice(0, 5)
+    .forEach(([top, side, offset], i) => {
+      const mark = marks[i];
+      if (!mark) return;
+      mark.style.top = `${top}%`;
+      mark.style[side] = `${offset}%`;
+      mark.classList.toggle('chart-mark--right', side === 'right');
+      mark.hidden = false;
+    });
+</script>
