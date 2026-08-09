@@ -631,6 +631,378 @@
     }
   }
 
+  /* --- Water column: marine snow and drifting contacts -------------------- */
+
+  /* Fixed, so the whole layer costs one viewport however long the page runs.
+     z-index -1 inside .zone-deep puts it above the zone background and the
+     contours but behind every word. */
+  .drift {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    overflow: hidden;
+    color: var(--color-cream);
+    /* Anything crossing fades out at the frame edge, so nothing ever pops in
+       or out. One mask here replaces a fade keyframe on every figure. */
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      #000 9%,
+      #000 91%,
+      transparent
+    );
+  }
+
+  /* Suspended detritus falling through the column. It is the only reason the
+     deep reads as water with volume rather than as a dark background: the eye
+     needs something of a known size to judge the space between. Two fields at
+     different sizes and speeds, because one alone reads as dust on the lens.
+
+     Each field falls exactly one tile per cycle, so the loop is seamless, and
+     the layer overhangs the top by more than that fall so it never drags an
+     unpainted edge into frame. */
+  .drift::before,
+  .drift::after {
+    content: "";
+    position: absolute;
+    top: -340px;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background-repeat: repeat;
+  }
+
+  .drift::before {
+    background-image: radial-gradient(
+        circle at 12% 18%,
+        rgba(234, 227, 211, 0.5) 0 1.2px,
+        rgba(234, 227, 211, 0) 1.7px
+      ),
+      radial-gradient(
+        circle at 63% 7%,
+        rgba(234, 227, 211, 0.36) 0 1px,
+        rgba(234, 227, 211, 0) 1.5px
+      ),
+      radial-gradient(
+        circle at 34% 46%,
+        rgba(234, 227, 211, 0.44) 0 1.3px,
+        rgba(234, 227, 211, 0) 1.8px
+      ),
+      radial-gradient(
+        circle at 88% 39%,
+        rgba(234, 227, 211, 0.3) 0 1px,
+        rgba(234, 227, 211, 0) 1.5px
+      ),
+      radial-gradient(
+        circle at 51% 74%,
+        rgba(234, 227, 211, 0.42) 0 1.1px,
+        rgba(234, 227, 211, 0) 1.6px
+      ),
+      radial-gradient(
+        circle at 19% 89%,
+        rgba(234, 227, 211, 0.32) 0 1px,
+        rgba(234, 227, 211, 0) 1.5px
+      );
+    background-size: 240px 240px;
+    animation: snow-near 34s linear infinite;
+  }
+
+  .drift::after {
+    background-image: radial-gradient(
+        circle at 27% 9%,
+        rgba(234, 227, 211, 0.26) 0 0.9px,
+        rgba(234, 227, 211, 0) 1.3px
+      ),
+      radial-gradient(
+        circle at 71% 21%,
+        rgba(234, 227, 211, 0.2) 0 0.8px,
+        rgba(234, 227, 211, 0) 1.2px
+      ),
+      radial-gradient(
+        circle at 8% 44%,
+        rgba(234, 227, 211, 0.24) 0 0.9px,
+        rgba(234, 227, 211, 0) 1.3px
+      ),
+      radial-gradient(
+        circle at 46% 58%,
+        rgba(234, 227, 211, 0.18) 0 0.8px,
+        rgba(234, 227, 211, 0) 1.2px
+      ),
+      radial-gradient(
+        circle at 84% 66%,
+        rgba(234, 227, 211, 0.24) 0 0.9px,
+        rgba(234, 227, 211, 0) 1.3px
+      ),
+      radial-gradient(
+        circle at 33% 83%,
+        rgba(234, 227, 211, 0.2) 0 0.8px,
+        rgba(234, 227, 211, 0) 1.2px
+      ),
+      radial-gradient(
+        circle at 62% 94%,
+        rgba(234, 227, 211, 0.22) 0 0.9px,
+        rgba(234, 227, 211, 0) 1.3px
+      );
+    background-size: 310px 310px;
+    animation: snow-far 62s linear infinite;
+  }
+
+  @keyframes snow-near {
+    from {
+      transform: translate3d(0, 0, 0);
+    }
+    to {
+      transform: translate3d(0, 240px, 0);
+    }
+  }
+
+  @keyframes snow-far {
+    from {
+      transform: translate3d(0, 0, 0);
+    }
+    to {
+      transform: translate3d(0, 310px, 0);
+    }
+  }
+
+  /* Nothing is in the water until data-depth names a band, and data-depth
+     stays "dry" until the waterline has left the top of the frame. */
+  .drift__figure {
+    position: absolute;
+    left: 0;
+    opacity: 0;
+    transition: opacity 1.6s ease;
+  }
+
+  .drift__figure svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  :root[data-depth="shallow"] .drift__figure[data-band="shallow"],
+  :root[data-depth="mid"] .drift__figure[data-band="mid"],
+  :root[data-depth="abyss"] .drift__figure[data-band="abyss"] {
+    opacity: var(--vis);
+  }
+
+  /* Everything crosses in the first stretch of its cycle and then waits off
+     frame for the rest, which is what makes a sighting a sighting. A long
+     period buys both a slow crossing and a long absence. */
+  @keyframes drift-right {
+    0% {
+      transform: translate3d(-32vw, 0, 0);
+    }
+    38% {
+      transform: translate3d(118vw, 0, 0);
+    }
+    100% {
+      transform: translate3d(118vw, 0, 0);
+    }
+  }
+
+  @keyframes drift-left {
+    0% {
+      transform: translate3d(118vw, 0, 0);
+    }
+    38% {
+      transform: translate3d(-32vw, 0, 0);
+    }
+    100% {
+      transform: translate3d(-32vw, 0, 0);
+    }
+  }
+
+  /* Siphonophores climb the whole column at dusk and sink again by morning.
+     This one only ever goes up, which is the half worth watching. */
+  @keyframes rise {
+    0% {
+      transform: translate3d(0, 116vh, 0);
+    }
+    44% {
+      transform: translate3d(-5vw, -62vh, 0);
+    }
+    100% {
+      transform: translate3d(-5vw, -62vh, 0);
+    }
+  }
+
+  .drift__figure--school {
+    --vis: 0.3;
+    top: 24%;
+    width: clamp(150px, 22vw, 250px);
+    animation: drift-right 78s linear infinite;
+  }
+
+  .drift__figure--probe {
+    --vis: 0.26;
+    top: 0;
+    width: 54px;
+    animation: drift-right 196s linear infinite;
+  }
+
+  .drift__figure--oarfish {
+    --vis: 0.22;
+    top: 36%;
+    width: clamp(240px, 36vw, 460px);
+    animation: drift-right 148s linear infinite;
+  }
+
+  /* A live oarfish flies a scarlet crest. Buoy is the one warm mark down here
+     and the lure has the other, two bands apart, so they never share a frame. */
+  .drift__crest {
+    color: var(--color-buoy);
+  }
+
+  .drift__figure--rov {
+    --vis: 0.28;
+    top: 57%;
+    width: clamp(140px, 18vw, 230px);
+    animation: drift-left 116s linear infinite;
+  }
+
+  .drift__figure--angler {
+    --vis: 0.2;
+    top: 29%;
+    width: clamp(150px, 20vw, 260px);
+    animation: drift-left 172s linear infinite;
+  }
+
+  .drift__figure--wreck {
+    --vis: 0.15;
+    top: 63%;
+    width: clamp(160px, 22vw, 280px);
+    animation: drift-left 224s linear infinite;
+  }
+
+  /* A wreck does not move. What moves is the sweep finding it again. */
+  .drift__figure--wreck svg {
+    animation: sweep 8.4s ease-in-out infinite alternate;
+  }
+
+  @keyframes sweep {
+    from {
+      opacity: 0.4;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .drift__figure--colony {
+    --vis: 0.2;
+    top: 0;
+    left: 16%;
+    width: 40px;
+    animation: rise 178s linear infinite;
+  }
+
+  /* Fl(2) 5s: a real light characteristic, and the same grammar the chart
+     above prints in its margin. Foam is telemetry and nothing else. */
+  .drift__telemetry,
+  .drift__ping {
+    color: var(--color-foam);
+  }
+
+  .drift__telemetry {
+    animation: blink 5s linear infinite;
+  }
+
+  .drift__ping {
+    animation: ping 5s linear infinite;
+  }
+
+  .drift__ping--late {
+    animation-delay: 0.34s;
+  }
+
+  @keyframes blink {
+    0%,
+    62% {
+      opacity: 0.12;
+    }
+    64%,
+    70% {
+      opacity: 1;
+    }
+    72%,
+    80% {
+      opacity: 0.12;
+    }
+    82%,
+    88% {
+      opacity: 1;
+    }
+    90%,
+    100% {
+      opacity: 0.12;
+    }
+  }
+
+  @keyframes ping {
+    0%,
+    60% {
+      opacity: 0;
+    }
+    68% {
+      opacity: 0.9;
+    }
+    88%,
+    100% {
+      opacity: 0;
+    }
+  }
+
+  /* Bioluminescence, not telemetry, so it takes the accent and swells rather
+     than blinks. */
+  .drift__lure {
+    color: var(--color-buoy);
+    animation: lure 7.5s ease-in-out infinite alternate;
+  }
+
+  @keyframes lure {
+    from {
+      opacity: 0.3;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .drift__tag {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 6px;
+    white-space: nowrap;
+    font-family: var(--font-mono);
+    font-size: 0.5rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-foam);
+  }
+
+  .drift__tag--dim {
+    color: var(--color-sounding);
+  }
+
+  /* No margin on a phone, so contacts cross behind the copy rather than
+     beside it. Pull the whole layer back instead of hiding it. */
+  @media (max-width: 700px) {
+    .drift {
+      opacity: 0.55;
+    }
+  }
+
+  /* Asked for no motion, so there is nothing swimming past. The chart marks
+     on the paper above are printed and stay. */
+  @media (prefers-reduced-motion: reduce) {
+    .drift {
+      display: none;
+    }
+  }
+
   /* --- Depth rail -------------------------------------------------------- */
 
   .depth-rail {
@@ -939,6 +1311,53 @@
 
   .soundings span {
     position: absolute;
+  }
+
+  /* --- Chart marginalia (surface only) ------------------------------------ */
+
+  .chart-marks {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    color: var(--color-sounding);
+  }
+
+  /* Marginalia needs a margin. Below this width the content column takes the
+     whole page and there is nowhere to put a mark that is not under a word. */
+  @media (max-width: 1180px) {
+    .chart-marks {
+      display: none;
+    }
+  }
+
+  .chart-mark {
+    position: absolute;
+    width: 108px;
+    opacity: 0.6;
+  }
+
+  .chart-mark--right {
+    text-align: right;
+  }
+
+  .chart-mark svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .chart-mark--right svg {
+    margin-left: auto;
+  }
+
+  .chart-mark__label {
+    display: block;
+    margin-top: 5px;
+    white-space: nowrap;
+    font-family: var(--font-mono);
+    font-size: 0.5rem;
+    letter-spacing: 0.1em;
   }
 
   /* --- Prose ------------------------------------------------------------- */

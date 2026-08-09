@@ -4,6 +4,8 @@ import Header from '@/components/Header.astro';
 import Footer from '@/components/Footer.astro';
 import DepthRail from '@/components/DepthRail.astro';
 import Waterline from '@/components/Waterline.astro';
+import ChartMarks from '@/components/ChartMarks.astro';
+import Drift from '@/components/Drift.astro';
 
 interface Props {
   title: string;
@@ -57,7 +59,7 @@ const soundings: [number, number, number][] = [
 ---
 
 <!doctype html>
-<html lang="en" data-zone="surface">
+<html lang="en" data-zone="surface" data-depth="dry">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -92,11 +94,14 @@ const soundings: [number, number, number][] = [
     <div class="zone-surface">
       {
         hasSurface && (
-          <div class="soundings" aria-hidden="true">
-            {soundings.map(([left, top, value]) => (
-              <span style={`left:${left}%;top:${top}%`}>{value}</span>
-            ))}
-          </div>
+          <>
+            <div class="soundings" aria-hidden="true">
+              {soundings.map(([left, top, value]) => (
+                <span style={`left:${left}%;top:${top}%`}>{value}</span>
+              ))}
+            </div>
+            <ChartMarks />
+          </>
         )
       }
       <Header />
@@ -108,6 +113,7 @@ const soundings: [number, number, number][] = [
     <Waterline compact={!hasSurface} />
 
     <div class="zone-deep flex-1 flex flex-col">
+      <Drift />
       <main class="flex-1 w-full max-w-3xl mx-auto px-4 sm:px-6 py-12 sm:py-20">
         <slot />
       </main>
@@ -163,6 +169,20 @@ const soundings: [number, number, number][] = [
           waterlineBottom < window.innerHeight * 0.34 ? 'deep' : 'surface';
         root.dataset.zoneLow =
           waterlineBottom < window.innerHeight * 0.9 ? 'deep' : 'surface';
+
+        // Which contacts are awake in the water column. Banded by scroll
+        // progress rather than by page offset, so a short page is a shallow
+        // dive instead of a cramped one. Nothing is in the water until the
+        // waterline has left the top of the frame entirely -- the drift layer
+        // is fixed, so anything sooner would swim over the paper.
+        root.dataset.depth =
+          waterlineBottom > 0
+            ? 'dry'
+            : progress < 0.42
+              ? 'shallow'
+              : progress < 0.74
+                ? 'mid'
+                : 'abyss';
       }
 
       function schedule() {

@@ -1,0 +1,61 @@
+---
+// Printed marginalia for the chart paper. Real chart vocabulary, real
+// notation, printed the way a chart prints it: hairline, grey, unexplained.
+//
+// Two of the four say something. The fix is plotted on Berlin, and a chart
+// calls a fibre run a submarine cable, which is a joke that only lands if you
+// have run one.
+//
+// Paper does not move, so none of this animates. It lives in the outer margin
+// and is hidden below the width where that margin exists.
+---
+
+<div class="chart-marks" aria-hidden="true">
+  {/* Variation rose: the solid arrow is true north, the dashed one is where a
+      compass actually points, and the label is the angle between them. */}
+  <div class="chart-mark" style="top:9%;left:2.5%">
+    <svg viewBox="0 0 72 62" fill="none" stroke="currentColor" stroke-width="0.8">
+      <circle cx="36" cy="30" r="22" opacity="0.45" />
+      <path
+        d="M36 8V3M51.6 14.4 55.1 10.9M58 30h5M51.6 45.6 55.1 49.1M36 52v5M20.4 45.6 16.9 49.1M14 30H9M20.4 14.4 16.9 10.9"
+        stroke-width="0.6"
+      />
+      <path d="M36 50V13" />
+      <path d="m31 21 5-9 5 9" />
+      <path d="M36 30 41.5 8.6" stroke-width="0.6" stroke-dasharray="2 2" opacity="0.8" />
+    </svg>
+    <span class="chart-mark__label">var 4&deg;10'E</span>
+  </div>
+
+  {/* A plotted fix: two bearing lines crossed on a position, which is how you
+      know where you are without being told. */}
+  <div class="chart-mark chart-mark--right" style="top:24%;right:3%">
+    <svg viewBox="-2 -2 92 56" fill="none" stroke="currentColor" stroke-width="0.8">
+      <path d="M2 2 74 44M88 6 30 50" opacity="0.55" />
+      <circle cx="52" cy="30" r="4.5" stroke-width="1" />
+      <path d="M52 21v-6M52 39v6M43 30h-6M61 30h6" stroke-width="0.6" />
+    </svg>
+    <span class="chart-mark__label">52&deg;31'N 013&deg;24'E</span>
+  </div>
+
+  {/* Chart symbol for a submarine cable. */}
+  <div class="chart-mark" style="top:57%;left:3.5%">
+    <svg viewBox="-2 -8 96 32" fill="none" stroke="currentColor" stroke-width="0.8">
+      <path
+        d="M0 8h10c4 0 4-8 8-8s4 16 8 16 4-16 8-16 4 16 8 16 4-16 8-16 4 16 8 16 4-8 8-8h16"
+      />
+    </svg>
+    <span class="chart-mark__label">subm cable</span>
+  </div>
+
+  {/* Light characteristic: three flashes, white, every ten seconds. The same
+      grammar the ROV blinks in, far below this. */}
+  <div class="chart-mark chart-mark--right" style="top:74%;right:5%">
+    <svg viewBox="-10 -10 72 40" fill="none" stroke="currentColor" stroke-width="0.8">
+      <path d="M8 20V6" />
+      <circle cx="8" cy="4" r="3" stroke-width="1" />
+      <path d="M13 0 24-6M13 4h12M13 8l11 6" stroke-width="0.6" opacity="0.7" />
+    </svg>
+    <span class="chart-mark__label">Fl(3)W 10s 18m</span>
+  </div>
+</div>

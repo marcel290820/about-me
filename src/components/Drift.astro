@@ -1,0 +1,219 @@
+---
+// Everything suspended in the deep water.
+//
+// Marine snow rides on this layer's own two pseudo-elements. The contacts are
+// its children, drawn hairline and unfilled: the way a sounder or a field
+// notebook records something rather than the way an illustration pictures it.
+//
+// The layer is position: fixed, so it costs exactly one viewport however long
+// the page runs. Which contacts are awake is set by data-depth on <html>
+// (written in Base.astro), so the cast changes with depth rather than with how
+// much content a page happens to have.
+//
+// Only transform and opacity animate. Foam marks telemetry and nothing else;
+// buoy marks a lure, the way it marks a rule on the chart above.
+
+// Head at x=15, tail at x=-5, swimming right. [x, y, scale]
+const FISH = 'M0 5C4 0.6 11 0.6 15 5C11 9.4 4 9.4 0 5ZM0 5L-5 1.4M0 5L-5 8.6';
+
+const SCHOOL: [number, number, number][] = [
+  [0, 15, 0.9],
+  [24, 4, 0.8],
+  [30, 27, 0.85],
+  [58, 13, 1],
+  [64, 31, 0.75],
+  [92, 21, 0.7],
+];
+
+// A siphonophore is a colony, not an animal: a gas float at the top, a stack
+// of swimming bells under it that beat together, then metres of feeding stem.
+// The bells taper down the chain. [x, y, scale]
+const BELLS: [number, number, number][] = [
+  [26, 30, 1],
+  [31, 54, 0.94],
+  [22, 78, 0.88],
+  [30, 102, 0.8],
+  [23, 126, 0.72],
+  [29, 150, 0.64],
+  [24, 174, 0.56],
+];
+
+const BELL = 'M-10 4 -5.5-11H5.5L10 4Q0 10-10 4Z';
+
+// An oarfish is the longest bony fish there is: a silver ribbon with a red
+// crest, and the reason sailors kept coming home reporting sea serpents.
+//
+// Built from a sampled wave rather than drawn by hand. Both body edges and
+// every fin ray read the same spine, so the rays sit exactly on the back
+// instead of near it, and the ribbon cannot come apart when the wave changes.
+const OAR_STEPS = 48;
+
+const spine = Array.from({ length: OAR_STEPS + 1 }, (_, i) => {
+  const t = i / OAR_STEPS;
+  return {
+    x: 12 + t * 300,
+    y: 34 + Math.sin(t * 9.4) * 8 + Math.sin(t * 19) * 2.2,
+    // Deepest at the head, tapering to a point at the tail.
+    half: 5.5 - t * 5.3,
+    // The dorsal runs the whole length and stands into a crest over the head.
+    fin: 4 + Math.max(0, 1 - t * 5) * 13,
+  };
+});
+
+const edge = (side: -1 | 1) =>
+  'M' +
+  spine.map((p) => `${p.x.toFixed(1)} ${(p.y + side * p.half).toFixed(1)}`).join('L');
+
+const finEdge =
+  'M' +
+  spine.map((p) => `${p.x.toFixed(1)} ${(p.y - p.half - p.fin).toFixed(1)}`).join('L');
+
+const ray = (p: (typeof spine)[number]) =>
+  `M${p.x.toFixed(1)} ${(p.y - p.half).toFixed(1)}V${(p.y - p.half - p.fin).toFixed(1)}`;
+
+// The first rays are the crest, and on a live oarfish they are scarlet.
+const crestRays = spine.filter((_, i) => i % 2 === 0 && i < 8).map(ray).join('');
+const dorsalRays = spine.filter((_, i) => i % 3 === 0 && i >= 8).map(ray).join('');
+---
+
+<div class="drift" data-drift aria-hidden="true">
+  {/* Shallow: light still reaches, so things here are quick and legible. */}
+
+  <div class="drift__figure drift__figure--school" data-band="shallow">
+    <svg viewBox="-8 -6 206 52" fill="none" stroke="currentColor" stroke-width="1">
+      {
+        SCHOOL.map(([x, y, s]) => (
+          <path d={FISH} transform={`translate(${x} ${y}) scale(${s})`} />
+        ))
+      }
+      {/* The one that got caught, measured and let go again. A tagged fish is
+          real field kit, and it is the only thing down here still reporting. */}
+      <g transform="translate(128 10) scale(1.3)">
+        <path d={FISH} />
+        <path d="M4 1.2h6v2.4H4z" />
+        <path d="M10 1.2 14-2" />
+        <path d="M15.6-4.2a4.4 4.4 0 0 1 2.6 3.4" class="drift__ping" />
+        <path d="M17.4-6.6a7.4 7.4 0 0 1 4.4 5.7" class="drift__ping drift__ping--late" />
+        <circle cx="7" cy="2.4" r="1.1" fill="currentColor" class="drift__telemetry" />
+      </g>
+    </svg>
+  </div>
+
+  {/* Hangs from a wire that runs off the top of the frame, so it reads as
+      being lowered from a ship you cannot see. */}
+  <div class="drift__figure drift__figure--probe" data-band="shallow">
+    <svg viewBox="0 0 72 300" fill="none" stroke="currentColor" stroke-width="1">
+      {/* The wire is the one vertical line in the whole layer, and a vertical
+          hairline through a paragraph reads as a rendering fault rather than
+          as rigging. Held well under the instrument's weight. */}
+      <path d="M36 0v236" stroke-width="0.6" opacity="0.45" />
+      <path d="M20 248 36 236l16 12" stroke-width="0.7" />
+      <path d="M16 248h40l-5 44H21z" />
+      <path d="M25 254v34M36 252v38M47 254v34" stroke-width="0.6" />
+      <path d="M19 266h34M20 278h32" stroke-width="0.6" />
+      <path d="M36 292v8" />
+      <circle cx="36" cy="298" r="2" fill="currentColor" class="drift__telemetry" />
+    </svg>
+    <span class="drift__tag">CTD 03</span>
+  </div>
+
+  {/* Mid: blue water. Big, slow, and mostly silhouette. */}
+
+  <div class="drift__figure drift__figure--oarfish" data-band="mid">
+    <svg viewBox="0 6 318 66" fill="none" stroke="currentColor" stroke-width="1">
+      <path d={edge(-1)} />
+      <path d={edge(1)} />
+      <path d="M12 28.5C4 29 1 32 1 34s3 5 11 5.5" />
+      <path d={finEdge} stroke-width="0.5" opacity="0.7" />
+      <path d={dorsalRays} stroke-width="0.5" opacity="0.7" />
+      <path d={crestRays} stroke-width="0.7" class="drift__crest" />
+      {/* Pelvic fins are two long oars, which is where the name comes from. */}
+      <path d="M22 39c4 14 16 22 28 21M26 39c3 16 16 26 30 26" stroke-width="0.5" opacity="0.8" />
+      <path d="M50 56c3 2 3 6 0 8-3-2-3-6 0-8zM56 61c3 2 3 6 0 8-3-2-3-6 0-8z" stroke-width="0.5" opacity="0.8" />
+      <circle cx="7" cy="33" r="1.7" stroke-width="0.7" />
+      <path d="M2 36h5" stroke-width="0.5" />
+    </svg>
+  </div>
+
+  {/* The only thing down here that was built rather than grown. Tethered,
+      because everything useful at depth still needs its link home. */}
+  <div class="drift__figure drift__figure--rov" data-band="mid">
+    <svg viewBox="0 0 138 78" fill="none" stroke="currentColor" stroke-width="1">
+      <path d="M22 0c8 12-6 20 2 30" stroke-width="0.7" />
+      <path d="M30 30h72l10 10v14l-10 10H30L20 54V40z" />
+      <path d="M30 30v34M102 30v34" stroke-width="0.6" />
+      <circle cx="26" cy="40" r="5" stroke-width="0.7" />
+      <circle cx="26" cy="54" r="5" stroke-width="0.7" />
+      <path d="M102 40h8v14h-8" stroke-width="0.7" />
+      <path d="M112 44a5 5 0 0 1 0 6" stroke-width="0.7" />
+      <path d="M84 64v8h14" stroke-width="0.7" />
+      <path d="M44 36h20v6H44z" stroke-width="0.6" />
+      <circle cx="96" cy="36" r="2.2" fill="currentColor" class="drift__telemetry" />
+    </svg>
+    <span class="drift__tag">ROV-01 &middot; Fl(2) 5s</span>
+  </div>
+
+  {/* Abyss: no light at all, so everything here either glows or is only ever
+      a return on a screen. */}
+
+  <div class="drift__figure drift__figure--angler" data-band="abyss">
+    <svg viewBox="-6 -14 148 82" fill="none" stroke="currentColor" stroke-width="1">
+      <path d="M20 32c6-16 26-24 48-20 20 4 34 14 38 26" />
+      <path d="M20 32v10c10 12 34 18 54 14 16-4 28-8 32-16" />
+      <path d="m22 34 4 6 4-6 4 6 4-6 4 6 4-6" stroke-width="0.7" />
+      <path d="m106 38 14-10v22z" />
+      <path d="M78 20c4 8 4 16 0 24M92 24c3 6 3 12 0 18" stroke-width="0.6" />
+      <circle cx="34" cy="26" r="1.8" stroke-width="0.7" />
+      <path d="M36 16C30 0 16-6 6 4" stroke-width="0.8" />
+      <g class="drift__lure">
+        <circle cx="6" cy="6" r="3" fill="currentColor" />
+        <circle cx="6" cy="6" r="6.5" stroke-width="0.6" opacity="0.5" />
+      </g>
+    </svg>
+  </div>
+
+  {/* Sits still and listing, the way a wreck does. What moves is the sweep
+      finding it again. */}
+  <div class="drift__figure drift__figure--wreck" data-band="abyss">
+    <svg viewBox="-8 -10 146 88" fill="none" stroke="currentColor" stroke-width="1">
+      <g transform="rotate(-9 62 34)">
+        <path d="M4 30c16-8 56-10 104-8l10 4-2 14c-26 8-76 8-98 2Z" />
+        <path d="M10 29c22-5 60-6 101-5" stroke-width="0.6" />
+        <path d="M62 22V11h24v11" stroke-width="0.8" />
+        <path d="M66 15h4M74 15h4" stroke-width="0.5" />
+        <path d="M70 11V4h9v7" stroke-width="0.7" />
+        <path d="M36 23 31 3M27 9h9" stroke-width="0.7" />
+        <path d="m50 21 4 9-5 8 4 7" stroke-width="0.7" />
+        <path d="M14 41 8 52M104 44l4 10" stroke-width="0.5" opacity="0.6" />
+      </g>
+      <g stroke-width="0.8" opacity="0.65">
+        <path d="M-6-8h9M-6-8v9M136-8h-9M136-8v9M-6 76h9M-6 76v-9M136 76h-9M136 76v-9" />
+      </g>
+    </svg>
+    <span class="drift__tag drift__tag--dim">WRECK &middot; SONAR</span>
+  </div>
+
+  {/* Metres of it, no brain anywhere, and it climbs the whole column at dusk. */}
+  <div class="drift__figure drift__figure--colony" data-band="abyss">
+    <svg viewBox="0 0 56 300" fill="none" stroke="currentColor" stroke-width="1">
+      <path
+        d="M26 14c8 30-8 54 0 84s-8 54 0 84-6 56 0 104"
+        stroke-width="0.8"
+      />
+      <path d="M20 12a7 9 0 0 1 13 0 9 9 0 0 1-13 0Z" stroke-width="0.9" />
+      {
+        BELLS.map(([x, y, s]) => (
+          <path
+            d={BELL}
+            stroke-width={(0.9 / s).toFixed(2)}
+            transform={`translate(${x} ${y}) scale(${s})`}
+          />
+        ))
+      }
+      <g stroke-width="0.5" opacity="0.8">
+        <path d="M24 190c-4 14-1 22 4 30M28 214c-4 12-1 18 4 26M23 240c-3 12 0 18 5 24M27 262c-3 10 0 16 4 22" />
+        <path d="M30 196c3 12 1 18-3 24M21 224c3 10 1 16-3 22M29 252c3 10 1 14-3 20" />
+      </g>
+    </svg>
+  </div>
+</div>
