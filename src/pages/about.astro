@@ -27,6 +27,7 @@ const jsonLd = {
   knowsAbout: [
     'Full-Stack Development',
     'DevOps',
+    'Observability',
     'Cloud Infrastructure',
     'Kubernetes',
     'Terraform',
@@ -45,7 +46,7 @@ const jsonLd = {
 
   <div class="flex flex-col sm:flex-row items-start gap-8 mb-12">
     <div class="flex-1 prose prose-invert max-w-none">
-      <p>I'm a fullstack engineer and DevOps enthusiast based in Berlin. Right now I'm finishing my M.Sc. in Industrial Engineering & IT at TU Berlin and working as a DevOps Engineer at Capgemini. Most of what I do sits between software and infrastructure: AWS EKS migrations with Terraform, Python automation, full-stack tooling. Before any of that I spent six months on a sailing ship, mentoring students and helping with microplastic research. That trip is still why I prefer working on whole systems instead of single features.</p>
+      <p>I'm a fullstack engineer and DevOps enthusiast based in Berlin. Right now I'm finishing my M.Sc. in Industrial Engineering & IT at TU Berlin. I just wrapped up six months as a DevOps Engineer at Capgemini, where I built the observability stack for a sovereign AI platform. Most of what I do sits between software and infrastructure: AWS EKS migrations with Terraform, Python automation, full-stack tooling. Before any of that I spent six months on a sailing ship, mentoring students and helping with microplastic research. That trip is still why I prefer working on whole systems instead of single features.</p>
     </div>
     <div class="shrink-0 portrait-ring">
       <Image
@@ -66,8 +67,14 @@ const jsonLd = {
       <div class="rail">
         <h3 class="text-base font-semibold mb-1">DevOps Engineer (Werkstudent)</h3>
         <p class="font-mono text-sm text-accent mb-1">Capgemini Deutschland GmbH</p>
-        <p class="font-mono text-xs text-text-dim mb-2">Feb 2026 to present &middot; Berlin</p>
-        <p class="text-sm text-text-muted">Cloud infrastructure automation and DevOps transformations in enterprise environments.</p>
+        <p class="font-mono text-xs text-text-dim mb-2">Feb 2026 to Jul 2026 &middot; Berlin</p>
+        <ul class="text-sm text-text-muted list-disc pl-4 space-y-1">
+          <li>Central observability stack for a sovereign AI platform: metrics, logs and traces across ~40 tenants and 70+ Docker services</li>
+          <li>OpenTelemetry pipelines with receivers, processors and exporters feeding a Grafana LGTM stack (Loki, Tempo, Mimir)</li>
+          <li>Ansible playbooks and Jinja templates automating deployment and configuration of every component</li>
+          <li>Docker Swarm rollout and operations: Compose files, rolling service updates, failure debugging</li>
+          <li>Instrumentation of Authentik, Traefik, the Docker daemon, LiteLLM and OpenWebUI, plus host and container telemetry via Node Exporter and cAdvisor</li>
+        </ul>
       </div>
 
       <div class="rail">
@@ -126,7 +133,7 @@ const jsonLd = {
       </div>
       <div class="chip">
         <h3 class="font-mono text-sm text-accent mb-2">devops</h3>
-        <p class="text-sm text-text-muted">CI/CD systems, Terraform, Ansible, Git</p>
+        <p class="text-sm text-text-muted">CI/CD systems, Terraform, Ansible, OpenTelemetry, Grafana LGTM, Git</p>
       </div>
       <div class="chip">
         <h3 class="font-mono text-sm text-accent mb-2">cloud</h3>
