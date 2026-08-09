@@ -7,7 +7,7 @@ This file tracks all placeholders used across the site. Replace each with real c
 |---|---|---|---|
 | `PLACEHOLDER_TAGLINE` | Hero component, index page | FILLED | "infra, backends, interfaces. all of it." |
 | `PLACEHOLDER_BIO` | About page | FILLED | Full bio paragraph about Marcel |
-| `PLACEHOLDER_PROFILE_IMAGE` | About page, Hero | OPEN | Path to profile photo |
+| `PLACEHOLDER_PROFILE_IMAGE` | About page, Hero | FILLED | `src/assets/images/marcel-heidebrecht-portrait.jpeg` |
 | `PLACEHOLDER_GITHUB_URL` | Social links, Footer | FILLED | https://github.com/marcel290820 |
 | `PLACEHOLDER_LINKEDIN_URL` | Social links, Footer | FILLED | https://www.linkedin.com/in/marcel-heidebrecht-a52296212 |
 | `PLACEHOLDER_X_URL` | Social links, Footer | FILLED | https://x.com/marcel290820 |
