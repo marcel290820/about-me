@@ -112,6 +112,8 @@ const soundings: [number, number, number][] = [
       // The rail and the mobile badge both carry these hooks, so every match
       // gets written.
       const depthOutputs = document.querySelectorAll('[data-depth-value]');
+      const depthTicks =
+        document.querySelectorAll<HTMLElement>('[data-tick-depth]');
       const waterline = document.querySelector<HTMLElement>('[data-waterline]');
 
       const MAX_DEPTH = 48;
@@ -128,9 +130,19 @@ const soundings: [number, number, number][] = [
         root.style.setProperty('--depth-pct', (progress * 100).toFixed(2));
         root.style.setProperty('--attenuation', (1 - progress).toFixed(3));
 
-        const depth = String(Math.round(progress * MAX_DEPTH));
+        const depthM = progress * MAX_DEPTH;
+        const depth = String(Math.round(depthM));
         depthOutputs.forEach((el) => {
           el.textContent = depth;
+        });
+
+        // Ticks sit 12m apart, so 2.5m of clearance keeps the marker's label
+        // off the scale's own at every viewport height.
+        depthTicks.forEach((el) => {
+          el.classList.toggle(
+            'is-covered',
+            Math.abs(Number(el.dataset.tickDepth) - depthM) < 2.5,
+          );
         });
 
         // The rail is fixed and spans the viewport, so its two ends can sit
