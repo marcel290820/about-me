@@ -20,10 +20,10 @@ This file tracks all placeholders used across the site. Replace each with real c
 | Interests | `src/content/interests/` | 4 sample interests from CV; expand with details |
 
 ## Assets
-| Placeholder | Location | Description |
-|---|---|---|
-| `public/favicon.svg` | Root | Replace with custom favicon |
-| `public/og-default.png` | Root | Default Open Graph image (1200x630) |
+| Placeholder | Location | Status | Description |
+|---|---|---|---|
+| `public/favicon.svg` | Root | FILLED | Two stems and a swell: an M drawn as water |
+| `public/og-default.png` | Root | FILLED | 1200x630, the crossing. Regenerate with `scripts/og.mjs` |
 
 ## Deployment
 | Placeholder | Location | Description |
