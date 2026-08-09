@@ -249,7 +249,9 @@ const ENSIGN = 'M-27-10V-24M-27-24-17-21-27-18';
 </div>
 
 <script>
-  // Five of the eight, in five of the six margin slots, drawn fresh each load.
+  // Three of the eight, in three of the six margin slots, drawn fresh each
+  // load. Marginalia is what a cartographer put in the empty water, not what
+  // they filled it with: printing five left no empty water.
   // [top%, side, offset%]
   const SLOTS: [number, 'left' | 'right', number][] = [
     [7, 'left', 2.5],
@@ -274,7 +276,7 @@ const ENSIGN = 'M-27-10V-24M-27-24-17-21-27-18';
   );
 
   shuffle(SLOTS)
-    .slice(0, 5)
+    .slice(0, 3)
     .forEach(([top, side, offset], i) => {
       const mark = marks[i];
       if (!mark) return;

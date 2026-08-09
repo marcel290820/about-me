@@ -42,20 +42,17 @@ const jsonLd = {
 const hasSurface = surface;
 
 // Scattered depth soundings, the way they are printed across the water on a
-// chart. Decorative only. [left%, top%, value]
+// chart. Decorative only, and thin on purpose: a sounding is a place someone
+// actually took a cast, so a page of them reads as noise rather than as data.
+// [left%, top%, value]
 const soundings: [number, number, number][] = [
-  [8, 18, 14],
   [23, 47, 9],
   [37, 12, 22],
-  [46, 71, 17],
   [58, 31, 11],
   [67, 58, 26],
-  [74, 8, 7],
   [83, 44, 19],
-  [91, 76, 13],
   [16, 84, 31],
-  [52, 92, 24],
-  [95, 22, 8],
+  [91, 76, 13],
 ];
 ---
 
