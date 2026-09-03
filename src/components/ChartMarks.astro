@@ -235,6 +235,30 @@ const ENSIGN = 'M-27-10V-24M-27-24-17-21-27-18';
     <span class="chart-mark__label">GNSS 12 sv</span>
   </div>
 
+  {/* The one mark on this chart that is about its owner. Six months under
+      sail, Oct 2018 to Apr 2019, eleven countries: the passage the rest of
+      this page is drawn from. Pinned, so it prints on every visit; the other
+      two marks are drawn from the bag around it. */}
+  <div class="chart-mark" data-mark data-mark-pinned hidden>
+    <svg viewBox="0 0 116 76" fill="none" stroke="currentColor" stroke-width="0.7">
+      {/* The track she made, hourly fixes ticked along it, running off the
+          edge of the paper at both ends: the passage is longer than the chart. */}
+      <path d="M-2 62C18 58 30 66 46 60" stroke-width="0.5" stroke-dasharray="2 3" opacity="0.7" />
+      <path d="M12 58v6M30 59v6" stroke-width="0.5" opacity="0.7" />
+      <g transform="translate(72 66) scale(0.72)">
+        <path d={HULL} />
+        <path d={SAILS} stroke-width="0.9" />
+        <path d={SPARS} stroke-width="0.7" opacity="0.8" />
+        <path d={MASTS} stroke-width="1.1" />
+        <path d={BOWSPRIT} stroke-width="0.9" />
+        <path d={JIB} stroke-width="0.8" />
+        <path d={ENSIGN} stroke-width="0.9" />
+      </g>
+      <path d="M6 72h104" stroke-width="0.5" opacity="0.35" />
+    </svg>
+    <span class="chart-mark__label">under sail 2018-19</span>
+  </div>
+
   {/* Three bearings never quite cross at a point. The little triangle they
       leave instead has a name, and you are somewhere inside it. */}
   <div class="chart-mark" data-mark hidden>
@@ -249,7 +273,7 @@ const ENSIGN = 'M-27-10V-24M-27-24-17-21-27-18';
 </div>
 
 <script>
-  // Three of the eight, in three of the six margin slots, drawn fresh each
+  // Three of the nine, in three of the six margin slots, drawn fresh each
   // load. Marginalia is what a cartographer put in the empty water, not what
   // they filled it with: printing five left no empty water.
   // [top%, side, offset%]
@@ -271,9 +295,13 @@ const ENSIGN = 'M-27-10V-24M-27-24-17-21-27-18';
     return out;
   };
 
-  const marks = shuffle(
-    Array.from(document.querySelectorAll<HTMLElement>('[data-mark]')),
-  );
+  // The owner's own passage prints every time; the rest of the margin is
+  // drawn from the bag around it.
+  const all = Array.from(document.querySelectorAll<HTMLElement>('[data-mark]'));
+  const marks = [
+    ...all.filter((m) => m.hasAttribute('data-mark-pinned')),
+    ...shuffle(all.filter((m) => !m.hasAttribute('data-mark-pinned'))),
+  ];
 
   shuffle(SLOTS)
     .slice(0, 3)

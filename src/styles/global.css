@@ -390,50 +390,6 @@
     width: 34px;
   }
 
-  /* Chart crop marks on opposite corners. */
-  .chip {
-    position: relative;
-    background: var(--color-surface-elevated);
-    border: 1px solid var(--color-border-subtle);
-    border-radius: 2px;
-    padding: 1.1rem 1.15rem;
-    transition: border-color 0.2s ease;
-  }
-
-  .chip:hover {
-    border-color: var(--color-border);
-  }
-
-  .chip::before,
-  .chip::after {
-    content: "";
-    position: absolute;
-    width: 9px;
-    height: 9px;
-    border: 1px solid var(--color-accent);
-    opacity: 0.5;
-    transition: opacity 0.2s ease;
-  }
-
-  .chip::before {
-    top: -1px;
-    left: -1px;
-    border-right: 0;
-    border-bottom: 0;
-  }
-
-  .chip::after {
-    bottom: -1px;
-    right: -1px;
-    border-left: 0;
-    border-top: 0;
-  }
-
-  .chip:hover::before,
-  .chip:hover::after {
-    opacity: 1;
-  }
-
   .tag {
     display: inline-flex;
     align-items: center;
@@ -475,13 +431,13 @@
   }
 
   .btn-primary {
-    color: var(--color-paper);
+    color: var(--color-ink);
     background: var(--color-accent);
     border: 1px solid var(--color-accent);
   }
 
   .btn-primary:hover {
-    color: var(--color-paper);
+    color: var(--color-ink);
     background: var(--color-accent-dim);
     border-color: var(--color-accent-dim);
   }
@@ -555,20 +511,48 @@
 
   .waterline {
     position: relative;
-    height: 160px;
+    height: 220px;
     /* Stopped through shoaling water rather than straight to black: a plain
-       two-stop ramp interpolates through grey and reads as fog. */
+       two-stop ramp interpolates through grey and reads as fog. The last
+       stops are spread out, because a fade that finishes in the final tenth
+       of the band puts a hard edge on the water. */
     background: linear-gradient(
       to bottom,
       var(--color-paper) 0%,
-      var(--color-paper) 16%,
-      #b9c3b8 38%,
-      #5b8288 58%,
-      #1c4750 76%,
-      var(--color-abyss) 94%,
+      var(--color-paper) 11%,
+      #b9c3b8 27%,
+      #5b8288 44%,
+      #1c4750 61%,
+      #0d2a33 79%,
+      var(--color-abyss) 96%,
       var(--color-abyss) 100%
     );
     overflow: hidden;
+  }
+
+  /* The station plate. The rail prints the same numbers, but here they sit on
+     the swell they are driving, which is the only way anyone learns it is
+     live. Foam because it is a live value, and this sits on the dark half. */
+  .waterline__station {
+    position: absolute;
+    right: clamp(1rem, 4vw, 3rem);
+    bottom: 18px;
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.12em;
+    color: var(--color-cream);
+    opacity: 0.8;
+    white-space: nowrap;
+  }
+
+  .waterline__station b {
+    font-weight: 500;
+    color: var(--color-foam);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .waterline--compact .waterline__station {
+    display: none;
   }
 
   /* Pages with no surface block cross the waterline right after the header. */
@@ -813,8 +797,11 @@
      thing that says which way it points. That is why nothing can swim
      backwards: it is one rule rather than a fact about twenty drawings. */
   .drift__body {
-    transform: translate(var(--fx, 0px), var(--fy, 0px)) rotate(var(--fr, 0deg))
-      scale(var(--fs, 1)) scaleX(var(--flip, 1));
+    /* The heel is multiplied by the heading: the flip is applied first, so
+       without it a left-facing fish fleeing upward put its nose down. */
+    transform: translate(var(--fx, 0px), var(--fy, 0px))
+      rotate(calc(var(--fr, 0deg) * var(--flip, 1))) scale(var(--fs, 1))
+      scaleX(var(--flip, 1));
     transition: transform 2.4s cubic-bezier(0.22, 0.61, 0.36, 1);
   }
 
@@ -834,21 +821,39 @@
     overflow: visible;
   }
 
+  /* --dy is the height gained or lost over the whole run, set per contact in
+     the browser, so no two crossings share a line. */
   @keyframes drift-cross-r {
     from {
-      transform: translate3d(-48vw, 0, 0);
+      transform: translate3d(-48vw, calc(var(--dy, 0vh) * -0.5), 0);
     }
     to {
-      transform: translate3d(128vw, 0, 0);
+      transform: translate3d(128vw, calc(var(--dy, 0vh) * 0.5), 0);
     }
   }
 
   @keyframes drift-cross-l {
     from {
-      transform: translate3d(128vw, 0, 0);
+      transform: translate3d(128vw, calc(var(--dy, 0vh) * -0.5), 0);
     }
     to {
-      transform: translate3d(-48vw, 0, 0);
+      transform: translate3d(-48vw, calc(var(--dy, 0vh) * 0.5), 0);
+    }
+  }
+
+  /* Anything alive breathes. On the drawing rather than the body, which is
+     where a poke lands, so the two never fight over one transform. */
+  .is-alive svg {
+    animation: bob var(--bob-t, 7s) ease-in-out var(--bob-d, 0s) infinite
+      alternate;
+  }
+
+  @keyframes bob {
+    from {
+      transform: translateY(-5px);
+    }
+    to {
+      transform: translateY(5px);
     }
   }
 
@@ -859,7 +864,7 @@
       transform: translate3d(0, 116vh, 0);
     }
     to {
-      transform: translate3d(-7vw, -96vh, 0);
+      transform: translate3d(var(--dx, -7vw), -96vh, 0);
     }
   }
 
@@ -1206,6 +1211,34 @@
     }
   }
 
+  /* --- Seabed ------------------------------------------------------------ */
+
+  /* The bottom. The gauge stops at 48 m and this is what it stops on: one
+     sounded profile under the footer, lopsided the way ground is, with the
+     casts that fixed it printed above the line. Nothing here moves. */
+  .seabed {
+    position: relative;
+    height: 84px;
+    color: var(--color-cream);
+    opacity: 0.55;
+    pointer-events: none;
+  }
+
+  .seabed svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .seabed span {
+    position: absolute;
+    font-family: var(--font-mono);
+    font-size: 0.5625rem;
+    letter-spacing: 0.1em;
+    transform: translateX(-50%);
+  }
+
   /* --- Depth rail -------------------------------------------------------- */
 
   .depth-rail {
@@ -1353,7 +1386,7 @@
     position: absolute;
     left: 0;
     bottom: 7vh;
-    font-size: 0.5625rem;
+    font-size: 0.625rem;
     line-height: 1.7;
     letter-spacing: 0.1em;
     transition: color 0.4s ease;
@@ -1508,8 +1541,8 @@
     pointer-events: none;
     color: var(--color-sounding);
     font-family: var(--font-mono);
-    font-size: 0.5rem;
-    opacity: 0.5;
+    font-size: 0.5625rem;
+    opacity: 0.72;
   }
 
   .soundings span {
@@ -1537,7 +1570,7 @@
   .chart-mark {
     position: absolute;
     width: 118px;
-    opacity: 0.78;
+    opacity: 0.92;
   }
 
   .chart-mark--right {

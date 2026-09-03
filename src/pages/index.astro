@@ -13,6 +13,10 @@ const featuredProjects = (await getCollection('projects'))
   .filter((p) => p.data.featured)
   .sort((a, b) => b.data.sortOrder - a.data.sortOrder)
   .slice(0, 3);
+
+const interests = (await getCollection('interests')).sort((a, b) =>
+  a.data.title.localeCompare(b.data.title),
+);
 ---
 
 <Base title="Home" surface>
@@ -61,4 +65,26 @@ const featuredProjects = (await getCollection('projects'))
       </a>
     </section>
   )}
+
+  {/* The landing page has to descend too. The first screen under the line is
+      left as water, with the buoy riding in it; this sits below that. Taller
+      than one viewport on purpose: the water column only wakes once the
+      waterline has left the top of the frame, and a deep zone shorter than
+      the screen never gets there. */}
+  <section class="min-h-[108vh] flex flex-col justify-end">
+    <div class="section-heading">
+      <h2>beyond code</h2>
+    </div>
+    <dl class="border-t border-border-subtle">
+      {interests.map((i) => (
+        <div class="grid grid-cols-[6.5rem_1fr] sm:grid-cols-[9rem_1fr] gap-4 py-3.5 border-b border-border-subtle">
+          <dt class="font-mono text-xs uppercase tracking-[0.14em] text-accent pt-0.5">{i.data.title}</dt>
+          <dd class="text-[0.9375rem] text-text-muted">{i.data.description}</dd>
+        </div>
+      ))}
+    </dl>
+    <a href="/about" class="inline-block mt-6 font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-text-dim hover:text-accent transition-colors">
+      the full log &rarr;
+    </a>
+  </section>
 </Base>
