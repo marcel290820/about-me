@@ -451,7 +451,7 @@ const JELLIES = [JELLY(40, 30, 20), JELLY(23, 94, 12), JELLY(55, 134, 9)];
 // vis   settled opacity. Depth reads as distance, so the deeper it lives the
 //       fainter it is allowed to be.
 const SPECIES = [
-  { id: 'school', band: 'shallow', mode: 'cross', w: [190, 290], top: [14, 52], dur: [50, 76], vis: 0.34, react: 'flee', weight: 3 },
+  { id: 'school', band: 'shallow', mode: 'cross', w: [190, 290], top: [14, 52], dur: [50, 76], vis: 0.34, react: 'flee', weight: 2 },
   { id: 'turtle', band: 'shallow', mode: 'cross', w: [110, 150], top: [18, 56], dur: [64, 92], vis: 0.3, react: 'flee', weight: 2 },
   { id: 'jellies', band: 'shallow', mode: 'rise', w: [76, 108], top: [0, 0], dur: [78, 118], vis: 0.26, react: 'pulse', weight: 2 },
   { id: 'sailfish', band: 'shallow', mode: 'cross', w: [240, 330], top: [16, 44], dur: [30, 46], vis: 0.24, react: 'flee', weight: 1 },
@@ -584,9 +584,12 @@ const SPECIES = [
 
 <template data-species="towfish">
   <svg viewBox="-6 0 160 108" fill="none" stroke="currentColor" stroke-width="1">
-    {/* Towed on a warp that runs up to a ship you cannot see. */}
-    <path d="M34 28C22 18 12 10 0 4" stroke-width="0.6" opacity="0.5" />
-    <path d="M34 28 40 34" stroke-width="0.7" />
+    {/* Towed on a warp that runs up and AHEAD to a ship you cannot see. A
+        towed body goes where its cable goes, so the bail sits forward of
+        centre and the warp leaves toward the nose. With the warp off the tail
+        the fish swam backwards for every visitor. */}
+    <path d="M100 23C114 14 130 4 154-6" stroke-width="0.6" opacity="0.5" />
+    <path d="M100 23 96 27" stroke-width="0.7" />
     <path d={towHull} />
     <path d="M40 26v16M52 24v20" stroke-width="0.5" opacity="0.6" />
     <path d="M36 24 26 12h9l7 10M36 44 26 56h9l7-10" stroke-width="0.7" />
@@ -794,11 +797,11 @@ const SPECIES = [
     <path d="M124 56 118 64l6 8" stroke-width="0.5" opacity="0.6" />
     {/* Illicium: a modified first dorsal ray, arched forward over the mouth.
         The bulb on the end is a pouch of luminous bacteria it farms. */}
-    <path d="M108 33C108 2 84-16 58-12" stroke-width="0.9" />
-    <path d="M58-12c-4-5-10-7-15-6M58-12c-3 5-4 11-2 16" stroke-width="0.5" opacity="0.7" />
+    <path d="M104 33C102 6 122-16 148-9" stroke-width="0.9" />
+    <path d="M148-9c5-4 11-5 16-3M148-9c1 5 0 10-3 15" stroke-width="0.5" opacity="0.7" />
     <g class="drift__lure">
-      <circle cx="56" cy="-12" r="3.6" fill="currentColor" />
-      <circle cx="56" cy="-12" r="8" stroke-width="0.6" opacity="0.5" />
+      <circle cx="150" cy="-8" r="3.6" fill="currentColor" />
+      <circle cx="150" cy="-8" r="8" stroke-width="0.6" opacity="0.5" />
     </g>
     <path d="M84 92c6 6 8 12 8 18M64 92c4 6 5 12 4 17" stroke-width="0.5" opacity="0.6" />
     <path d="M18 64 2 50v28Z" stroke-width="0.8" />
@@ -996,6 +999,11 @@ const SPECIES = [
     }
 
     const live = [];
+    // The last few species seen, so a contact that just left cannot be the
+    // next one in. Live-only exclusion let the school swim out and straight
+    // back in, which reads as one fish on a loop rather than a sea.
+    const recent = [];
+    const REMEMBER = 3;
     let band = root.dataset.depth;
 
     function despawn(c) {
@@ -1010,11 +1018,17 @@ const SPECIES = [
     function spawn(seeded) {
       // Never two of the same thing at once. Twenty species and a cap of two
       // in frame means a repeat reads as a glitch rather than as a shoal.
-      const bag = (BANDS[band] || []).filter(
+      const here = (BANDS[band] || []).filter(
         (s) => !live.some((c) => c.sp.id === s.id),
       );
+      // Prefer what has not been seen lately; fall back to anything not live
+      // when a band is too small to have anything fresh left.
+      const fresh = here.filter((s) => !recent.includes(s.id));
+      const bag = fresh.length ? fresh : here;
       if (!bag.length) return;
       const sp = bag[(Math.random() * bag.length) | 0];
+      recent.push(sp.id);
+      if (recent.length > REMEMBER) recent.shift();
       const tpl = document.querySelector(`template[data-species="${sp.id}"]`);
       if (!tpl) return;
 
@@ -1050,6 +1064,18 @@ const SPECIES = [
 
       const body = document.createElement('div');
       body.className = 'drift__body';
+      // Every figure is drawn facing right, and this is the one place heading
+      // is decided -- for the things that stand still as much as for the
+      // things that cross. A tripod fish that always faced right was a tell.
+      const heading = Math.random() < 0.5 ? 1 : -1;
+      body.style.setProperty('--flip', heading);
+      // Anything alive breathes: a slow bob on the drawing, on its own clock,
+      // so no two are in step. Machines hold their trim.
+      if (sp.react !== 'ping') {
+        el.classList.add('is-alive');
+        el.style.setProperty('--bob-t', `${rnd(5.5, 9.5).toFixed(1)}s`);
+        el.style.setProperty('--bob-d', `${(-rnd(0, 9)).toFixed(1)}s`);
+      }
 
       const frag = tpl.content.cloneNode(true);
       body.appendChild(frag.querySelector('svg'));
@@ -1065,11 +1091,14 @@ const SPECIES = [
       const lead = (a, b) => (seeded ? `${(-dur * rnd(a, b)).toFixed(1)}s` : '0s');
 
       if (sp.mode === 'cross') {
-        const heading = Math.random() < 0.5 ? 1 : -1;
-        body.style.setProperty('--flip', heading);
+        // Not on rails: each crossing climbs or dives a little over its run.
+        // A straight line at one height is how a conveyor moves, not a fish.
+        el.style.setProperty('--dy', `${rnd(-11, 11).toFixed(1)}vh`);
         el.style.animation = `drift-cross-${heading > 0 ? 'r' : 'l'} ${dur}s linear ${lead(0.3, 0.78)} 1 forwards`;
       } else if (sp.mode === 'rise') {
         el.style.left = `${rnd(8, 78)}%`;
+        // Risers lean with whatever current there is, either way.
+        el.style.setProperty('--dx', `${rnd(-10, 10).toFixed(1)}vw`);
         el.style.animation = `drift-rise ${dur}s linear ${lead(0.12, 0.46)} 1 forwards`;
       } else {
         el.style.left = `${rnd(sp.left[0], sp.left[1])}%`;
