@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run dev` — dev server on `localhost:4321`
 - `npm run build` — production build to `dist/`
 - `npm run preview` — preview the built site locally
-- No test, lint, or typecheck scripts exist. Verify changes with `npm run build`.
+- No test, lint, or typecheck scripts exist. Verify changes with `npm run build`. `.claude/check.sh` wraps it for the stop and commit gates.
 
 Node 22+ is required (`engines` in `package.json`). Deploy is automated — never run a manual deploy step.
 
@@ -30,7 +30,7 @@ Astro 6 static site, no JS framework islands (no React/Vue/Svelte). Pages are `.
 - Accent is `--color-buoy` (`#E4572E`). On paper it measures 3.12:1, so restrict it there to large text, rules and marks — never body copy. `--color-foam` (`#7FD1C0`) is reserved for live/dynamic values and is deep-zone only.
 - Type: `--font-sans` is Archivo variable. Use `.display-name` for headings (expanded, fluid `clamp()`), `.label` for condensed uppercase section lettering. `--font-mono` is IBM Plex Mono, for data and small caps labels only.
 - The portrait is a chart inset (`.portrait-inset`): a ruled frame with printer's corner ticks and a coordinate caption. The ring it replaced is gone.
-- Orange dots are two systems, not three: the rule on a section heading ends in one, and the soundings printed on the paper are the other. The log-book rail (`.rail`) is a hairline only.
+- Orange dots are two systems, not three: the rule on a section heading ends in one, and the soundings printed on the paper are the other. The log-book rail (`.rail`) is one hairline down a section; `.rail__fix` on an entry's date line pins it to the rail with the depth rail's marker in miniature, so the CV reads as soundings.
 - The passage plot (`Passage.astro`, class `.passage`) prints on home under the water and on the about page beside the story: Mercator, rhumb lines between fixes, no land. Port positions are the country's port of call to the nearest half degree. Below `sm` the graticule labels go and only the key ports keep their names at a larger size; the prose on the about page lists every port so nothing is lost with them. The track stroke does not scale, so it holds the swell line's weight at every width.
 - Reusable component classes (`.card`, `.tag`, `.btn-primary`, `.rail`, `.portrait-inset`, `.waterline`, `.depth-rail`, `.seabed`) live in `@layer components`. Use Tailwind utilities inline for layout/spacing. No CSS modules, no styled-components.
 - Border radius is `2px` everywhere. Transitions: `0.15s ease` for color/text, `0.2s ease` for background/border, `0.4s ease` for zone recolouring.
@@ -47,7 +47,7 @@ Astro 6 static site, no JS framework islands (no React/Vue/Svelte). Pages are `.
 Three layers, animated with transform and opacity only so they stay on the compositor. Motion is graded by depth, which is also the rule for anything added later.
 
 - **Paper (`.zone-surface`) is deliberately still.** It is ink on a chart, and holding it still is what makes the water below read as moving. Do not animate it.
-- **`.waterline` carries two swell trains** at incommensurate periods, so their crests drift in and out of phase instead of looping. Each train is two tiles wide and travels exactly one tile per cycle (`translateX(-50%)`), which is what makes the loop seamless at any viewport width. The profiles are sums of sines with **integer** wave numbers over the tile, so `y(0) === y(TILE)` by construction — keep them that way or the wrap will jog. Soundings are printed chart data and stay put; the sea moves under them.
+- **`.waterline` carries two swell trains** at incommensurate periods, and the far one is the edge of the paper: its SVG holds a paper fill above the profile, so the orange line is where the chart ends and the near train runs in the water below it, going under the paper wherever it rises past the edge. The layer's gradient is water only. The trains run so their crests drift in and out of phase instead of looping. Each train is two tiles wide and travels exactly one tile per cycle (`translateX(-50%)`), which is what makes the loop seamless at any viewport width. The profiles are sums of sines with **integer** wave numbers over the tile, so `y(0) === y(TILE)` by construction — keep them that way or the wrap will jog. Soundings are printed chart data and stay put; the sea moves under them.
 - **`.zone-deep::before` has a slow undertow**, further and slower than anything above, with a paired opacity breath standing in for light through moving surface water. Its `inset` is negative so the drift never drags an unpainted edge into view.
 - **`.drift` carries marine snow and the contacts.** See below.
 - **`.shallows` is the swell itself.** Nothing up there travels; the ceiling does, and the one thing floating in it rides and heels on its mooring. See below.
