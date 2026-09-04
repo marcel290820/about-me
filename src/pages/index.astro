@@ -1,6 +1,7 @@
 ---
 import Base from '@/layouts/Base.astro';
 import Hero from '@/components/Hero.astro';
+import Passage from '@/components/Passage.astro';
 import PostCard from '@/components/PostCard.astro';
 import ProjectCard from '@/components/ProjectCard.astro';
 import { getCollection } from 'astro:content';
@@ -71,7 +72,13 @@ const interests = (await getCollection('interests')).sort((a, b) =>
       than one viewport on purpose: the water column only wakes once the
       waterline has left the top of the frame, and a deep zone shorter than
       the screen never gets there. */}
-  <section class="min-h-[108vh] flex flex-col justify-end">
+  <section class="min-h-[108vh] pt-[25rem] sm:pt-[31rem] xl:pt-[16rem] flex flex-col justify-end">
+    {/* What you find down here: the owner's own track, before the list. The
+        top padding clears the buoy's mooring where the two can share a
+        column (the buoy rides at 74 to 86 percent, the column ends at 75 at
+        1208px), and drops once the frame is clear of it so the plot's top
+        edge sits inside the first screen of water. */}
+    <Passage detail class="mb-20 sm:mb-28" />
     <div class="section-heading">
       <h2>beyond code</h2>
     </div>
@@ -83,8 +90,11 @@ const interests = (await getCollection('interests')).sort((a, b) =>
         </div>
       ))}
     </dl>
-    <a href="/about" class="inline-block mt-6 font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-text-dim hover:text-accent transition-colors">
-      the full log &rarr;
+    {/* Set like the section heads above it, so the one action down here
+        speaks the same language as the controls. */}
+    <a href="/about" class="inline-flex items-center gap-3 mt-8 font-sans font-semibold uppercase tracking-[0.1em] text-[0.9375rem] [font-stretch:68%] text-text hover:text-accent transition-colors">
+      the full log
+      <span class="w-1 h-1 rounded-full bg-accent" aria-hidden="true"></span>
     </a>
   </section>
 </Base>

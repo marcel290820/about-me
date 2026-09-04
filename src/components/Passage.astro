@@ -1,0 +1,170 @@
+---
+// The owner's passage, drawn the way a navigator keeps it: Mercator, rhumb
+// lines between fixes, and no land, because a plotting sheet carries none.
+// Six months under sail, Oct 2018 to Apr 2019, Ireland to France round the
+// Atlantic. Thirteen landfalls, and the Caribbean was several ports on its
+// own, so the list is already distilled. Positions are the country's port of
+// call to the nearest half degree, which at this scale is the width of a fix.
+//
+// Below the sm breakpoint the graticule labels go and only the key ports keep
+// their names, at a size that survives the scale; the prose beside the plot
+// carries every port, so nothing is lost with them.
+interface Props {
+  /** The log version: dates, "several", and the graticule labels. Home
+      prints ports only; the about page carries the annotations. */
+  detail?: boolean;
+  class?: string;
+}
+
+const { detail = false, class: className } = Astro.props;
+
+type Side = 'l' | 'r' | 'a' | 'b';
+type Port = {
+  name: string;
+  lat: number;
+  lon: number;
+  side: Side;
+  note?: string;
+  key?: boolean;
+  more?: [number, number][];
+};
+
+const PORTS: Port[] = [
+  { name: 'Ireland', lat: 51.9, lon: -8.5, side: 'l', note: 'Oct 2018', key: true },
+  { name: 'England', lat: 50.2, lon: -5.1, side: 'r' },
+  { name: 'Spain', lat: 42.2, lon: -8.7, side: 'r' },
+  { name: 'Morocco', lat: 31.5, lon: -9.8, side: 'r' },
+  { name: 'Tenerife', lat: 28.5, lon: -16.3, side: 'l' },
+  { name: 'Cape Verde', lat: 16.9, lon: -25.0, side: 'l', key: true },
+  { name: 'Caribbean', lat: 15.3, lon: -61.3, side: 'l', note: 'several', key: true, more: [[14.6, -61.1], [17.1, -61.8]] },
+  { name: 'Costa Rica', lat: 10.0, lon: -83.0, side: 'b' },
+  { name: 'Panama', lat: 9.4, lon: -79.9, side: 'r', key: true },
+  { name: 'Cuba', lat: 23.1, lon: -82.4, side: 'a', key: true },
+  { name: 'Bahamas', lat: 25.1, lon: -77.3, side: 'r' },
+  { name: 'Azores', lat: 38.5, lon: -28.6, side: 'a', key: true },
+  { name: 'France', lat: 48.4, lon: -4.5, side: 'r', note: 'Apr 2019', key: true },
+];
+
+const MAP = { w: 640, lon: [-96, 14], lat: [0, 59] };
+const merc = (lat: number) => Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360));
+const MAP_H = Math.round(
+  (MAP.w * (merc(MAP.lat[1]) - merc(MAP.lat[0]))) / (((MAP.lon[1] - MAP.lon[0]) * Math.PI) / 180),
+);
+const px = (lon: number) => ((lon - MAP.lon[0]) / (MAP.lon[1] - MAP.lon[0])) * MAP.w;
+const py = (lat: number) =>
+  ((merc(MAP.lat[1]) - merc(lat)) / (merc(MAP.lat[1]) - merc(MAP.lat[0]))) * MAP_H;
+const at = (lat: number, lon: number) => `${px(lon).toFixed(1)} ${py(lat).toFixed(1)}`;
+
+const track = 'M' + PORTS.map((p) => at(p.lat, p.lon)).join('L');
+
+// How far along the track each fix sits, 0 to 1, so the fixes can come up in
+// passage order as the route draws itself on.
+const legs = PORTS.map((p, i) => {
+  if (!i) return 0;
+  const q = PORTS[i - 1];
+  return Math.hypot(px(p.lon) - px(q.lon), py(p.lat) - py(q.lat));
+});
+const total = legs.reduce((a, b) => a + b, 0);
+const along = legs.map(((acc) => (l) => (acc += l) / total)(0));
+const revealId = 'passage-' + Math.random().toString(36).slice(2, 7);
+const meridians = [-90, -80, -70, -60, -50, -40, -30, -20, -10, 0];
+const parallels = [10, 20, 30, 40, 50];
+
+// Where the name sits relative to the fix: [dx, dy, text-anchor].
+const LABEL: Record<Side, [number, number, string]> = {
+  r: [9, 3.5, 'start'],
+  l: [-9, 3.5, 'end'],
+  a: [0, -9, 'middle'],
+  b: [0, 16, 'middle'],
+};
+---
+
+<figure class:list={['passage', className]} data-passage>
+  <svg viewBox={`0 0 ${MAP.w} ${MAP_H}`} aria-hidden="true" fill="none" stroke="currentColor">
+    {/* The route draws itself on when the plot scrolls into view: the dashed
+        track is masked by a solid copy of itself whose dash offset runs from
+        one to zero. Without the script, or with reduced motion, the mask is
+        already complete and the plot simply prints. */}
+    <defs>
+      <mask id={revealId} maskUnits="userSpaceOnUse" x="0" y="0" width={MAP.w} height={MAP_H}>
+        <path d={track} class="passage__reveal" pathLength="1" stroke="#fff" stroke-width="10" stroke-linejoin="round" stroke-linecap="round" />
+      </mask>
+    </defs>
+    {/* Graticule, ten degrees each way, and the frame. */}
+    <g stroke-width="0.5" opacity="0.35">
+      {meridians.map((lon) => <path d={`M${px(lon).toFixed(1)} 0V${MAP_H}`} />)}
+      {parallels.map((lat) => <path d={`M0 ${py(lat).toFixed(1)}H${MAP.w}`} />)}
+    </g>
+    <rect x="0.5" y="0.5" width={MAP.w - 1} height={MAP_H - 1} stroke-width="1" opacity="0.7" />
+    {detail && (
+      <g class="passage__grad">
+        {meridians.map((lon) => <text x={px(lon) + 3} y={MAP_H - 5}>{lon ? `${-lon}\u00b0W` : '0\u00b0'}</text>)}
+        {parallels.map((lat) => <text x="4" y={py(lat) - 3}>{lat}&deg;N</text>)}
+      </g>
+    )}
+
+    {/* The track: rhumb lines, which are straight on a Mercator sheet. The
+        stroke does not scale, so it holds the weight of the swell line above
+        at every width. */}
+    <path d={track} class="passage__track" stroke-width="1.5" stroke-dasharray="5 3" vector-effect="non-scaling-stroke" mask={`url(#${revealId})`} />
+
+    {/* Fixes. The Caribbean gets its extra ports as unnamed fixes on the same
+        arc, because it was several and the list is distilled. */}
+    <g stroke-width="1" fill="var(--color-surface)" vector-effect="non-scaling-stroke">
+      {PORTS.flatMap((p, i) => (p.more ?? []).map(([lat, lon]) => (
+        <circle cx={px(lon).toFixed(1)} cy={py(lat).toFixed(1)} r="2.2" opacity="0.7" class="passage__fix" style={`--at:${along[i].toFixed(3)}`} />
+      )))}
+      {PORTS.map((p, i) => (
+        <circle cx={px(p.lon).toFixed(1)} cy={py(p.lat).toFixed(1)} r="3.5" class="passage__fix" style={`--at:${along[i].toFixed(3)}`}>
+          <title>{p.name}</title>
+        </circle>
+      ))}
+    </g>
+
+    <g class="passage__names">
+      {PORTS.map((p, i) => {
+        const [dx, dy, anchor] = LABEL[p.side];
+        const x = px(p.lon) + dx;
+        const y = py(p.lat) + dy;
+        return (
+          <text x={x.toFixed(1)} y={y.toFixed(1)} text-anchor={anchor} class:list={['passage__fix', p.key && 'is-key']} style={`--at:${along[i].toFixed(3)}`}>
+            {p.name}
+            {detail && p.note && <tspan class="passage__note" x={x.toFixed(1)} dy="11">{p.note}</tspan>}
+          </text>
+        );
+      })}
+    </g>
+  </svg>
+</figure>
+
+<script>
+  // Armed only when the page can animate: the arming is what hides the route,
+  // so a visitor with no script or with reduced motion gets the finished plot.
+  const plots = document.querySelectorAll<HTMLElement>('[data-passage]');
+  if (plots.length && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const seen = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (!e.isIntersecting) continue;
+          e.target.classList.add('is-seen');
+          seen.unobserve(e.target);
+        }
+      },
+      { threshold: 0.35 },
+    );
+    for (const el of plots) {
+      el.classList.add('is-armed');
+      seen.observe(el);
+      // Once the route has drawn, the drawn plot is the resting state again.
+      // Arming is what hides things, and a resize across the phone breakpoint
+      // toggles the hidden labels through display:none, which cancels a
+      // finished animation and would run it again from nothing.
+      const settle = (e: AnimationEvent) => {
+        if (e.animationName !== 'passage-draw') return;
+        el.classList.remove('is-armed');
+        el.removeEventListener('animationend', settle);
+      };
+      el.addEventListener('animationend', settle);
+    }
+  }
+</script>

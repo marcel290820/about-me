@@ -34,14 +34,17 @@ const FISH =
   // Eye. A ring this small closes up into a dot at the size it is seen.
   'M16.2 4.2a0.85 0.85 0 1 0 0.01 0';
 
+// Staggered so that no two bodies overlap: a fish drawn across another fish
+// is a tangle of lines at this size, and one tangle spoils the whole school.
+// The tagged one at (92, 2) is in this layout too, at 1.25.
 const SCHOOL: [number, number, number][] = [
-  [4, 16, 0.9],
-  [30, 4, 0.78],
-  [36, 29, 0.86],
-  [66, 14, 1],
-  [72, 34, 0.74],
-  [104, 23, 0.7],
-  [116, 6, 0.8],
+  [4, 0, 0.7],
+  [2, 22, 0.9],
+  [28, 6, 0.8],
+  [38, 36, 0.86],
+  [62, 20, 1],
+  [98, 32, 0.74],
+  [124, 18, 0.8],
 ];
 
 // --- Oarfish --------------------------------------------------------------
@@ -382,20 +385,39 @@ const subHull = shell(
 // --- Siphonophore ---------------------------------------------------------
 // A colony, not an animal: a gas float at the top, a stack of swimming bells
 // under it that beat together, then metres of feeding stem.
-// Packed, overlapping and alternating. Spaced out they read as lampshades
-// threaded on a string; a real nectosome is a stack that beats as one thing.
-const BELLS: [number, number, number][] = [
-  [26, 32, 1],
-  [30, 41, 0.97],
-  [22, 50, 0.95],
-  [30, 59, 0.92],
-  [22, 68, 0.88],
-  [29, 77, 0.85],
-  [23, 86, 0.8],
-  [28, 95, 0.76],
-  [24, 104, 0.72],
-];
-const BELL = 'M-8 3-4.5-9H4.5L8 3Q0 8-8 3Z';
+//
+// Nectophores in two rows, each a rounded box with its opening turned down
+// and out, packed so tightly that each overlaps the next. From a distance a
+// nectosome is a cob, not a string of anything: trapezoids read as
+// lampshades and circles read as grapes, both because they leave gaps.
+const BELLS: [number, number, number, number][] = Array.from({ length: 11 }, (_, i) => [
+  28 + (i % 2 ? 4.5 : -4.5),
+  24 + i * 7.4,
+  i % 2 ? 12 : -12,
+  1 - i * 0.028,
+]);
+const BELL = 'M-6-7h12v9c0 3.5-2.5 6-6 6s-6-2.5-6-6z';
+const VELUM = 'M-3 5q3 2 6 0';
+
+// Cormidia down the stem at one interval, because the colony budded them at
+// one interval. Each is a bract, a leaf-shaped scale that shields the stem,
+// with one tentacle hanging off it, and the tentacles hang at their own
+// lengths, which is the difference between a stem and a string of hooks.
+const CORMIDIA = Array.from({ length: 9 }, (_, i) => {
+  const y = 128 + i * 17;
+  const s = i % 2 ? 1 : -1;
+  // Shorter than the station interval: a tentacle that reaches the next
+  // station's tentacle interleaves with it, and two interleaved curves are
+  // a loop.
+  const len = 9 + ((i * 5) % 6);
+  const bract = `M28 ${y}c${s * 3} -2 ${s * 6} -1 ${s * 7} 2c${-s * 1} 2 ${-s * 4} 3 ${-s * 7} 1Z`;
+  // Trails down and away, with one sway in it. Bent back toward the stem it
+  // reads as a hook, and a stem of hooks is a vine.
+  const tentacle =
+    `M${28 + s * 4} ${y + 3}c${s * 3} 3 ${s * 5} 6 ${s * 4} ${len}` +
+    `c${-s * 1} 2 ${-s * 1} 3 ${-s * 2} 4`;
+  return bract + tentacle;
+}).join('');
 
 // --- Moon jellies ---------------------------------------------------------
 // Four horseshoes in the bell are the gonads, and they are the only reliable
@@ -484,13 +506,13 @@ const SPECIES = [
 {/* --- Shallow: light still reaches, so things here are quick and legible. */}
 
 <template data-species="school">
-  <svg viewBox="-10 -6 152 48" fill="none" stroke="currentColor" stroke-width="1">
+  <svg viewBox="-10 -12 156 58" fill="none" stroke="currentColor" stroke-width="1">
     {SCHOOL.map(([x, y, s]) => (
       <path d={FISH} transform={`translate(${x} ${y}) scale(${s})`} />
     ))}
     {/* The one that got caught, measured and let go again. An acoustic tag is
         real field kit, and it is the only thing down here still reporting. */}
-    <g transform="translate(84 12) scale(1.25)">
+    <g transform="translate(92 2) scale(1.25)">
       <path d={FISH} />
       {/* Clipped to the dorsal base, which is where one actually goes. */}
       <path d="M5.2-0.8h5.4v2.4H5.2z" stroke-width="0.7" />
@@ -515,7 +537,7 @@ const SPECIES = [
     <path d={carapace} />
     {/* Vertebral seams down the midline, and the line that separates them from
         the costal scutes on the flank. */}
-    <path d="M52 36v20M68 30v29M84 29v30M98 31v28" stroke-width="0.5" opacity="0.55" />
+    <path d="M52 36c1 7 1 13 0 20M68 30c1.5 10 1.5 19 0 29M84 29c-1 10-1 20 0 30M98 31c-1.5 9-1.5 19 0 28" stroke-width="0.5" opacity="0.55" />
     <path d="M36 46C56 34 92 34 110 42" stroke-width="0.5" opacity="0.55" />
     {/* Marginals, which is the row that gives the shell its sawn edge. */}
     <path d="M48 57l-1 3M64 60v3M80 60v3M96 60l1 3" stroke-width="0.5" opacity="0.5" />
@@ -724,10 +746,11 @@ const SPECIES = [
     {/* Ink first in the paint order, so it puffs behind everything else. */}
     <circle cx="58" cy="52" r="13" class="drift__ink" />
     <path d={shell(squid)} />
-    {/* One pair of fins at the apex, flaring off the mantle. Drawn as two loose
-        triangles they read as fletching on an arrow. */}
-    <path d="M128 38C146 28 162 22 170 20c4 8 7 16 8 24Z" stroke-width="0.8" />
-    <path d="M128 58C146 68 162 74 170 76c4-8 7-16 8-24Z" stroke-width="0.8" />
+    {/* One pair of fins at the apex, flaring off the mantle. The outer corner
+        is rounded and the trailing edge runs into the tip: drawn as two
+        pointed triangles they read as fletching on a paper dart. */}
+    <path d="M122 39C140 30 156 24 166 24c6 0 10 6 11 13l3 11Z" stroke-width="0.8" />
+    <path d="M122 57C140 66 156 72 166 72c6 0 10-6 11-13l3-11Z" stroke-width="0.8" />
     {/* Head at the mantle opening, and an eye out of all proportion to it. */}
     <path d="M70 37C60 38 52 42 52 48s8 10 18 11" stroke-width="0.9" />
     <path d="M70 37c-6 3-9 7-9 11s3 8 9 11" stroke-width="0.5" opacity="0.6" />
@@ -884,18 +907,17 @@ const SPECIES = [
 
 <template data-species="colony">
   <svg viewBox="0 0 56 300" fill="none" stroke="currentColor" stroke-width="1">
-    <path d="M26 26c5 22-5 40 0 62s-5 40 0 62 4 40 0 62 3 40 0 88" stroke-width="0.8" />
+    <path d="M28 20c3 22-4 44 0 66s-4 44 0 66 3 44 0 66 3 44 0 70" stroke-width="0.7" />
     {/* Gas float at the top. Everything under it hangs from this one bubble. */}
-    <path d="M26 6c4 1 6 4 6 8s-2 7-6 7-6-3-6-7 2-7 6-8Z" stroke-width="0.9" />
-    <path d="M24 9c1-1 3-1 4 0" stroke-width="0.5" opacity="0.7" />
-    {BELLS.map(([x, y, s]) => (
-      <path d={BELL} stroke-width={(0.9 / s).toFixed(2)} transform={`translate(${x} ${y}) scale(${s})`} />
+    <path d="M28 4c3 0 5 3 5 7s-2 8-5 8-5-4-5-8 2-7 5-7Z" stroke-width="0.9" />
+    <path d="M26 8c1-1 3-1 4 0" stroke-width="0.5" opacity="0.7" />
+    {BELLS.map(([x, y, tilt, s]) => (
+      <g transform={`translate(${x} ${y}) rotate(${tilt}) scale(${s})`} stroke-width={(0.8 / s).toFixed(2)}>
+        <path d={BELL} />
+        <path d={VELUM} opacity="0.6" />
+      </g>
     ))}
-    {/* Feeding stem: one pair of tentacles per body, at a regular interval, the
-        whole way down. The regularity is the tell that it is a colony. */}
-    <g stroke-width="0.5" opacity="0.8">
-      <path d="M24 146c-8 4-10 11-7 18M28 160c8 4 10 11 7 18M24 174c-8 4-10 11-7 18M28 188c8 4 10 11 7 18M24 202c-8 4-10 11-7 18M28 216c8 4 10 11 7 18M24 230c-8 4-10 11-7 18M28 244c8 4 10 11 7 18M24 258c-8 4-10 11-7 18M28 272c8 4 10 11 7 18" />
-    </g>
+    <path d={CORMIDIA} stroke-width="0.5" opacity="0.8" />
   </svg>
 </template>
 
