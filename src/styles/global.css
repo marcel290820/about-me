@@ -331,7 +331,8 @@
     background: var(--color-accent);
   }
 
-  /* Log-book row: hairline rule with the entry marked by a dot. */
+  /* Log-book row: one hairline down the margin. The dot it used to carry was
+     the third orange dot on the page, after the rule ends and the soundings. */
   .rail {
     position: relative;
     padding-left: 1.35rem;
@@ -345,17 +346,6 @@
     bottom: 0.35rem;
     width: 1px;
     background: var(--color-border);
-  }
-
-  .rail::after {
-    content: "";
-    position: absolute;
-    left: -2.5px;
-    top: 0.5rem;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--color-accent);
   }
 
   /* --- Surfaces ---------------------------------------------------------- */
@@ -472,39 +462,158 @@
     border-color: var(--color-accent);
   }
 
-  /* --- Portrait ---------------------------------------------------------- */
+  /* --- Portrait ----------------------------------------------------------
+     A chart inset: a rectangle ruled onto the paper with its own border, and
+     outside each corner the ticks a printer leaves where the plate was cut. */
 
-  .portrait-ring {
+  .portrait-inset {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 0;
+  }
+
+  .portrait-inset__frame {
     position: relative;
-    border-radius: 50%;
-    overflow: hidden;
-    isolation: isolate;
-    box-shadow:
-      0 0 0 1px var(--color-border-bright),
-      0 0 0 5px var(--color-surface),
-      0 0 0 6px var(--color-border);
-    transition: box-shadow 0.3s ease;
+    padding: 5px;
+    border: 1px solid var(--color-border-bright);
+    background: var(--color-surface);
+    transition: border-color 0.2s ease;
   }
 
-  .portrait-ring:hover {
-    box-shadow:
-      0 0 0 1px var(--color-accent),
-      0 0 0 5px var(--color-surface),
-      0 0 0 6px var(--color-border);
+  .portrait-inset:hover .portrait-inset__frame {
+    border-color: var(--color-accent);
   }
 
-  .portrait-ring img {
-    border-radius: 50%;
-  }
-
-  .portrait-ring::after {
+  /* Eight ticks from one element: each edge line carried past its corner,
+     with a two pixel gap so the tick reads as a mark and not as a longer box. */
+  .portrait-inset__frame::before {
+    --tick: linear-gradient(var(--color-text-faint), var(--color-text-faint));
     content: "";
     position: absolute;
-    inset: 0;
-    border-radius: 50%;
-    box-shadow: inset 0 0 40px rgba(6, 20, 27, 0.35);
+    inset: -9px;
     pointer-events: none;
-    z-index: 1;
+    background-image: var(--tick), var(--tick), var(--tick), var(--tick),
+      var(--tick), var(--tick), var(--tick), var(--tick);
+    background-repeat: no-repeat;
+    background-size:
+      6px 1px, 1px 6px,
+      6px 1px, 1px 6px,
+      6px 1px, 1px 6px,
+      6px 1px, 1px 6px;
+    background-position:
+      left 0 top 8px, left 8px top 0,
+      right 0 top 8px, right 8px top 0,
+      left 0 bottom 8px, left 8px bottom 0,
+      right 0 bottom 8px, right 8px bottom 0;
+  }
+
+  .portrait-inset img {
+    display: block;
+    border: 1px solid var(--color-border);
+  }
+
+  .portrait-inset figcaption {
+    font-family: var(--font-mono);
+    font-size: 0.5625rem;
+    letter-spacing: 0.12em;
+    color: var(--color-text-dim);
+    white-space: nowrap;
+  }
+
+  /* --- Passage plot ------------------------------------------------------
+     The owner's own track, drawn as a plotting sheet: graticule, rhumb lines,
+     fixes, no land. Tokens, not anchors, so it prints in whichever zone the
+     section lands in. */
+
+  .passage svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    color: var(--color-text);
+  }
+
+  .passage text {
+    font-family: var(--font-mono);
+    fill: var(--color-text);
+    stroke: none;
+    letter-spacing: 0.06em;
+  }
+
+  .passage__grad text {
+    font-size: 8px;
+    fill: var(--color-text-dim);
+  }
+
+  .passage__names text {
+    font-size: 10px;
+    /* A knockout in the water's own colour, so a name that lands on the route
+       sits over it instead of tangling with the dashes. */
+    paint-order: stroke;
+    stroke: var(--color-surface);
+    stroke-width: 3px;
+    stroke-linejoin: round;
+  }
+
+  .passage__note {
+    font-size: 9px;
+    fill: var(--color-text-dim);
+  }
+
+  .passage__track {
+    stroke: var(--color-accent);
+  }
+
+  /* The route draws itself on. The reveal path is the mask over the dashed
+     track; arming hides it, seeing runs it, and each fix comes up when the
+     line reaches it (--at is its fraction along the track). */
+  .passage__reveal {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 0;
+  }
+
+  .passage.is-armed .passage__reveal {
+    stroke-dashoffset: 1;
+  }
+
+  .passage.is-armed .passage__fix {
+    opacity: 0;
+  }
+
+  .passage.is-seen .passage__reveal {
+    animation: passage-draw 4.2s ease-in-out forwards;
+  }
+
+  .passage.is-seen .passage__fix {
+    animation: passage-fix 0.5s ease-out forwards;
+    animation-delay: calc(var(--at, 0) * 4.2s);
+  }
+
+  @keyframes passage-draw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @keyframes passage-fix {
+    to {
+      opacity: 1;
+    }
+  }
+
+  /* Under 40rem the sheet is a third the size it was drawn at. The graticule
+     labels go, the key ports keep their names at a size that survives, and
+     the prose beside the plot carries the rest. */
+  @media (width < 40rem) {
+    .passage__grad,
+    .passage__note,
+    .passage__names text:not(.is-key) {
+      display: none;
+    }
+
+    .passage__names text {
+      font-size: 17px;
+    }
   }
 
   /* --- Waterline --------------------------------------------------------- */
@@ -553,6 +662,14 @@
 
   .waterline--compact .waterline__station {
     display: none;
+  }
+
+  /* Below 1024px the depth badge carries Hs, so the swell does not print it
+     a second time beside it. */
+  @media (max-width: 1023px) {
+    .waterline__station {
+      display: none;
+    }
   }
 
   /* Pages with no surface block cross the waterline right after the header. */
@@ -1389,13 +1506,22 @@
     font-size: 0.625rem;
     line-height: 1.7;
     letter-spacing: 0.1em;
-    transition: color 0.4s ease;
+    transition:
+      color 0.4s ease,
+      opacity 0.6s ease;
 
     --rail-line: var(--color-border);
     --rail-ink: #5e6e75;
     --rail-live: var(--color-buoy);
 
     color: var(--rail-ink);
+  }
+
+  /* At the surface the block would sit over the waterline's fade, where
+     nothing is legible and the swell already prints Hs. It comes on once
+     the waterline has left the frame and the rail's foot is on solid deep. */
+  :root[data-depth="dry"] .depth-rail__live {
+    opacity: 0;
   }
 
   :root[data-zone-low="deep"] .depth-rail__live {
@@ -1438,24 +1564,39 @@
     font-variant-numeric: tabular-nums;
     pointer-events: none;
     color: #5e6e75;
-    background: rgba(241, 236, 223, 0.82);
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--color-border-bright);
     border-radius: 2px;
-    backdrop-filter: blur(6px);
+    /* No fill: it is the rail condensed, not a notification. The blur alone
+       keeps the text readable over the fade. */
+    backdrop-filter: blur(8px);
     transition:
       color 0.4s ease,
-      background 0.4s ease,
       border-color 0.4s ease;
   }
 
   :root[data-zone-low="deep"] .depth-badge {
     color: #93a3a6;
-    background: rgba(6, 20, 27, 0.72);
-    border-color: rgba(234, 227, 211, 0.16);
+    border-color: rgba(234, 227, 211, 0.22);
+  }
+
+  /* The same flag the rail's marker carries at 0 M. */
+  .depth-badge::before {
+    content: "";
+    flex: none;
+    width: 0;
+    height: 0;
+    border-top: 3.5px solid transparent;
+    border-bottom: 3.5px solid transparent;
+    border-left: 6px solid var(--color-buoy);
+    transition: border-color 0.4s ease;
   }
 
   .depth-badge__depth {
     color: var(--color-buoy);
+  }
+
+  :root[data-zone-low="deep"] .depth-badge::before {
+    border-left-color: var(--color-foam);
   }
 
   :root[data-zone-low="deep"] .depth-badge__depth {
@@ -1547,6 +1688,15 @@
 
   .soundings span {
     position: absolute;
+  }
+
+  /* No margin on a phone: the column takes the whole page, and a sounding
+     printed into a paragraph reads as a stray number. Same rule as the
+     marginalia, which go at 1180px. */
+  @media (max-width: 760px) {
+    .soundings {
+      display: none;
+    }
   }
 
   /* --- Chart marginalia (surface only) ------------------------------------ */

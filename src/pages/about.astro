@@ -2,6 +2,7 @@
 import Page from '@/layouts/Page.astro';
 import { Image } from 'astro:assets';
 import portrait from '@/assets/images/marcel-heidebrecht-portrait.jpeg';
+import Passage from '@/components/Passage.astro';
 
 // Read as a soundings table: field on the left, what was found on the right.
 const skills: [string, string][] = [
@@ -52,15 +53,18 @@ const jsonLd = {
       <div class="flex-1 prose max-w-none">
         <p>I'm a fullstack engineer and DevOps enthusiast based in Berlin. Right now I'm finishing my M.Sc. in Industrial Engineering & IT at TU Berlin. I just wrapped up six months as a DevOps Engineer at Capgemini, where I built the observability stack for a sovereign AI platform. Most of what I do sits between software and infrastructure: AWS EKS migrations with Terraform, Python automation, full-stack tooling. Before any of that I spent six months on a sailing ship, mentoring students and helping with microplastic research. That trip is still why I prefer working on whole systems instead of single features.</p>
       </div>
-      <div class="shrink-0 portrait-ring">
-        <Image
-          src={portrait}
-          alt="Marcel Heidebrecht"
-          width={640}
-          height={640}
-          class="object-cover w-32 h-32 sm:w-40 sm:h-40 block relative z-0"
-        />
-      </div>
+      <figure class="portrait-inset shrink-0">
+        <div class="portrait-inset__frame">
+          <Image
+            src={portrait}
+            alt="Marcel Heidebrecht"
+            width={640}
+            height={640}
+            class="object-cover w-32 h-40 sm:w-44 sm:h-56"
+          />
+        </div>
+        <figcaption>Berlin, 52&deg;31'N 013&deg;24'E</figcaption>
+      </figure>
     </div>
   </div>
 
@@ -76,11 +80,9 @@ const jsonLd = {
         <p class="font-mono text-sm text-accent mb-1">Capgemini Deutschland GmbH</p>
         <p class="font-mono text-xs text-text-dim mb-3">Feb 2026 to Jul 2026, Berlin</p>
         <ul class="text-[0.9375rem] text-text-muted list-disc pl-4 space-y-1.5">
-          <li>Central observability stack for a sovereign AI platform: metrics, logs and traces across ~40 tenants and 70+ Docker services</li>
-          <li>OpenTelemetry pipelines with receivers, processors and exporters feeding a Grafana LGTM stack (Loki, Tempo, Mimir)</li>
-          <li>Ansible playbooks and Jinja templates automating deployment and configuration of every component</li>
-          <li>Docker Swarm rollout and operations: Compose files, rolling service updates, failure debugging</li>
-          <li>Instrumentation of Authentik, Traefik, the Docker daemon, LiteLLM and OpenWebUI, plus host and container telemetry via Node Exporter and cAdvisor</li>
+          <li>Central observability stack for a sovereign AI platform: OpenTelemetry pipelines into Grafana LGTM, across ~40 tenants and 70+ services</li>
+          <li>Every component deployed and configured through Ansible; Docker Swarm rollout and operations</li>
+          <li>Instrumented the platform end to end, from Traefik and Authentik to LiteLLM and OpenWebUI</li>
         </ul>
       </div>
 
@@ -89,10 +91,8 @@ const jsonLd = {
         <p class="font-mono text-sm text-accent mb-1">Campana &amp; Schott GmbH</p>
         <p class="font-mono text-xs text-text-dim mb-3">Apr 2025 to Jan 2026, Berlin</p>
         <ul class="text-[0.9375rem] text-text-muted list-disc pl-4 space-y-1.5">
-          <li>AI-powered lead generation agent with Python and browser automation</li>
-          <li>Data platform maintenance for international clients; performance improvements</li>
+          <li>AI-powered lead generation agent in Python with browser automation</li>
           <li>Migration concept consolidating Azure Data Factory and Databricks into Microsoft Fabric</li>
-          <li>Client project presentations and internal initiatives</li>
         </ul>
       </div>
 
@@ -101,9 +101,8 @@ const jsonLd = {
         <p class="font-mono text-sm text-accent mb-1">Sourcepark GmbH</p>
         <p class="font-mono text-xs text-text-dim mb-3">Nov 2021 to Apr 2025, Berlin</p>
         <ul class="text-[0.9375rem] text-text-muted list-disc pl-4 space-y-1.5">
-          <li>Cloud migration of a complex microservice system to AWS EKS; Terraform provisioning and Ansible configuration</li>
-          <li>Java OCR app (Tesseract) and Playwright test project implementation</li>
-          <li>Full-stack security scanner and custom Docker client tooling</li>
+          <li>Migrated a microservice system to AWS EKS: Terraform provisioning, Ansible configuration</li>
+          <li>Java OCR app on Tesseract, a Playwright test suite, a full-stack security scanner</li>
         </ul>
       </div>
     </div>
@@ -131,6 +130,21 @@ const jsonLd = {
 
   <section class="mb-24 sm:mb-32">
     <div class="section-heading">
+      <h2>extracurricular</h2>
+    </div>
+    <div class="rail">
+      <h3 class="text-base font-semibold mb-1">Student Consultant</h3>
+      <p class="font-mono text-sm text-accent mb-1">Company Consulting Team e.V.</p>
+      <p class="font-mono text-xs text-text-dim mb-3">Jun 2024 to present, Berlin</p>
+      <ul class="text-[0.9375rem] text-text-muted list-disc pl-4 space-y-1.5">
+        <li>Led the database redesign: 10x faster</li>
+        <li>Internal LLM infrastructure, a Slack app in Python, GitLab CI/CD pipelines</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="mb-24 sm:mb-32">
+    <div class="section-heading">
       <h2>skills</h2>
     </div>
     <dl class="border-t border-border-subtle">
@@ -143,30 +157,19 @@ const jsonLd = {
     </dl>
   </section>
 
-  <section class="mb-24 sm:mb-32">
+  <section>
     <div class="section-heading">
       <h2>beyond code</h2>
     </div>
     <div class="rail">
-      <h3 class="text-base font-semibold mb-1">Global sailing expedition</h3>
+      <h3 class="text-base font-semibold mb-1">Atlantic circuit under sail</h3>
       <p class="font-mono text-sm text-accent mb-1">Ocean College</p>
-      <p class="font-mono text-xs text-text-dim mb-3">Oct 2018 to Apr 2019, 11 countries</p>
-      <p class="text-[0.9375rem] text-text-muted">Mentored 26 students during a 6-month global sailing expedition across 11 countries. Conducted scientific research on ocean microplastic pollution, published in FAZ.</p>
+      <p class="font-mono text-xs text-text-dim mb-3">Oct 2018 to Apr 2019, both sides of the Atlantic</p>
+      <p class="text-[0.9375rem] text-text-muted">Six months aboard a tall ship, Ireland to France the long way round: England, Spain and Morocco, out to Tenerife and Cape Verde, across the trades to the Caribbean, on to Costa Rica, Panama, Cuba and the Bahamas, and home by the Azores. I mentored 26 students on board and helped run the microplastics research that was later published in the FAZ.</p>
     </div>
+
+    {/* Outside the rail so its hairline does not run through the plot. */}
+    <Passage detail class="mt-10" />
   </section>
 
-  <section>
-    <div class="section-heading">
-      <h2>extracurricular</h2>
-    </div>
-    <div class="rail">
-      <h3 class="text-base font-semibold mb-1">IT Department, Company Consulting Team</h3>
-      <p class="font-mono text-xs text-text-dim mb-3">Jun 2024 to present, Berlin</p>
-      <ul class="text-[0.9375rem] text-text-muted list-disc pl-4 space-y-1.5">
-        <li>Project lead for database redesign achieving 10x performance improvement</li>
-        <li>Project controlling for BCM conception; internal LLM infrastructure rollout</li>
-        <li>Knowledge management system, Python Slack app, GitLab CI/CD pipelines</li>
-      </ul>
-    </div>
-  </section>
 </Page>

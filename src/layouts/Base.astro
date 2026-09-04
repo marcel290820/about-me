@@ -246,7 +246,8 @@ const soundings: [number, number, number][] = [
       const MARINE_URL =
         'https://marine-api.open-meteo.com/v1/marine' +
         '?latitude=54.25&longitude=12.10' +
-        '&current=wave_height,sea_surface_temperature';
+        '&current=wave_height,sea_surface_temperature' +
+        '&timezone=Europe%2FBerlin';
 
       // Baltic wave heights rarely pass 2.5m, so that is full scale.
       const FULL_SCALE_M = 2.5;
@@ -270,6 +271,14 @@ const soundings: [number, number, number][] = [
           if (typeof seaTemp === 'number') {
             const el = document.querySelector('[data-sea-sst]');
             if (el) el.textContent = seaTemp.toFixed(1) + '°';
+          }
+
+          // The observation time, buoy local, is what makes "live" believable.
+          const when = data?.current?.time;
+          if (typeof when === 'string' && when.length >= 16) {
+            document.querySelectorAll('[data-sea-time]').forEach((el) => {
+              el.textContent = when.slice(11, 16);
+            });
           }
         })
         .catch(() => {

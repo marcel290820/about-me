@@ -36,12 +36,16 @@ const ticks = [0, 12, 24, 36, 48];
       <dt>SST</dt>
       <dd data-sea-sst>&ndash;&ndash;</dd>
     </div>
+    <div class="flex gap-2">
+      <dt>obs</dt>
+      <dd data-sea-time>&ndash;&ndash;</dd>
+    </div>
   </dl>
 </aside>
 
 <!-- Below 1024px the rail is hidden, so the instrument condenses to this. -->
 <div class="depth-badge" aria-hidden="true">
-  <span class="depth-badge__depth"><em data-depth-value style="font-style: normal">0</em>m</span>
+  <span class="depth-badge__depth"><em data-depth-value style="font-style: normal">0</em> m</span>
   <span class="depth-badge__rule"></span>
-  <span data-sea-hs>&ndash;&ndash;</span>
+  <span>Hs <b data-sea-hs>&ndash;&ndash;</b></span>
 </div>

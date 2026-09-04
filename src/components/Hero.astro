@@ -4,11 +4,11 @@ import portrait from '@/assets/images/marcel-heidebrecht-portrait.jpeg';
 ---
 
 <section class="relative pt-10 pb-16 sm:pt-16 sm:pb-28">
-  <h1 class="display-name display-name--hero mb-10 sm:mb-12">
+  <h1 class="display-name display-name--hero mb-8 sm:mb-10">
     Marcel<br />Heidebrecht
   </h1>
 
-  <div class="flex flex-col-reverse sm:flex-row sm:items-end sm:justify-between gap-8 sm:gap-10">
+  <div class="flex flex-col-reverse sm:flex-row sm:items-start sm:justify-between gap-8 sm:gap-10">
     <div class="min-w-0">
       <p class="text-lg sm:text-xl text-text-muted mb-3">
         Fullstack Engineer <span class="text-text-faint">/</span> DevOps Enthusiast
@@ -23,14 +23,17 @@ import portrait from '@/assets/images/marcel-heidebrecht-portrait.jpeg';
       </div>
     </div>
 
-    <div class="shrink-0 portrait-ring self-start sm:self-end">
-      <Image
-        src={portrait}
-        alt="Marcel Heidebrecht"
-        width={640}
-        height={640}
-        class="object-cover w-28 h-28 sm:w-40 sm:h-40 block relative z-0"
-      />
-    </div>
+    <figure class="portrait-inset shrink-0 self-start">
+      <div class="portrait-inset__frame">
+        <Image
+          src={portrait}
+          alt="Marcel Heidebrecht"
+          width={640}
+          height={640}
+          class="object-cover w-32 h-40 sm:w-44 sm:h-56"
+        />
+      </div>
+      <figcaption>Berlin, 52&deg;31'N 013&deg;24'E</figcaption>
+    </figure>
   </div>
 </section>

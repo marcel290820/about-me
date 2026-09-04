@@ -20,7 +20,7 @@
 - All custom CSS in single file: `src/styles/global.css`
 - Theme tokens in `@theme {}` block — use these variables, not raw colors
 - Accent glow token: `--color-accent-glow: rgba(56, 189, 248, 0.45)` — use for all glow/shadow effects
-- Component classes (`.card`, `.tag`, `.btn-primary`, `.chip`, `.rail`, `.portrait-ring`, etc.) are in `@layer components`
+- Component classes (`.card`, `.tag`, `.btn-primary`, `.rail`, `.portrait-inset`, etc.) are in `@layer components`
 - Tailwind utility classes inline in templates for layout/spacing; custom classes for visual effects
 - No CSS modules, no styled-components
 - Border radius: `3px` (buttons/tags), `4px` (cards/images/chips)
