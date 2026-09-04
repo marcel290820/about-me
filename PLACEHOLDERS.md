@@ -1,31 +1,10 @@
 # PLACEHOLDER TRACKING
 
-This file tracks all placeholders used across the site. Replace each with real content when ready.
-
-## Profile / Personal Info
-| Placeholder | Location | Status | Description |
-|---|---|---|---|
-| `PLACEHOLDER_TAGLINE` | Hero component, index page | FILLED | "infra, backends, interfaces. all of it." |
-| `PLACEHOLDER_BIO` | About page | FILLED | Full bio paragraph about Marcel |
-| `PLACEHOLDER_PROFILE_IMAGE` | About page, Hero | FILLED | `src/assets/images/marcel-heidebrecht-portrait.jpeg` |
-| `PLACEHOLDER_GITHUB_URL` | Footer | FILLED | https://github.com/marcel290820 |
-| `PLACEHOLDER_LINKEDIN_URL` | Footer | FILLED | https://www.linkedin.com/in/marcel-heidebrecht-a52296212 |
-| `PLACEHOLDER_X_URL` | Footer | FILLED | https://x.com/marcel290820 |
+Content slots still unfilled. Profile, links, favicon, OG image and deploy are done.
 
 ## Content
 | Placeholder | Location | Description |
 |---|---|---|
 | Blog posts | `src/content/blog/` | empty; curate real posts |
-| Projects | `src/content/projects/` | empty; curate real projects |
+| Projects | `src/content/projects/` | directory missing, so every build warns; create it and curate real projects |
 | Interests | `src/content/interests/` | 4 sample interests from CV; expand with details |
-
-## Assets
-| Placeholder | Location | Status | Description |
-|---|---|---|---|
-| `public/favicon.svg` | Root | FILLED | Two stems and a swell: an M drawn as water |
-| `public/og-default.png` | Root | FILLED | 1200x630, the crossing. Regenerate with `scripts/og.mjs` |
-
-## Deployment
-| Placeholder | Location | Description |
-|---|---|---|
-| GitHub Actions | `.github/workflows/deploy.yml` | CNAME file already in `public/` for marcel-heidebrecht.de |

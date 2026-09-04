@@ -348,6 +348,25 @@
     background: var(--color-border);
   }
 
+  /* A fix on the rail: an entry's dates pinned to the hairline with the depth
+     rail's marker in miniature, so the log reads in the chart's notation. */
+  .rail__fix {
+    position: relative;
+  }
+
+  .rail__fix::before {
+    content: "";
+    position: absolute;
+    left: -1.35rem;
+    top: 50%;
+    width: 0;
+    height: 0;
+    transform: translateY(-50%);
+    border-top: 3.5px solid transparent;
+    border-bottom: 3.5px solid transparent;
+    border-left: 6px solid var(--color-accent);
+  }
+
   /* --- Surfaces ---------------------------------------------------------- */
 
   .card {
@@ -621,17 +640,17 @@
   .waterline {
     position: relative;
     height: 220px;
-    /* Stopped through shoaling water rather than straight to black: a plain
-       two-stop ramp interpolates through grey and reads as fog. The last
-       stops are spread out, because a fade that finishes in the final tenth
-       of the band puts a hard edge on the water. */
+    /* Water only. The paper is the far train's fill, so its edge is the
+       swell profile rather than a gradient stop, and the water starts pale
+       right under the edge. Stopped through shoaling water rather than
+       straight to black: a plain two-stop ramp interpolates through grey and
+       reads as fog. The last stops are spread out, because a fade that
+       finishes in the final tenth of the band puts a hard edge on the water. */
     background: linear-gradient(
       to bottom,
-      var(--color-paper) 0%,
-      var(--color-paper) 11%,
-      #b9c3b8 27%,
-      #5b8288 44%,
-      #1c4750 61%,
+      #9db4ae 0%,
+      #5b8288 40%,
+      #1c4750 60%,
       #0d2a33 79%,
       var(--color-abyss) 96%,
       var(--color-abyss) 100%
@@ -697,10 +716,12 @@
   /* The floor is high on purpose. A flat Baltic reports around 0.08, and
      scaling straight off that leaves a line, not a sea. Live wave height sets
      how rough it looks, not whether it looks like water at all. */
+  /* The far train carries the paper. Overflow visible so the fill can reach
+     above the frame; the layer itself clips. */
   .waterline__train--far {
     --amp: calc(0.62 + var(--sea-state) * 0.5);
     --period: calc(44s - var(--sea-state) * 18s);
-    opacity: 0.4;
+    overflow: visible;
   }
 
   .waterline__train--near {

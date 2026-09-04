@@ -27,13 +27,16 @@ function train(mid: number, harmonics: Harmonic[]) {
 
 // Perspective: the far swell sits higher in the frame, runs shallower and
 // travels slower. Kept angular rather than smooth, the way a sounder draws it.
+// It is also where the paper ends: the same SVG carries a paper fill above
+// the profile, so the orange line is the edge of the chart and not a stripe
+// printed on a fade.
 const far = train(56, [
   [1, 8, 2.4],
   [2, 4, 0.3],
   [5, 1.8, 1.7],
 ]);
 
-const near = train(92, [
+const near = train(100, [
   [1, 14, 0],
   [2, 7, 1.1],
   [3, 4, 2.3],
@@ -45,6 +48,10 @@ interface Props {
 }
 
 const { compact = false } = Astro.props;
+
+// The fill runs well above the frame so that scaleY never pulls its top edge
+// into view; the layer clips whatever is outside.
+const paper = far + `L${TILE * 2} -300L0 -300Z`;
 
 const soundings = [
   [70, 118],
@@ -65,20 +72,6 @@ const soundings = [
   aria-hidden="true"
 >
   <svg
-    class="waterline__train waterline__train--far"
-    viewBox={`0 0 ${TILE * 2} 160`}
-    preserveAspectRatio="none"
-    fill="none"
-  >
-    <path
-      d={far}
-      stroke="var(--color-buoy)"
-      stroke-width="1"
-      vector-effect="non-scaling-stroke"
-    />
-  </svg>
-
-  <svg
     class="waterline__train waterline__train--near"
     viewBox={`0 0 ${TILE * 2} 160`}
     preserveAspectRatio="none"
@@ -86,6 +79,23 @@ const soundings = [
   >
     <path
       d={near}
+      stroke="var(--color-buoy)"
+      stroke-width="1"
+      vector-effect="non-scaling-stroke"
+    />
+  </svg>
+
+  {/* Drawn after the near train so that a crest rising past the edge goes
+      under the paper instead of over it. */}
+  <svg
+    class="waterline__train waterline__train--far"
+    viewBox={`0 0 ${TILE * 2} 160`}
+    preserveAspectRatio="none"
+    fill="none"
+  >
+    <path d={paper} fill="var(--color-paper)" />
+    <path
+      d={far}
       stroke="var(--color-buoy)"
       stroke-width="1"
       vector-effect="non-scaling-stroke"
