@@ -1,75 +1,217 @@
 ---
-import { type Node, spine, shell, ridge, rays } from '@/lib/curves';
+import { type Node, spine, ridge } from '@/lib/curves';
 
 // --- Oarfish --------------------------------------------------------------
 // The longest bony fish there is: a silver ribbon that stands a scarlet crest
 // over its head, and the reason sailors kept coming home reporting serpents.
+//
+// The ribbon is the identification. Depth is about a seventeenth of length
+// behind the head and thins from there to a thread; at eleven to one it read
+// as a deep eel and at fourteen as a cutlassfish. The wave is one long, low
+// undulation, head lifted a little: a tube that snakes is a serpent, and
+// the serpent was the sailors' mistake, not ours.
+const HEAD_U = 10.6;
+const HEAD_D = 10.2;
 const oar = spine({
-  from: 20,
+  from: 14,
   to: 292,
-  steps: 52,
-  y: (t) => 52 + Math.sin((1 - t) * 7.4) * 7 + Math.sin((1 - t) * 15) * 2,
+  steps: 150,
+  y: (t) => 66 - 9 * t + 4.2 * Math.sin(t * 8.2 + 0.9),
   up: [
-    [0, 1],
-    [0.2, 7],
-    [0.5, 13],
-    [0.78, 16],
-    [0.92, 16.5],
-    [1, 12],
+    [0, 0.3],
+    [0.12, 2.6],
+    [0.3, 5.2],
+    [0.5, 7],
+    [0.78, 8],
+    [0.93, HEAD_U],
+    [1, HEAD_U],
   ],
   down: [
-    [0, 1],
-    [0.2, 7.5],
-    [0.5, 13.5],
-    [0.8, 16.5],
-    [0.93, 15.5],
-    [1, 10],
+    [0, 0.3],
+    [0.12, 3],
+    [0.3, 5.8],
+    [0.5, 7.6],
+    [0.78, 8.4],
+    [0.93, HEAD_D],
+    [1, HEAD_D],
   ],
+}).map((p) => {
+  // The head is a fraction deeper than the body and has its own profile:
+  // the forehead is one convex curve from the nape steepening into the
+  // snout, and the chin recedes under the mouth on a shorter one. A vertical
+  // cut between two bevels at body depth was a ribbon die-cut at one end.
+  // Both are superellipse quadrants: the brow's exponent keeps it deep and
+  // then drops it steeply, so the snout is truncated rather than bulleted;
+  // the chin's lower one lets the jaw fall away. The term is clamped
+  // because t = 1 lands a hair past 1 in floating point, and one NaN in the
+  // path data throws the rest of the outline away.
+  const arc = (k: number, n: number) => Math.pow(Math.max(0, 1 - Math.pow(k, n)), 1 / n);
+  const brow = (p.t - 0.945) / 0.055;
+  const chin = (p.t - 0.95) / 0.05;
+  return {
+    ...p,
+    u: brow > 0 ? HEAD_U * arc(brow, 2.6) : p.u,
+    d: chin > 0 ? HEAD_D * arc(chin, 1.6) : p.d,
+  };
 });
 
-// The dorsal fin runs the whole animal and stays low. Letting it swell toward
-// the head instead is what turned the crest into a flag last time round.
-const oarFin = (p: Node) => 4 + p.t * 5;
-const oarHead = oar[oar.length - 1];
+const head = oar[oar.length - 1];
+const face = head.x;
+const f = (n: number) => n.toFixed(1);
+const nodeAt = (x: number) => oar.reduce((a, b) => (Math.abs(b.x - x) < Math.abs(a.x - x) ? b : a));
 
-// The crest is a separate thing: the first ten or so dorsal rays, standing
-// well clear of the fin behind them and trailing aft. Nothing joins their tips
-// -- a line across them is a sail, and a sail is a different fish.
-const oarCrest = (() => {
-  const mane = oar.filter((p) => p.t >= 0.84);
-  return mane
-    .map((p, i) => {
-      const f = i / (mane.length - 1);
-      const h = 17 + f * 27;
-      const base = p.y - p.u - 2;
-      const top = base - h;
-      return (
-        `M${p.x.toFixed(1)} ${base.toFixed(1)}` +
-        `C${(p.x - 3).toFixed(1)} ${(top + h * 0.55).toFixed(1)}` +
-        ` ${(p.x - 6).toFixed(1)} ${(top + h * 0.28).toFixed(1)}` +
-        ` ${(p.x - 8 - f * 5).toFixed(1)} ${top.toFixed(1)}`
-      );
-    })
-    .join('');
+// The outline is a shell left open at the tail. An oarfish tail is almost
+// always broken off, so the two edges close to a thread over the last tenth
+// and stop short of each other instead of meeting in a neat point: the
+// lower one stops first and the upper runs on alone.
+const ribbon = (() => {
+  const top = oar.map((p) => `${f(p.x)} ${f(p.y - p.u)}`);
+  const bot = oar
+    .filter((p) => p.t >= 0.02)
+    .map((p) => `${f(p.x)} ${f(p.y + p.d)}`)
+    .reverse();
+  return `M${top.join('L')}L${bot.join('L')}`;
 })();
+
+// The head goes over again, heavier. At the opacity it is seen at, the body
+// ghosts out and the crest floats loose unless the face holds.
+const headline = (() => {
+  const n = oar.filter((p) => p.t >= 0.92);
+  const top = n.map((p) => `${f(p.x)} ${f(p.y - p.u)}`);
+  const bot = n.map((p) => `${f(p.x)} ${f(p.y + p.d)}`).reverse();
+  return `M${top.join('L')}L${bot.join('L')}`;
+})();
+
+// The dorsal fin runs from the crest to the tail and stays low: lowest at
+// the tail, a quarter of the depth behind the head, and the last tenth runs
+// up into the crest so the orange is visibly the same fin carrying on. The
+// rays rake aft and vary a little in pitch and height, and a faint edge
+// drawn through their nominal tips carries the membrane. Ruled dead
+// vertical at even pitch between two edges they were a zipper; spaced out
+// and ragged with no edge they were bristles.
+const finLift = (p: Node) => {
+  const k = Math.max(0, (p.t - 0.8) / 0.1);
+  return 1.4 + p.t * 3.6 + k * k * 9;
+};
+const fin = oar.filter((p) => p.t >= 0.02 && p.t < 0.9);
+const hash = (i: number) => {
+  const s = Math.sin(i * 12.9898) * 43758.5453;
+  return s - Math.floor(s);
+};
+const finRays = fin
+  // Pitch is two, three or four nodes by the hash, and over the rear third
+  // more and more rays drop out so the edge line carries the fin alone.
+  .filter((p, i) => i % (2 + Math.floor(hash(i) * 3)) === 0 && hash(i + 700) < 0.35 + p.t * 1.6)
+  .map((p, i) => {
+    const h = finLift(p) * (0.82 + 0.36 * hash(i + 300));
+    return `M${f(p.x)} ${f(p.y - p.u)}l${f(-h * 0.22)} ${f(-h)}`;
+  })
+  .join('');
+
+/** Narrow closed blade from (x, y) along (dx, dy); w is its full width. */
+const blade = (x: number, y: number, dx: number, dy: number, len: number, w: number) => {
+  const m = Math.hypot(dx, dy);
+  const ux = dx / m;
+  const uy = dy / m;
+  const nx = -uy;
+  const ny = ux;
+  const tx = x + ux * len;
+  const ty = y + uy * len;
+  const mx = x + ux * len * 0.42;
+  const my = y + uy * len * 0.42;
+  return (
+    `M${f(x)} ${f(y)}Q${f(mx + nx * w)} ${f(my + ny * w)} ${f(tx)} ${f(ty)}` +
+    `Q${f(mx - nx * w)} ${f(my - ny * w)} ${f(x)} ${f(y)}`
+  );
+};
+
+// The crest is the first dorsal rays grown long. It rises from over the eye
+// and streams aft over the nape, the first rays longest, each ending in a
+// small open tab of membrane set along the ray. Nothing joins the tips -- a
+// line across them is a sail, and a sail is a different fish. Each ray is
+// one even arc that leaves the head a little aft of vertical and arrives at
+// its tip leaning further; rising stiff and then laying over made a row of
+// shepherd's crooks, and standing them up made a mohawk. Pitch and lean are
+// uneven down the row, and the third ray leans harder than the fourth so
+// the two cross: a fan of rays that never touch is a comb.
+const CREST: [number, number, number][] = [
+  // [set-back of the base from the face, length, lean aft of the tip]
+  [5, 36, 0.5],
+  [6.8, 33, 0.62],
+  [9.6, 28, 0.9],
+  [12, 25, 0.72],
+  [16.2, 20, 1.05],
+  [19.4, 16, 1.2],
+  [24.6, 12.5, 1.36],
+];
+const crest = CREST.map(([back, h, lean]) => {
+  const x = face - back;
+  const p = nodeAt(x);
+  const base = p.y - p.u;
+  const a0 = lean * 0.3 - 0.06;
+  const a1 = Math.min(lean * 1.6, 1.75);
+  const c1x = x - h * 0.4 * Math.sin(a0);
+  const c1y = base - h * 0.4 * Math.cos(a0);
+  const tx = x - h * 0.92 * Math.sin(lean);
+  const ty = base - h * 0.92 * Math.cos(lean);
+  const c2x = tx + h * 0.36 * Math.sin(a1);
+  const c2y = ty + h * 0.36 * Math.cos(a1);
+  // The tab: the ray runs on a touch past the tip and a second stroke lies
+  // beside it, open at the back. A closed teardrop was a pin head.
+  const dx = -Math.sin(a1);
+  const dy = -Math.cos(a1);
+  const ex = tx + dx * 3.2;
+  const ey = ty + dy * 3.2;
+  return (
+    `M${f(x)} ${f(base)}C${f(c1x)} ${f(c1y)} ${f(c2x)} ${f(c2y)} ${f(tx)} ${f(ty)}` +
+    `L${f(ex)} ${f(ey)}` +
+    `M${f(tx - dx * 0.4 - dy * 1.1)} ${f(ty - dy * 0.4 + dx * 1.1)}L${f(ex)} ${f(ey)}`
+  );
+}).join('');
+
+// One pelvic ray each side, longer than the body is deep, ending in a flat
+// paddle. They leave from low behind the gill and trail back and down. That
+// is where the name came from; without the paddles it is a fish with
+// whiskers. The near paddle is seen flat and the far one nearly edge-on,
+// because two identical leaves on two stalks are a plant; narrower still
+// and the far one was an arrowhead.
+const oarlock = nodeAt(face - 22);
+const ox = oarlock.x;
+const oy = oarlock.y + oarlock.d - 0.5;
+const near = { c1: [ox - 10, oy + 14], c2: [ox - 28, oy + 30], end: [ox - 50, oy + 41] };
+const far = { c1: [ox - 12, oy + 11], c2: [ox - 34, oy + 23], end: [ox - 60, oy + 31] };
+const pelvic = (r: typeof near) =>
+  `M${f(ox)} ${f(oy)}C${f(r.c1[0])} ${f(r.c1[1])} ${f(r.c2[0])} ${f(r.c2[1])} ${f(r.end[0])} ${f(r.end[1])}`;
+const paddle = (r: typeof near, w: number) =>
+  blade(r.end[0], r.end[1], r.end[0] - r.c2[0], r.end[1] - r.c2[1], 12, w);
+
+// Head furniture, all hung off the face so it moves with the spine. The eye
+// is enormous, set high enough to crowd the forehead line, and the pupil
+// is a pinpoint forward of centre: a fat dot dead centre in a ring is a
+// target, and a fat one off centre is a cartoon.
+// One opercular curve behind it bows aft and separates head from body.
+const eye = { x: face - 8.4, y: head.y - 4.4 };
+const gill = nodeAt(face - 20);
 ---
 
-<svg viewBox="0 -20 316 158" fill="none" stroke="currentColor" stroke-width="1">
-  <path d={shell(oar)} />
-  <path d={ridge(oar, oarFin)} stroke-width="0.5" opacity="0.7" />
-  <path d={rays(oar, oarFin, 3, 0)} stroke-width="0.5" opacity="0.65" />
+<svg viewBox="0 12 318 112" fill="none" stroke="currentColor" stroke-width="0.8">
+  <path d={ribbon} />
+  <path d={headline} stroke-width="1.05" />
+  <path d={finRays} stroke-width="0.35" opacity="0.55" />
+  <path d={ridge(fin, finLift)} stroke-width="0.35" opacity="0.28" />
   {/* On a live one the crest is scarlet. Buoy is the one warm mark down here. */}
-  <path d={oarCrest} stroke-width="0.9" class="drift__crest" />
-  {/* The face is near vertical and the eye is enormous, which is what a fish
-      that lives on the edge of the light ends up with. */}
-  <circle cx={oarHead.x - 13} cy={oarHead.y - 5} r="4.4" stroke-width="0.7" />
-  <circle cx={oarHead.x - 13} cy={oarHead.y - 5} r="1.6" fill="currentColor" stroke="none" />
-  {/* The mouth is protrusible: it shoots forward off that face to feed. */}
-  <path d={`M${oarHead.x} ${oarHead.y + 3}c5 0 8 2 9 5-4 0-7-1-9-3Z`} stroke-width="0.7" />
-  <path d={`M${oarHead.x} ${oarHead.y}h-4M${oarHead.x - 6} ${oarHead.y - 9}c3 3 4 6 4 9`} stroke-width="0.5" opacity="0.6" />
-  <path d={`M${oarHead.x - 26} ${oarHead.y - 12}c3 6 4 12 3 18`} stroke-width="0.5" opacity="0.5" />
-  {/* Two pelvic fins trail like oars, each one ray with a blade on the end.
-      That is where the name came from. */}
-  <path d="M266 74C258 92 242 104 225 110M262 75C254 96 238 110 219 118" stroke-width="0.6" opacity="0.8" />
-  <path d="M225 110c-6 2-10 6-10 10 6-1 10-5 11-9ZM219 118c-6 2-10 6-10 10 6-1 10-5 11-9Z" stroke-width="0.5" opacity="0.8" />
+  <path d={crest} stroke-width="0.85" stroke-linecap="round" class="drift__crest" />
+  <circle cx={eye.x} cy={eye.y} r="3.9" stroke-width="0.75" />
+  <circle cx={eye.x + 1} cy={eye.y - 0.2} r="1.1" fill="currentColor" stroke="none" />
+  {/* The mouth is small and protrusible and sits at the very front: one
+      cleft notched into the profile with the lower jaw jutting under it. */}
+  <path d={`M${f(face - 0.4)} ${f(head.y + 0.4)}l-4.2 0.8M${f(face - 0.4)} ${f(head.y + 0.4)}l0.9 1.7-1.7 1.5`} stroke-width="0.6" />
+  <path d={`M${f(gill.x)} ${f(gill.y - gill.u + 1.2)}C${f(gill.x + 4)} ${f(gill.y - 3)} ${f(gill.x + 4)} ${f(gill.y + 4)} ${f(gill.x - 0.5)} ${f(gill.y + gill.d - 1)}`} stroke-width="0.45" opacity="0.6" />
+  {/* The pectoral is two short strokes off the operculum, low; more than
+      that read as an arrowhead. */}
+  <path d={`M${f(gill.x - 1.5)} ${f(gill.y + 2.5)}l-6.4 1.6M${f(gill.x - 1.5)} ${f(gill.y + 2.5)}l-5.6 3.6`} stroke-width="0.45" opacity="0.5" />
+  <path d={pelvic(far)} stroke-width="0.5" opacity="0.6" />
+  <path d={paddle(far, 2.4)} stroke-width="0.45" opacity="0.6" />
+  <path d={pelvic(near)} stroke-width="0.55" />
+  <path d={paddle(near, 5.2)} stroke-width="0.5" />
 </svg>

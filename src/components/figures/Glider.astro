@@ -1,22 +1,137 @@
 ---
-import { shell, torpedo } from '@/lib/curves';
+import { torpedo } from '@/lib/curves';
 
-const gliderHull = shell(torpedo(26, 148, 38, 9));
+// Nose first: t=0 is the blunt end of the profile. Run the other way the
+// dome sat at the tail and the long taper at the nose, which is a dart, and
+// a dart flies point first. shell() would wall the nose flat, and an arc
+// across that flat was a button on the tip, so the outline starts three
+// nodes in and closes with a hemisphere the width of the hull there. The
+// tail keeps its small flat: that is the end cap.
+const NOSE = 240;
+const TAIL = 110;
+const AXIS = 76;
+const n = torpedo(NOSE, TAIL, AXIS, 10.5);
+const f = (v: number) => v.toFixed(1);
+const pt = (x: number, y: number) => `${f(x)} ${f(y)}`;
+
+// The near wing, seen from above enough that it shows as a planform: root
+// chord on the centreline, leading edge swept about a third off the axis,
+// tip square, chord narrow. It is in front of the hull, so the hull's lower
+// edge stops where the wing covers it and picks up again past it. With the
+// root down on the flank it was a keel, and a torpedo with a keel is still
+// a torpedo; with a chord half again this wide it was a fighter.
+// One wing only: the far tip peeking over the top line landed beside the
+// rudder and made a second fin.
+const wing = { rootLE: 181, rootTE: 166, rootY: AXIS, tipLE: 150, tipTE: 144, tipY: 104 };
+const cross = (xr: number, xt: number) => {
+  // Where the wing edge from (xr, rootY) to (xt, tipY) meets the hull's lower
+  // edge. That edge is flat to within a hair here, so two passes at the
+  // nearest node are exact enough.
+  let x = xr;
+  let yb = wing.rootY;
+  for (let pass = 0; pass < 2; pass++) {
+    const near = n.reduce((a, b) => (Math.abs(b.x - x) < Math.abs(a.x - x) ? b : a));
+    yb = near.y + near.d;
+    x = xr + ((xt - xr) * (yb - wing.rootY)) / (wing.tipY - wing.rootY);
+  }
+  return { x, y: yb };
+};
+const gapFore = cross(wing.rootLE, wing.tipLE);
+const gapAft = cross(wing.rootTE, wing.tipTE);
+const body = n.slice(3);
+const top = body.map((p) => pt(p.x, p.y - p.u));
+const aft = body.filter((p) => p.x < gapAft.x).map((p) => pt(p.x, p.y + p.d)).reverse();
+const fore = body.filter((p) => p.x > gapFore.x).map((p) => pt(p.x, p.y + p.d)).reverse();
+const cap = f(body[0].u);
+const hull =
+  `M${top.join('L')}L${aft.join('L')}L${pt(gapAft.x, gapAft.y)}` +
+  `M${pt(gapFore.x, gapFore.y)}L${fore.join('L')}A${cap} ${cap} 0 0 0 ${top[0]}`;
+const wingPath =
+  `M${wing.rootLE} ${wing.rootY}H${wing.rootTE}L${wing.tipTE} ${wing.tipY}H${wing.tipLE}Z`;
+
+// Fin root and the section ring are read off the spine's own nodes, so they
+// stay on the hull if the profile moves. The ring is a shallow arc, not a
+// chord: a chord across a round body reads as a pen. One ring, ahead of the
+// wing, so the tube has volume where the wing enters it; a second at the
+// tail cone joint sat in the knot with the fin and the mast.
+const ring = (p: (typeof n)[number]) => `M${pt(p.x, p.y - p.u)}Q${pt(p.x + 2, AXIS)} ${pt(p.x, p.y + p.d)}`;
+const rings = ring(n[12]);
+// Rudder: a tab, a third of the mast, seated half a diameter ahead of the
+// mast root. Raked hard, because on a hull pitched this far down a fin that
+// stands square to the axis leans forward in the water and reads as glued
+// on; drawn tall it made the whole thing an airliner.
+const finLE = n[23];
+const finTE = n[27];
+const fin =
+  `M${pt(finLE.x, finLE.y - finLE.u)}L${pt(finLE.x - 16, AXIS - 23)}` +
+  `H${f(finTE.x - 6.7)}L${pt(finTE.x, finTE.y - finTE.u)}`;
+
+// Antenna mast off the top of the tail cone, raked back so it stands up out
+// of the water when the glider surfaces nose down. It is a rod with the
+// transmitter on the end: the ring that used to sit there read as a
+// lollipop. The rudder sits a chord ahead of it, or the two make a knot at
+// the tail at true size.
+const rake = (34 * Math.PI) / 180;
+const mastFoot: [number, number] = [n[29].x, n[29].y - n[29].u];
+const mast: [number, number] = [mastFoot[0] - 62 * Math.cos(rake), mastFoot[1] - 62 * Math.sin(rake)];
+
+// Pitch. The airframe is drawn level and rotated nose down as one piece about
+// the hull's centre. The track is computed in the rotated frame so its last
+// leg leaves the tail along the line the glider is actually flying: the
+// glider sits on its own plot rather than above a zigzag. Going down, the
+// nose rides a few degrees above the flight path (that is the wing's angle
+// of attack), so the glide is a little steeper than the pitch. Less than
+// twenty degrees and it read as a tilted drawing rather than a dive.
+const PITCH = 24;
+const GLIDE = 28;
+const rad = (PITCH * Math.PI) / 180;
+const glide = (GLIDE * Math.PI) / 180;
+const CX = (NOSE + TAIL) / 2;
+const rot = (x: number, y: number): [number, number] => {
+  const dx = x - CX;
+  const dy = y - AXIS;
+  return [CX + dx * Math.cos(rad) - dy * Math.sin(rad), AXIS + dx * Math.sin(rad) + dy * Math.cos(rad)];
+};
+
+// The sawtooth it flew to get here: equal legs at the glide angle, every
+// apex at the surface, every trough at depth, the glider halfway down a
+// leg. Clear water before the tail, or the plot reads as a tow line and its
+// end joins the knot at the mast root. It changes how much it weighs and
+// falls forward, over and over, for months.
+const LEG = 29;
+const RISE = LEG * Math.tan(glide);
+const [sx, sy] = rot(TAIL - 10, AXIS);
+const pts: [number, number][] = [[sx, sy], [sx - LEG / 2, sy - RISE / 2]];
+for (let i = 0; i < 3; i++) {
+  const [px, py] = pts[pts.length - 1];
+  pts.push([px - LEG, py + (i % 2 ? -RISE : RISE)]);
+}
+const track = 'M' + pts.map(([x, y]) => pt(x, y)).join('L');
+const farX = pts[pts.length - 1][0];
 ---
 
-<svg viewBox="-4 0 180 96" fill="none" stroke="currentColor" stroke-width="1">
-  {/* No propeller anywhere on it. It changes how much it weighs and falls
-      forward, over and over, for months. */}
-  <path d={gliderHull} />
-  {/* One swept blade crossing the hull. Drawn as a wide quad it reads as a
-      paper dart wedged inside the body. */}
-  <path d="M96 44 56 60 44 60 76 45Z" stroke-width="0.8" />
-  <path d="M30 34 6 6" stroke-width="0.8" />
-  <circle cx="5" cy="4" r="2.6" stroke-width="0.7" />
-  <path d="M110 30v16M124 31v14" stroke-width="0.5" opacity="0.55" />
-  <circle cx="142" cy="38" r="2" fill="currentColor" class="drift__telemetry" />
-  {/* The sawtooth it flew to get here, drawn behind it the way a plot is. */}
-  <path d="M22 62 2 88M22 62 42 88M42 88 62 62M62 62 82 88" stroke-width="0.5" stroke-dasharray="2 4" opacity="0.45" />
-  <circle cx="72" cy="38" r="26" class="drift__ring" />
+<svg viewBox="2 -10 236 126" fill="none" stroke="currentColor" stroke-width="1.2">
+  <defs>
+    {/* The plot fades toward where it came from rather than stopping: a
+        dashed line that ends in open water reads as cut. */}
+    <linearGradient id="glider-track-fade" gradientUnits="userSpaceOnUse" x1={f(sx)} y1="0" x2={f(farX)} y2="0">
+      <stop offset="0" stop-color="currentColor" stop-opacity="0.6" />
+      <stop offset="0.6" stop-color="currentColor" stop-opacity="0.42" />
+      <stop offset="1" stop-color="currentColor" stop-opacity="0" />
+    </linearGradient>
+  </defs>
+  <path d={track} stroke="url(#glider-track-fade)" stroke-width="0.7" stroke-dasharray="2.5 3" />
+  <g transform={`rotate(${PITCH} ${CX} ${AXIS})`}>
+    {/* No propeller anywhere on it. */}
+    <path d={hull} />
+    <path d={rings} stroke-width="0.55" opacity="0.55" />
+    <path d={wingPath} stroke-width="1.05" />
+    {/* Rudder on the shoulder of the tail cone, swept, open at the root so it
+        grows out of the cone instead of standing on it. */}
+    <path d={fin} stroke-width="0.9" />
+    <path d={`M${pt(...mastFoot)}L${pt(...mast)}`} stroke-width="0.8" />
+    <circle cx={f(mast[0])} cy={f(mast[1])} r="2" fill="currentColor" class="drift__telemetry" />
+  </g>
+  <circle cx={CX} cy={AXIS} r="28" class="drift__ring" />
 </svg>
 <span class="drift__tag">SG-014 &middot; 1000 m</span>

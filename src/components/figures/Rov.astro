@@ -1,53 +1,78 @@
-<svg viewBox="-2 -10 204 120" fill="none" stroke="currentColor" stroke-width="1">
-  {/* Tether on to a lift bail. Everything useful at depth still needs its
-      link home, and something has to take the weight of it. */}
-  <path d="M86 4C80-3 76-6 70-9" stroke-width="0.6" opacity="0.5" />
-  <path d="M74 12V4h24v8" stroke-width="0.7" />
-  {/* Syntactic foam on top, in blocks. It is the buoyancy the rest hangs
-      under, and it is the one solid thing on the whole vehicle. */}
-  <path d="M32 12h108a9 9 0 0 1 0 18H32a9 9 0 0 1 0-18z" />
-  <path d="M52 12v18M82 12v18M112 12v18" stroke-width="0.4" opacity="0.45" />
-  {/* Posts and rails rather than a closed box: an ROV is a cage you can see
-      straight through, and an outlined rectangle is a briefcase. */}
-  <path d="M24 32h124M24 90h124" stroke-width="0.9" />
-  <path d="M24 32v58M60 32v58M112 32v58M148 32v58" stroke-width="0.9" />
-  {/* Braced at the ends, open through the middle where the kit rides. A rail
-      all the way across turns the frame into a window with six panes. */}
-  <path d="M24 62h36M112 62h36" stroke-width="0.7" />
-  <path d="M24 62 60 32M148 62 112 32" stroke-width="0.5" opacity="0.45" />
-  {/* Pressure housings. Round ends, because anything that holds one
-      atmosphere against four hundred is a cylinder. */}
-  <path d="M68 42h28a7 7 0 0 1 0 14H68a7 7 0 0 1 0-14z" stroke-width="0.6" opacity="0.7" />
-  <path d="M68 66h18a6 6 0 0 1 0 12H68a6 6 0 0 1 0-12z" stroke-width="0.6" opacity="0.7" />
-  {/* Two ducted thrusters aft. The duct is the part that says thruster; a
-      bare circle says porthole. */}
-  <g stroke-width="0.8">
-    <path d="M2 38h22v20H2zM2 66h22v20H2z" />
-    <circle cx="13" cy="48" r="7" />
-    <circle cx="13" cy="48" r="2.4" />
-    <circle cx="13" cy="76" r="7" />
-    <circle cx="13" cy="76" r="2.4" />
+<svg viewBox="-2 -14 222 120" fill="none" stroke="currentColor" stroke-width="1">
+  {/* The whole vehicle carries three degrees of bow-down trim: level, it
+      was parked. The ring stays outside the trim so it scales true. */}
+  <g transform="rotate(3 106 60)">
+    {/* Tether off a padeye aft of centre, trailing up and AFT: the vehicle
+        flies away from its cage and the umbilical follows it down. The eye
+        is kept low; a tall bail on a flat top was a knob on a lid. */}
+    <path d="M81 8C78 2 70-5 56-14" stroke-width="0.6" opacity="0.5" />
+    <path d="M77 12V9.5A1.5 1.5 0 0 1 78.5 8h5A1.5 1.5 0 0 1 85 9.5V12" stroke-width="0.8" />
+    {/* Syntactic foam: one solid slab, the heaviest line on the vehicle
+        and the only closed shape, overhanging the frame a little at each
+        end and bevelled under the nose the way Hercules and Jason are cut
+        back to give the cameras their view. The top corners are chamfered
+        the way machined foam is; sharp, the slab was a brick. Nothing
+        drawn inside it, so it reads as solid against the cage. */}
+    <path d="M30 12h130l4 4v14l-8 10H26V16z" />
+    {/* Near posts and rail, each member run past its joint the way welded
+        tube meets, and the outer posts run up into the foam so slab and
+        cage are one body: corners that close are a briefcase. The far
+        posts are ghosted up and aft of the near ones, because seeing the
+        other side through the bays is what makes an open frame read open
+        at true size; a far rail as well closed it into a tray. One
+        diagonal, in the aft bay only, says truss; one in every bay said
+        window. The foam's underside is the top rail. */}
+    <path d="M30 37v61M76 40v58M156 37v61" stroke-width="0.9" />
+    <path d="M26 94h134" stroke-width="0.9" />
+    <path d="M25 40v49M71 40v49M151 40v49" stroke-width="0.5" opacity="0.4" />
+    <path d="M30 94 76 40" stroke-width="0.5" opacity="0.45" />
+    {/* Aft thruster, vectored, mounted at the frame corner where an HD
+        carries it: a duct seen a quarter on, the near rim an ellipse, the
+        shroud running in across the post to a narrower far rim inside the
+        bay, and the hub with its shaft the only thing inside. Blades made
+        it a fan icon; a disc on edge made it a ring with marks. */}
+    <ellipse cx="20" cy="64" rx="7" ry="14" stroke-width="0.9" />
+    <path d="M20 50 30 52.5M20 78 30 75.5" stroke-width="0.7" />
+    <ellipse cx="30" cy="64" rx="4.5" ry="11.5" stroke-width="0.5" opacity="0.6" />
+    <circle cx="24" cy="64" r="2" stroke-width="0.7" />
+    <path d="M26 64h5" stroke-width="0.5" opacity="0.7" />
+    {/* One pressure housing inside, a tube with an end-cap rule at each
+        end, run across the mid post because kit in a real frame does not
+        stop at the members. Everything else that was drawn in the frame
+        went, so the rest of it shows through. */}
+    <path d="M64 60h72v12H64zM68 60v12M132 60v12" stroke-width="0.55" opacity="0.5" />
+    {/* Forward: one pan-and-tilt column hung from the bevel to the frame,
+        carrying both lamps and the camera, so the front is one fitting
+        rather than three floating on stubs. Both lamp faces are lit, and
+        between them they throw one cone, forward and down, which is where
+        an ROV looks; a beam pointing up was an antenna. The camera and
+        the jaw sit inside the cone, because the cone is what they are
+        for. */}
+    <path d="M159 36v28M156 48h3M156 62h3" stroke-width="0.7" />
+    <path d="M160 33h9a3 3 0 0 1 0 6h-9z" stroke-width="0.7" transform="rotate(4 160 36)" />
+    <path d="M160 44.5h10a3.5 3.5 0 0 1 0 7h-10z" stroke-width="0.7" transform="rotate(18 160 48)" />
+    <path d="M169 37 208 40M170 51 206 74" stroke-width="0.5" stroke-dasharray="3 4" opacity="0.5" />
+    <path d="M162 58h12v8h-12zM174 57v10" stroke-width="0.75" />
+    <circle cx="162" cy="62" r="1.6" stroke-width="0.6" />
+    <circle cx="169" cy="36.6" r="1.8" fill="currentColor" class="drift__telemetry" />
+    <circle cx="169.5" cy="51.1" r="2" fill="currentColor" class="drift__telemetry" />
+    {/* Manipulator off the forward post, elbow up, forearm reaching
+        forward and down into the light. Hung from the bottom corner with
+        the elbow down it was a folding table leg. The links are bars, two
+        lines each, because a single stroke ending in a V was an antenna.
+        Straight links; a curve here reads as a hose. */}
+    <circle cx="158" cy="80" r="3" stroke-width="0.8" />
+    <path d="M158.9 81.4 180.9 67.4M157.1 78.7 179.1 64.7" stroke-width="0.8" />
+    <circle cx="180" cy="66" r="2.6" stroke-width="0.7" />
+    <path d="M179.3 67.2 203.3 81.2M180.7 64.8 204.7 78.8" stroke-width="0.8" />
+    <circle cx="204" cy="80" r="1.8" stroke-width="0.7" />
+    <path d="m204 80 8-4 2 2M204 80l7 4 2-2" stroke-width="0.7" />
+    {/* Two skid runners, fore and aft, unequal, the forward toe turned
+        up, and nothing under the middle: one runner the full width closed
+        the frame into a plinth. */}
+    <path d="M40 94v6M60 94v6M104 94v6M144 94v6" stroke-width="0.7" />
+    <path d="M32 100h34M98 100h50l8-5" stroke-width="0.8" />
   </g>
-  {/* Camera on its pan and tilt, a lamp above and below on their own booms,
-      and what the three of them together can actually see. */}
-  <path d="M150 52h16v16h-16z" stroke-width="0.8" />
-  <circle cx="171" cy="60" r="5.5" stroke-width="0.8" />
-  <circle cx="172" cy="60" r="2" stroke-width="0.6" />
-  <path d="M148 38h8M148 84h8" stroke-width="0.7" />
-  <circle cx="160" cy="38" r="4" stroke-width="0.7" />
-  <circle cx="160" cy="84" r="4" stroke-width="0.7" />
-  <path d="M164 34 190 24M164 88 190 98M178 60h14" stroke-width="0.5" stroke-dasharray="3 4" opacity="0.5" />
-  {/* Manipulator, out where it works rather than folded away. Three straight
-      segments and a jaw; a curve here reads as a hose. */}
-  <circle cx="148" cy="88" r="3" stroke-width="0.8" />
-  <path d="M148 88 168 98 188 90" stroke-width="0.9" />
-  <path d="m188 90 9-5M188 90l8 6" stroke-width="0.7" />
-  {/* Two skids rather than one plinth: a runner the full width closes the
-      frame off into a box again. */}
-  <path d="M40 90v12M64 90v12M108 90v12M132 90v12" stroke-width="0.7" />
-  <path d="M32 102h40M100 102h40" stroke-width="0.8" />
-  <path d="m32 102-7-5M140 102l7-5" stroke-width="0.7" />
-  <circle cx="86" cy="60" r="2.4" fill="currentColor" class="drift__telemetry" />
-  <circle cx="86" cy="60" r="36" class="drift__ring" />
+  <circle cx="106" cy="58" r="44" class="drift__ring" />
 </svg>
 <span class="drift__tag">ROV-01 &middot; Fl(2) 5s</span>
