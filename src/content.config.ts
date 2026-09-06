@@ -16,17 +16,20 @@ const blog = defineCollection({
 });
 
 const projects = defineCollection({
-  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/projects' }),
+  loader: glob({ pattern: '**/*.yaml', base: './src/content/projects' }),
   schema: z.object({
-    title: z.string(),
+    // Named by what it does, never a brand. Longer than this wraps the
+    // sheet's title block to a third line.
+    title: z.string().max(48),
+    domain: z.enum(['web3', 'web', 'infra', 'data', 'mobile']),
     description: z.string(),
+    // Each name is a mark on the sheet's frame. Longer than sixteen
+    // characters and it no longer fits its slot; see src/lib/sheet.ts.
+    stack: z.array(z.string().max(16)).min(3).max(8),
+    from: z.number().int(),
+    to: z.number().int().optional(),
     url: z.string().optional(),
     repo: z.string().optional(),
-    tags: z.array(z.string()).default([]),
-    featured: z.boolean().default(false),
-    sortOrder: z.number().default(0),
-    startDate: z.coerce.date().optional(),
-    endDate: z.coerce.date().optional(),
   }),
 });
 
