@@ -1,5 +1,5 @@
 ---
-import type { Node, Prof } from '@/lib/curves';
+import { type Node, type Prof, fair } from '@/lib/curves';
 
 // --- School ---------------------------------------------------------------
 // One herring, drawn eight times, each at its own point in the tail beat. A
@@ -8,33 +8,6 @@ import type { Node, Prof } from '@/lib/curves';
 // fork, one dorsal, an eye that is a dot, and the gill cover that makes the
 // head a head. The pectoral is drawn lighter for the close view and goes to
 // nothing at the size it is seen.
-
-// Hermite through the control points with finite-difference tangents. The
-// smoothstep in curves.ts is flat at every control point, which rounds a
-// snout into a bulb and puts a wobble in a straight back. A herring's head is
-// a wedge, so the curve has to carry slope through the points.
-function fair(prof: Prof, t: number): number {
-  const n = prof.length;
-  let i = 1;
-  while (i < n - 1 && t > prof[i][0]) i++;
-  const [t0, v0] = prof[i - 1];
-  const [t1, v1] = prof[i];
-  const slope = (j: number) => {
-    const a = prof[Math.max(j - 1, 0)];
-    const b = prof[Math.min(j + 1, n - 1)];
-    return (b[1] - a[1]) / (b[0] - a[0]);
-  };
-  const h = t1 - t0;
-  const k = (t - t0) / h;
-  const k2 = k * k;
-  const k3 = k2 * k;
-  return (
-    (2 * k3 - 3 * k2 + 1) * v0 +
-    (k3 - 2 * k2 + k) * h * slope(i - 1) +
-    (-2 * k3 + 3 * k2) * v1 +
-    (k3 - k2) * h * slope(i)
-  );
-}
 
 // Origin at the middle of the body, nose to the right. t runs from the
 // peduncle (0) to the nose (1).
