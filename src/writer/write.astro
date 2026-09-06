@@ -1,0 +1,303 @@
+---
+// The chart table. Injected at /write by integration.ts under `astro dev`
+// only, so this file never reaches a build. Its own shell rather than Base:
+// no header, no rail, no water, no marine fetch. It is a desk, not a page.
+import '@/styles/global.css';
+
+const HOME_PORT = 'Berlin';
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <title>Chart table | Marcel Heidebrecht</title>
+  </head>
+  <body class="desk zone-surface">
+    <header class="desk__bar">
+      <a href="/blog" class="label text-sm text-text hover:text-accent transition-colors">Chart table</a>
+      <label class="desk__open">
+        open
+        <select id="open">
+          <option value="">new entry</option>
+        </select>
+      </label>
+      <output id="status" class="desk__status" aria-live="polite">new entry</output>
+      <label class="desk__draft">
+        <input type="checkbox" id="draft" checked />
+        draft
+      </label>
+      <button id="publish" class="btn-primary" type="button">publish</button>
+    </header>
+
+    <main class="desk__panes">
+      <form id="sheet" class="desk__sheet" autocomplete="off">
+        <div class="desk__fields">
+          <label class="desk__field"><span>title</span><input name="title" required /></label>
+          <label class="desk__field"><span>slug</span><input name="slug" pattern="[a-z0-9]+(-[a-z0-9]+)*" /></label>
+          <label class="desk__field"><span>date</span><input name="pubDate" type="date" required /></label>
+          <label class="desk__field"><span>place</span><input name="place" value={HOME_PORT} /></label>
+          <label class="desk__field"><span>tags</span><input name="tags" placeholder="devops, terraform" /></label>
+          <label class="desk__field"><span>remark</span><input name="description" required placeholder="one sentence" /></label>
+        </div>
+        <textarea name="body" class="desk__body" placeholder="Write." spellcheck="true"></textarea>
+        <p class="desk__foot">
+          <span id="words">0 words</span>
+          <span id="minutes">1 min</span>
+          <span class="desk__hint">cmd+s saves now</span>
+        </p>
+      </form>
+      <iframe id="preview" class="desk__preview" title="Preview of the entry"></iframe>
+    </main>
+
+    <script>
+      import { readingMinutes } from '@/lib/log';
+      import { slugify, SLUG_RE } from './slug.ts';
+
+      interface Frontmatter {
+        title: string;
+        description: string;
+        pubDate: string;
+        updatedDate?: string;
+        place?: string;
+        tags: string[];
+        draft: boolean;
+      }
+      interface Loaded {
+        slug: string;
+        ext: string;
+        frontmatter: Frontmatter;
+        body: string;
+      }
+      interface Listed {
+        slug: string;
+        title: string;
+        draft: boolean;
+      }
+
+      const SAVE_DELAY_MS = 800;
+
+      /** The content layer syncs a moment after the file lands, so a new
+       *  entry's page answers 404 until it has. Wait for it. */
+      async function untilBuilt(name: string) {
+        for (let i = 0; i < 20; i++) {
+          const res = await fetch(`/blog/${name}`, { method: 'HEAD' });
+          if (res.ok) return;
+          await new Promise((resolve) => setTimeout(resolve, 300));
+        }
+      }
+
+      /** Today in local time as YYYY-MM-DD; toISOString would give UTC. */
+      function today(): string {
+        const d = new Date();
+        const pad = (n: number) => String(n).padStart(2, '0');
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+      }
+
+      const form = document.getElementById('sheet') as HTMLFormElement;
+      const field = (name: string) => form.elements.namedItem(name) as HTMLInputElement;
+      const titleEl = field('title');
+      const slugEl = field('slug');
+      const bodyEl = form.elements.namedItem('body') as HTMLTextAreaElement;
+      const status = document.getElementById('status') as HTMLOutputElement;
+      const preview = document.getElementById('preview') as HTMLIFrameElement;
+      const openEl = document.getElementById('open') as HTMLSelectElement;
+      const draftEl = document.getElementById('draft') as HTMLInputElement;
+      const publishEl = document.getElementById('publish') as HTMLButtonElement;
+      const wordsEl = document.getElementById('words')!;
+      const minutesEl = document.getElementById('minutes')!;
+
+      let slug = new URL(location.href).searchParams.get('entry') ?? '';
+      let ext = 'md';
+      let locked = slug !== '';
+      let saved = true;
+      let timer: number | undefined;
+
+      function say(text: string, tone: 'ok' | 'busy' | 'bad' = 'ok') {
+        status.textContent = text;
+        status.dataset.tone = tone;
+      }
+
+      async function api<T>(method: string, route: string, body?: unknown): Promise<T> {
+        const res = await fetch(`/__writer/${route}`, {
+          method,
+          headers: { 'content-type': 'application/json' },
+          body: body === undefined ? undefined : JSON.stringify(body),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error ?? res.statusText);
+        return data as T;
+      }
+
+      function read(): { frontmatter: Frontmatter; body: string } {
+        const place = field('place').value.trim();
+        const tags = field('tags')
+          .value.split(',')
+          .map((t) => t.trim())
+          .filter(Boolean);
+        const frontmatter: Frontmatter = {
+          title: titleEl.value.trim(),
+          description: field('description').value.trim(),
+          pubDate: field('pubDate').value,
+          tags,
+          draft: draftEl.checked,
+        };
+        if (place) frontmatter.place = place;
+        return { frontmatter, body: bodyEl.value };
+      }
+
+      function fill(entry: Loaded) {
+        const fm = entry.frontmatter;
+        titleEl.value = fm.title;
+        slugEl.value = entry.slug;
+        field('pubDate').value = fm.pubDate;
+        field('place').value = fm.place ?? '';
+        field('tags').value = fm.tags.join(', ');
+        field('description').value = fm.description;
+        draftEl.checked = fm.draft;
+        bodyEl.value = entry.body;
+        ext = entry.ext;
+        lock(entry.slug);
+        preview.src = `/blog/${entry.slug}`;
+      }
+
+      function lock(name: string) {
+        slug = name;
+        locked = true;
+        slugEl.value = name;
+        slugEl.readOnly = true;
+      }
+
+      function counts() {
+        const words = bodyEl.value.trim().split(/\s+/).filter(Boolean).length;
+        wordsEl.textContent = `${words} ${words === 1 ? 'word' : 'words'}`;
+        minutesEl.textContent = `${readingMinutes(bodyEl.value)} min`;
+      }
+
+      /** Reload the preview and put it back where it was. */
+      function refresh() {
+        const win = preview.contentWindow;
+        if (!win || !preview.src) return;
+        const y = win.scrollY;
+        preview.addEventListener('load', () => preview.contentWindow?.scrollTo(0, y), { once: true });
+        win.location.reload();
+      }
+
+      async function save(): Promise<boolean> {
+        clearTimeout(timer);
+        const entry = read();
+        if (!entry.frontmatter.title) {
+          say('needs a title', 'bad');
+          return false;
+        }
+        const create = !locked;
+        const name = create ? slugEl.value.trim() || slugify(entry.frontmatter.title) : slug;
+        if (!SLUG_RE.test(name)) {
+          say('slug: lowercase words joined by single hyphens', 'bad');
+          return false;
+        }
+        say('saving', 'busy');
+        try {
+          await api('PUT', 'entry', { slug: name, ext, create, ...entry });
+        } catch (err) {
+          say((err as Error).message, 'bad');
+          return false;
+        }
+        saved = true;
+        if (create) {
+          lock(name);
+          history.replaceState(null, '', `?entry=${name}`);
+          await untilBuilt(name);
+          preview.src = `/blog/${name}`;
+          await list();
+        }
+        say(`saved ${new Date().toLocaleTimeString('en-GB')}`);
+        return true;
+      }
+
+      function schedule() {
+        saved = false;
+        say('unsaved', 'busy');
+        clearTimeout(timer);
+        timer = window.setTimeout(save, SAVE_DELAY_MS);
+      }
+
+      async function list() {
+        const entries = await api<Listed[]>('GET', 'entries');
+        openEl.replaceChildren(
+          new Option('new entry', ''),
+          ...entries.map((e) => new Option(`${e.draft ? 'draft: ' : ''}${e.title}`, e.slug, false, e.slug === slug)),
+        );
+      }
+
+      form.addEventListener('input', (event) => {
+        if (!locked && event.target === titleEl) slugEl.value = slugify(titleEl.value);
+        counts();
+        schedule();
+      });
+      draftEl.addEventListener('change', schedule);
+
+      document.addEventListener('keydown', (event) => {
+        if ((event.metaKey || event.ctrlKey) && event.key === 's') {
+          event.preventDefault();
+          void save();
+        }
+      });
+
+      window.addEventListener('beforeunload', (event) => {
+        if (!saved) event.preventDefault();
+      });
+
+      openEl.addEventListener('change', () => {
+        location.href = openEl.value ? `/write?entry=${openEl.value}` : '/write';
+      });
+
+      publishEl.addEventListener('click', async () => {
+        if (!locked) {
+          say('save it once before publishing', 'bad');
+          return;
+        }
+        if (!(await save())) return;
+        publishEl.disabled = true;
+        say('publishing: commit and push', 'busy');
+        try {
+          const result = await api<{ output: string }>('POST', 'publish', { slug });
+          draftEl.checked = false;
+          console.log(result.output);
+          say('published and pushed');
+          refresh();
+          await list();
+        } catch (err) {
+          say(`publish failed: ${(err as Error).message}`, 'bad');
+        } finally {
+          publishEl.disabled = false;
+        }
+      });
+
+      async function init() {
+        field('pubDate').value = today();
+        try {
+          await list();
+          if (slug) {
+            fill(await api<Loaded>('GET', `entry?slug=${encodeURIComponent(slug)}`));
+            say('opened');
+          }
+        } catch (err) {
+          say((err as Error).message, 'bad');
+        }
+        counts();
+      }
+
+      void init();
+    </script>
+  </body>
+</html>
