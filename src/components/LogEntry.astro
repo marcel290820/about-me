@@ -1,0 +1,28 @@
+---
+import TagList from './TagList.astro';
+import { logDate } from '@/lib/log';
+
+interface Props {
+  slug: string;
+  title: string;
+  description: string;
+  pubDate: Date;
+  place?: string;
+  tags?: string[];
+  minutes?: number;
+}
+
+const { slug, title, description, pubDate, place, tags = [], minutes } = Astro.props;
+---
+
+<article class="log-entry">
+  <p class="rail__fix font-mono text-xs text-text-dim mb-1.5">
+    <time datetime={pubDate.toISOString()}>{logDate(pubDate)}</time>{place && `, ${place}`}
+    {minutes && <span class="log-entry__min">{minutes} min</span>}
+  </p>
+  <h3 class="text-base font-semibold mb-1">
+    <a href={`/blog/${slug}`} class="log-entry__link">{title}</a>
+  </h3>
+  <p class="text-[0.9375rem] text-text-muted mb-3">{description}</p>
+  {tags.length > 0 && <TagList tags={tags} />}
+</article>

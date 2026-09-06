@@ -1,0 +1,43 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import LogEntry from './LogEntry.astro';
+import { readingMinutes } from '@/lib/log';
+
+interface Props {
+  /** Sorted newest first. */
+  posts: CollectionEntry<'blog'>[];
+}
+
+const { posts } = Astro.props;
+
+// Map keeps insertion order, so the years come out in the order the posts
+// went in: newest first.
+const years = new Map<number, CollectionEntry<'blog'>[]>();
+for (const post of posts) {
+  const year = post.data.pubDate.getUTCFullYear();
+  const list = years.get(year) ?? [];
+  list.push(post);
+  years.set(year, list);
+}
+---
+
+{[...years.entries()].map(([year, entries]) => (
+  <section class="mb-16 last:mb-0">
+    <div class="section-heading">
+      <h2>{year}</h2>
+    </div>
+    <div class="rail flex flex-col gap-9">
+      {entries.map((post) => (
+        <LogEntry
+          slug={post.id}
+          title={post.data.title}
+          description={post.data.description}
+          pubDate={post.data.pubDate}
+          place={post.data.place}
+          tags={post.data.tags}
+          minutes={readingMinutes(post.body ?? '')}
+        />
+      ))}
+    </div>
+  </section>
+))}
