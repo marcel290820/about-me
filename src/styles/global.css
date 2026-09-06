@@ -733,14 +733,13 @@
   }
 
   .sheet__shot img {
-    /* Cropped from the top: the head of a page is the part worth printing.
-       Above sm the frame takes its height from the prose beside it instead,
-       so the two columns start and finish on the same lines. */
-    /* Deep enough that the neat line lands under the head of the page it
-       shows, instead of through the middle of the site's own headline. */
-    aspect-ratio: 4 / 3;
-    object-fit: cover;
-    object-position: top center;
+    /* Printed whole, at the proportions it was shot in. The frame of the
+       survey is chosen in scripts/shoot-previews.sh, where the viewport can
+       be picked per site; cropping it again here only cut the composition
+       that shot was framed for. */
+    display: block;
+    width: 100%;
+    height: auto;
     /* At rest the shot is printed in the water's own ink: luminosity over the
        frame's fill leaves the site's shapes and takes its colours, which is
        what keeps a white page from outranking the plate and stops a second
@@ -768,22 +767,6 @@
     filter: none;
   }
 
-  @media (width >= 40rem) {
-    .sheet__shot {
-      align-self: stretch;
-    }
-
-    .sheet__shot .portrait-inset__frame {
-      display: flex;
-      flex: 1;
-      min-height: 10rem;
-    }
-
-    .sheet__shot img {
-      width: 100%;
-      height: 100%;
-    }
-  }
 
   .sheet__mark:hover .sheet__name,
   .sheet__mark:hover .sheet__deg {

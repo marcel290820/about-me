@@ -12,11 +12,13 @@ PW="playwright-core@1.60.0"
 OUT="src/assets/previews"
 SHOT="npx -y $PW screenshot --channel chrome --wait-for-timeout 2500"
 
-# Both sites are shot at phone width, because the inset prints a quarter of a
-# column wide: a desktop page reduced that far says only that a site exists,
-# while the site's own narrow layout still has readable type at that size.
+# The viewport is the composition: the inset prints what the shot holds and
+# crops nothing, so each site is framed here rather than in CSS. The site is
+# shot wide, because its hero is a headline on the left and a glyph on the
+# right and both belong in the frame; the status page is one card, and only
+# its own narrow layout is legible a quarter of a column wide.
 mkdir -p "$OUT"
-$SHOT --viewport-size=520,860 https://www.juniter.de/ "$OUT/consultancy-website.png"
-$SHOT --viewport-size=520,860 https://tower.cct-ev.de/ "$OUT/room-presence.png"
+$SHOT --viewport-size=1280,680 https://www.juniter.de/ "$OUT/consultancy-website.png"
+$SHOT --viewport-size=520,430 https://tower.cct-ev.de/ "$OUT/room-presence.png"
 
 ls -la "$OUT"
