@@ -1,19 +1,468 @@
 ---
+import { at, type Prof } from '@/lib/curves';
+
+// --- Somebody's cache -----------------------------------------------------
+// The oldest joke on a chart: a mark for money nobody has ever found, printed
+// because the story is old enough to print. Here the treasure is a data
+// cache, and the tell is in the spill -- the largest coin beside the chest is
+// a disk platter, hub hole and all.
+//
+// Cavalier projection: the front face square to the paper, the depth running
+// up and to the right, so we see the front and the RIGHT end. The dome of the
+// lid is an arch across that END. Drawn as an arch across the front it is the
+// cartoon chest.
+//
+// The thing this drawing keeps turning into is a BARN, or a Nissen hut: a
+// long arched roof over a rectangle on a ground line, and no amount of
+// ironwork argues with a silhouette. Four things hold against it and none of
+// them may be quietly dropped. The lid overhangs the body on every side and
+// caps down over the rim with a lip, which a roof does not do. The body is
+// taller than the lid, which means not burying more than about a quarter of
+// it. The chest is tipped hard, because a building stands square to its
+// ground. And the sand is a bank that falls away at both ends rather than a
+// horizon that crosses the mark.
+//
+// The lid is SPRUNG AT ONE END, not hinged open at the back, and that is the
+// whole difference between a chest and a hut. A lid lifted on its back hinge
+// opens a gap of constant height along the front, which is a second line
+// parallel to the rim: light, it reads as a band on the lid; hatched dark, it
+// reads as corrugated roofing; swung wide, the rim becomes a bright quad
+// between the front face and the lid and reads as a lean-to. All three were
+// drawn. Sprung at the near end instead -- which is what happens to a chest
+// that goes down and loses a hinge -- the gap is a WEDGE, shut at the far end
+// and widest at the near one, laid in dark. A wedge is the one version of
+// open that survives at 118px, and it is not parallel to anything.
+// The view is swung well round onto the corner and kept LOW. Both matter. A
+// shallow recession leaves a long low box under a long low arch, which is a
+// barn whatever is drawn on it. And a high eye does two bad things at once:
+// it opens the rim into a broad quad that reads as a second roof plane, and
+// every unit of depth it adds goes onto the apparent height of the DOME, so
+// the lid climbs to meet the body and the whole thing goes Nissen hut. From
+// here the end is half the width of the front and the dome keeps its place.
+const KX = 0.74; // screen x gained per unit of depth
+const KY = 0.17; // screen y lost per unit of depth
+
+const L = 32; // length
+const H = 20; // body, base to rim
+const D = 19; // depth
+const S = 1.7; // the lid's skirt, below where the arch springs
+const R = 4.2; // rise of the arch over the lid's width
+
+const OVX = 1.5; // lid overhangs each end
+const OVZ = 1.4; // and the front
+const LIP = 1.7; // and caps down over the rim
+
+const OX = 13;
+const OY = 52;
+
+// Heeled hard, left end down. This is the cheapest line in the drawing and
+// the one that does most: a building stands square to its ground and a thing
+// that went down does not. Four degrees read as a slightly wonky shed.
+const HEEL = (-7.5 * Math.PI) / 180;
+const HX = 34;
+const HY = 40;
+const hc = Math.cos(HEEL);
+const hs = Math.sin(HEEL);
+
+const p = (x: number, y: number, z: number): [number, number] => {
+  const dx = OX + x + z * KX - HX;
+  const dy = OY - y - z * KY - HY;
+  return [HX + dx * hc - dy * hs, HY + dx * hs + dy * hc];
+};
+
+// A true circular segment across the lid's own width, not a half round. A
+// dome-top trunk rises about a third of its depth; a semicircle is a sea
+// chest drawn by somebody who has only seen one in a cartoon.
+const LB = H - LIP; // the lid's lower edge, below the rim
+const Z0 = -OVZ; // where the arch springs
+const ZC = (Z0 + D) / 2;
+const AR = (D - Z0) ** 2 / (8 * R) + R / 2;
+const arch = (z: number) => R - AR + Math.sqrt(AR * AR - (z - ZC) ** 2);
+
+const AJAR = (9.5 * Math.PI) / 180;
+const AC = Math.cos(AJAR);
+const AS = Math.sin(AJAR);
+const lid = (x: number, z: number, y: number) => {
+  const dx = x + OVX;
+  const dy = y - H;
+  return p(-OVX + dx * AC - dy * AS, H + dx * AS + dy * AC, z);
+};
+// Where along the length the lid clears the rim: below this it is still
+// capped down over it and there is nothing to hatch.
+const XOPEN = (LIP * AC) / AS - OVX;
+
+// Where the dome turns away from the eye. That generator, not the crown, is
+// the lid's top edge; drawing the crown instead left the far arch hanging in
+// air. The spring is a rotation in x and y, so the arch's own cross-section
+// is untouched and this solves in the plain frame.
+const ZS = ZC + (AR * KY) / Math.hypot(KY, 1);
+const CREST = LB + S + arch(ZS);
+
+const f = ([x, y]: [number, number]) => `${x.toFixed(1)} ${y.toFixed(1)}`;
+const poly = (pts: [number, number][]) => 'M' + pts.map(f).join('L');
+
+const archPts = (x: number, z0: number, z1: number, steps: number) =>
+  Array.from({ length: steps + 1 }, (_, i) => {
+    const z = z0 + ((z1 - z0) * i) / steps;
+    return lid(x, z, LB + S + arch(z));
+  });
+
+// The seabed. One profile, sampled for the line that is drawn and solved
+// against for every member that enters it, so the chest cannot float a hair
+// above its own sand.
+//
+// It is a BANK, not a horizon. Run flat and level from edge to edge it is a
+// landscape, and anything with a curved top standing on a landscape is a
+// building; falling away at both ends it is a heap of sand with something in
+// it. It also has to wander under the chest, or it stops reading as sand and
+// starts reading as the box's own bottom edge.
+const SAND: Prof = [
+  [0, 54.6],
+  [8, 50.6],
+  [16, 48.2],
+  [25, 49],
+  [34, 48.2],
+  [42, 49.4],
+  [49, 48.2],
+  [54, 48.4],
+  [58, 44.6],
+  [64, 47.4],
+  [70, 48.8],
+  [76, 50.2],
+  [83, 51.6],
+  [90, 53.4],
+  [98, 55.4],
+];
+const sandY = (x: number) => at(SAND, x);
+const sandAt = (x0: number, x1: number, n: number) =>
+  poly(
+    Array.from({ length: n + 1 }, (_, i) => {
+      const x = x0 + ((x1 - x0) * i) / n;
+      return [x, sandY(x)] as [number, number];
+    }),
+  );
+const sandLine = sandAt(6, 87, 48);
+const sandFade = sandAt(0, 6, 4) + sandAt(87, 96, 6);
+
+// Stipple under the bank, thickest where the chest went in. Rows of short
+// ticks, not dots, because a dot at this size is a rivet.
+const STIP: [number, number, number][] = [
+  [11, 2.6, 3.4],
+  [19, 3.2, 4.6],
+  [27, 2.4, 3.1],
+  [24, 5.4, 4.2],
+  [36, 3, 3.8],
+  [33, 6.2, 2.9],
+  [45, 2.8, 4.4],
+  [43, 5.6, 3.3],
+  [54, 3.4, 3],
+  [52, 6.4, 4],
+  [63, 4.2, 3.6],
+  [72, 3, 2.8],
+  [78, 4.4, 3.4],
+  [84, 3.2, 3],
+];
+const stipple = STIP.map(
+  ([x, dy, w]) =>
+    `M${x.toFixed(1)} ${(sandY(x) + dy).toFixed(1)}h${w.toFixed(1)}`,
+).join('');
+
+// Bisection down a member to the sand: nothing below the surface is drawn.
+const foot = (a: [number, number], b: [number, number]): [number, number] => {
+  let lo = 0;
+  let hi = 1;
+  for (let i = 0; i < 22; i++) {
+    const m = (lo + hi) / 2;
+    const x = a[0] + (b[0] - a[0]) * m;
+    const y = a[1] + (b[1] - a[1]) * m;
+    if (y < sandY(x)) lo = m;
+    else hi = m;
+  }
+  const t = (lo + hi) / 2;
+  return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+};
+// A corner post starts at the rim, which the lifted lid no longer covers.
+const member = (x: number, z: number) =>
+  [p(x, H, z), foot(p(x, H, z), p(x, 0, z))] as [
+    [number, number],
+    [number, number],
+  ];
+
+const [flTop, flFoot] = member(0, 0);
+const [frTop, frFoot] = member(L, 0);
+const [brTop, brFoot] = member(L, D);
+
+// Two straps, symmetric about the lock, each running up the front and over
+// the dome. A trunk is a made thing, so here the regularity is right, and it
+// is what separates it from the rock and the fish. Each band is a PAIR of
+// edges with its rivets down the middle: one line is a seam in a plank, and
+// that is what the front panels kept looking like.
+const STRAPS = [0.22 * L, 0.78 * L];
+const GA = 0.55;
+const bands = STRAPS.flatMap((x) => [member(x - GA, 0), member(x + GA, 0)]);
+// And one down the end. The end was the empty face, and a drop handle drawn
+// there came out a tick mark; a band is what is really on that face anyway.
+const ZE = D * 0.46;
+const endBand = [member(L, ZE - 1.1), member(L, ZE + 1.1)];
+
+const lerp = (
+  a: [number, number],
+  b: [number, number],
+  t: number,
+): [number, number] => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+
+// Rivet heads: a close run where each band crosses the lid's edge, which is
+// where a trunk actually carries them, and three down the front. Specks at
+// true size, a riveted strap at 3x. Three spread dots read as a dotted line.
+const rivets = [
+  ...STRAPS.map((x) => member(x, 0)).flatMap(([top, end]) =>
+    [0.24, 0.54, 0.84].map((t) => lerp(top, end, t)),
+  ),
+  ...STRAPS.flatMap((x) =>
+    [0.1, 0.3, 0.5, 0.7, 0.9].map((t) =>
+      lid(x, Z0 + (ZS - Z0) * t, LB + S + arch(Z0 + (ZS - Z0) * t)),
+    ),
+  ),
+  ...[0.3, 0.62].map((t) => {
+    const m = member(L, ZE);
+    return lerp(m[0], m[1], t);
+  }),
+].map((q) => `M${f(q)}h0.01`);
+
+// Lockplate on the front face, and the hasp swung off it and hanging from the
+// lid's lip. At forty pixels the plate is the one fitting that says chest
+// rather than crate, so it is drawn as a plate and not as a dot.
+const plate = [
+  p(L / 2 - 2.1, H - 5.4, 0),
+  p(L / 2 + 2.1, H - 5.4, 0),
+  p(L / 2 + 2.1, H - 9.4, 0),
+  p(L / 2 - 2.1, H - 9.4, 0),
+];
+const keyhole = p(L / 2, H - 7.2, 0);
+const haspTop = lid(L / 2 - 1.2, Z0, LB);
+const haspEnd: [number, number] = [haspTop[0] + 2.8, haspTop[1] + 6.2];
+
+// The wedge, laid in close. Three bands, so it goes from a hairline where the
+// lid still sits down to solid at the sprung end.
+const wedgeBand = (x0: number, x1: number, step: number) => {
+  const out: string[] = [];
+  for (let x = x0; x <= x1 + 1e-9; x += step) {
+    out.push(poly([p(x, H, 0), lid(x, Z0, LB)]));
+  }
+  return out.join('');
+};
+const slot = [
+  wedgeBand(XOPEN + 0.6, XOPEN + 8, 0.8),
+  wedgeBand(XOPEN + 8.6, XOPEN + 15, 0.62),
+  wedgeBand(XOPEN + 15.5, L, 0.52),
+];
+// And the open end, where the wedge comes out.
+const wedge = Array.from({ length: 15 }, (_, i) => {
+  const z = (D * i) / 14;
+  return poly([p(L, H, z), lid(L + OVX, z, LB)]);
+}).join('');
+
+// Knockouts, so the reported-position limit passes behind the chest and not
+// through the open mouth. Two subpaths: the lid, and the body with its rim
+// quad. Both are the outlines above, closed.
+const lidFill =
+  poly([
+    lid(-OVX, Z0, LB),
+    lid(L + OVX, Z0, LB),
+    ...archPts(L + OVX, Z0, D, 24),
+    lid(L + OVX, D, LB),
+    lid(-OVX, D, LB),
+    ...archPts(-OVX, D, Z0, 24),
+  ]) + 'Z';
+const bodyFill =
+  poly([flTop, frTop, brTop, p(0, H, D)]) +
+  'Z' +
+  poly([
+    flTop,
+    frTop,
+    brTop,
+    brFoot,
+    ...Array.from({ length: 25 }, (_, i) => {
+      const x = brFoot[0] + ((flFoot[0] - brFoot[0]) * i) / 24;
+      return [x, sandY(x)] as [number, number];
+    }),
+    flFoot,
+  ]) +
+  'Z';
+
+// The platter leans on the chest, so it is the second largest thing in the
+// frame rather than one more coin. Its own knockout takes the chest's lines
+// out from behind it.
+const PC: [number, number] = [65, 42.4];
+const PA = -12;
+const PR = (PA * Math.PI) / 180;
+// Spindle screws round the hub. Three, because that is what is there, and
+// they are the detail that pays at 3x.
+const screws = [90, 210, 330]
+  .map((a) => (a * Math.PI) / 180)
+  .map((a) => {
+    const u = 3.6 * Math.cos(a);
+    const v = 2.5 * Math.sin(a);
+    const x = PC[0] + u * Math.cos(PR) - v * Math.sin(PR);
+    const y = PC[1] + u * Math.sin(PR) + v * Math.cos(PR);
+    return `M${x.toFixed(1)} ${y.toFixed(1)}h0.01`;
+  })
+  .join('');
 ---
 
-<svg viewBox="0 0 104 74" fill="none" stroke="currentColor" stroke-width="0.7">
-  <path d="M20 62V40h44v22z" />
-  <path d="M20 40a22 11 0 0 1 44 0" />
-  <path d="M20 46h44" stroke-width="0.5" opacity="0.7" />
-  <path d="M32 30v12M52 30v12" stroke-width="0.5" opacity="0.7" />
-  <path d="M39 44h6v8h-6z" stroke-width="0.8" />
-  {/* The pile beside it. One of them is a platter, which is the only part
-      of this that is actually true. */}
-  <circle cx="76" cy="58" r="5" stroke-width="0.6" />
-  <circle cx="76" cy="58" r="1.4" stroke-width="0.5" />
-  <circle cx="84" cy="61" r="4" stroke-width="0.6" />
-  <path d="M70 64h14M71 67h12" stroke-width="0.6" />
-  <ellipse cx="54" cy="46" rx="49" ry="25" stroke-width="0.5" stroke-dasharray="2 3" opacity="0.55" />
-  <path d="m80 20 9 9M89 20l-9 9" stroke-width="0.9" />
+{/* Cropped close. The mark is 118px wide whatever the viewBox says, so the
+    slack that used to sit above the ellipse and below the sand was only
+    making the drawing smaller. */}
+<svg
+  viewBox="2 14 96 43"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="0.85"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  {/* Reported position: the dashed limit is how far anyone trusts the story,
+      the cross is the fix somebody actually worked, and the chest is not
+      quite under either. Same dash as the wreck symbol, because on a real
+      chart it would be the same plate, and a step lighter than the chest so
+      the notation does not out-shout what it annotates. */}
+  <ellipse
+    cx="50"
+    cy="36"
+    rx="44"
+    ry="18.5"
+    stroke-width="0.32"
+    stroke-dasharray="1 3"
+    opacity="0.45"
+  />
+  <path d={lidFill} fill="var(--color-paper)" stroke="none" />
+  <path d={bodyFill} fill="var(--color-paper)" stroke="none" />
+  {/* The slot. Laid in close and run darkest at the near end. */}
+  <path d={slot[0]} stroke-width="0.4" opacity="0.4" />
+  <path d={slot[1]} stroke-width="0.45" opacity="0.7" />
+  <path d={slot[2]} stroke-width="0.5" opacity="0.9" />
+  <path d={wedge} stroke-width="0.45" opacity="0.8" />
+  {/* Box: the rim across the front and round the near end, and the three
+      corners that are not behind something. The back rim and the left end are
+      under the lid even with it cracked, so neither is drawn. */}
+  <path d={poly([flTop, frTop, brTop])} />
+  <path d={poly([flTop, flFoot])} />
+  <path d={poly([frTop, frFoot])} />
+  <path d={poly([brTop, brFoot])} />
+  {/* Lid: the near end shows the whole arch, the far end only as far as the
+      silhouette, and the line between them is the top edge. Nothing else is
+      ruled along it -- a second line down the lid was corrugated roofing. */}
+  <path
+    d={poly([
+      lid(L + OVX, Z0, LB),
+      ...archPts(L + OVX, Z0, D, 26),
+      lid(L + OVX, D, LB),
+    ])}
+  />
+  <path d={poly([lid(-OVX, Z0, LB), ...archPts(-OVX, Z0, ZS, 16)])} />
+  <path d={poly([lid(-OVX, ZS, CREST), lid(L + OVX, ZS, CREST)])} />
+  <path d={poly([lid(-OVX, Z0, LB), lid(L + OVX, Z0, LB)])} />
+  {/* Bands: front, end and over the dome. Each is a close pair with its
+      rivets down the middle, so it merges into one strap at true size and
+      opens into a riveted band at 3x. Wider apart, two straps read as four
+      ribs and the lid goes corrugated. */}
+  <path
+    d={[...bands, ...endBand].map(([a, b]) => poly([a, b])).join('')}
+    stroke-width="0.38"
+    opacity="0.85"
+  />
+  <path
+    d={STRAPS.flatMap((x) => [x - GA, x + GA])
+      .map((x) => poly([lid(x, Z0, LB), ...archPts(x, Z0, ZS, 14)]))
+      .join('')}
+    stroke-width="0.38"
+    opacity="0.85"
+  />
+  <path d={rivets.join('')} stroke-width="0.95" opacity="0.75" />
+  <path d={poly(plate) + 'Z'} stroke-width="0.42" opacity="0.9" />
+  <path d={`M${f(keyhole)}h0.01`} stroke-width="1.7" opacity="0.9" />
+  <path d={poly([haspTop, haspEnd])} stroke-width="0.5" />
+  <circle cx={haspEnd[0]} cy={haspEnd[1]} r="0.9" stroke-width="0.45" />
+  {/* The spill. The platter is the only thing here with a hole through the
+      middle, which is the whole joke, so the hole stays small and true, it
+      carries its clamp ring and screws, and the coins get nothing inside them
+      at all. It lies at the scene's own rake rather than face on: drawn as a
+      full circle it was a cart wheel propped against the box. */}
+  <ellipse
+    cx={PC[0]}
+    cy={PC[1]}
+    rx="7.8"
+    ry="5.4"
+    transform={`rotate(${PA} ${PC[0]} ${PC[1]})`}
+    fill="var(--color-paper)"
+    stroke="none"
+  />
+  <ellipse
+    cx={PC[0]}
+    cy={PC[1]}
+    rx="7.8"
+    ry="5.4"
+    transform={`rotate(${PA} ${PC[0]} ${PC[1]})`}
+    stroke-width="0.6"
+  />
+  <ellipse
+    cx={PC[0]}
+    cy={PC[1]}
+    rx="6.5"
+    ry="4.5"
+    transform={`rotate(${PA} ${PC[0]} ${PC[1]})`}
+    stroke-width="0.25"
+    opacity="0.4"
+  />
+  <ellipse
+    cx={PC[0]}
+    cy={PC[1]}
+    rx="2.2"
+    ry="1.52"
+    transform={`rotate(${PA} ${PC[0]} ${PC[1]})`}
+    stroke-width="0.35"
+    opacity="0.7"
+  />
+  <ellipse
+    cx={PC[0]}
+    cy={PC[1]}
+    rx="1.05"
+    ry="0.73"
+    transform={`rotate(${PA} ${PC[0]} ${PC[1]})`}
+    stroke-width="0.5"
+  />
+  <path d={screws} stroke-width="0.7" opacity="0.55" />
+  {/* Coins. Three, spaced and each big enough to survive as a mark at true
+      size, and stepped apart in height as well as along: three same-size
+      ellipses in a row came out a chain of bubbles. */}
+  <ellipse
+    cx="75.5"
+    cy="50.2"
+    rx="3.4"
+    ry="1.45"
+    transform="rotate(-12 75.5 50.2)"
+    stroke-width="0.5"
+  />
+  <ellipse
+    cx="81"
+    cy="52"
+    rx="2.3"
+    ry="0.95"
+    transform="rotate(8 81 52)"
+    stroke-width="0.5"
+  />
+  {/* The last one out is under the sand to its rim: cheaper than any line on
+      the chest for saying how long this has been here. */}
+  <path d="M85 52.4a2.6 1.4 0 0 1 5.2-.2" stroke-width="0.5" />
+  {/* The bank. Its ends run out light so it reads as a heap of sand with
+      something in it and not as a horizon crossing the mark, and the stipple
+      under it is what gives the heap mass: on one hairline nothing is
+      buried. */}
+  <path d={sandLine} stroke-width="0.5" />
+  <path d={sandFade} stroke-width="0.45" opacity="0.45" />
+  <path d={stipple} stroke-width="0.32" opacity="0.4" />
+  {/* The fix, drawn as a chart cross and not a saltire: an X beside a chest
+      is the one cartoon register this mark has to stay out of. */}
+  <path d="M79 24.6v5.6M76.2 27.4h5.6" stroke-width="0.5" />
 </svg>
 <span class="chart-mark__label">cache 4 TB</span>

@@ -1,13 +1,57 @@
 ---
 import Ship from '@/components/marks/Ship.astro';
+
+// The owner's own passage: six months under sail, Ireland to France the long
+// way round the Atlantic. Drawn as a chart is drawn, not as a picture of a
+// voyage -- the ship is the vignette, the track is the data.
+//
+// Rhumb legs, not a fair curve. A passage plot is straight lines between fixes
+// with a kink at each course change, and drawing it as one smooth arc turns a
+// worked track into a swoosh. It runs off both edges because the passage is
+// longer than the mark, and it runs behind her: the hull and the canvas carry a
+// paper fill, so she breaks her own track where she sits on it. The leg she
+// sits on is near level, or the line leaves her bow at a different height from
+// the one it entered her stern at and she reads as parked beside her own track.
+const LEGS: [number, number][] = [
+  [-8, 60],
+  [24, 57.6],
+  [52, 55.2],
+  [124, 53.4],
+];
+const TRACK = 'M' + LEGS.map(([x, y]) => `${x} ${y}`).join('L');
+
+// A tick across the track at every fix, square to the leg it sits on. Placed by
+// eye they come out crooked, and a crooked tick on a ruled leg is the one thing
+// on a chart that cannot be read as a printing accident.
+const SPACING = 15.5;
+const TICKS = (() => {
+  const out: string[] = [];
+  let next = 8;
+  for (let i = 1; i < LEGS.length; i++) {
+    const [x0, y0] = LEGS[i - 1];
+    const [x1, y1] = LEGS[i];
+    const len = Math.hypot(x1 - x0, y1 - y0);
+    const nx = -(y1 - y0) / len;
+    const ny = (x1 - x0) / len;
+    while (next < len) {
+      const k = next / len;
+      const cx = x0 + (x1 - x0) * k;
+      const cy = y0 + (y1 - y0) * k;
+      out.push(
+        `M${(cx - nx * 2.4).toFixed(1)} ${(cy - ny * 2.4).toFixed(1)}` +
+          `L${(cx + nx * 2.4).toFixed(1)} ${(cy + ny * 2.4).toFixed(1)}`,
+      );
+      next += SPACING;
+    }
+    next -= len;
+  }
+  return out.join('');
+})();
 ---
 
-<svg viewBox="0 0 116 76" fill="none" stroke="currentColor" stroke-width="0.7">
-  {/* The track she made, hourly fixes ticked along it, running off the
-      edge of the paper at both ends: the passage is longer than the chart. */}
-  <path d="M-2 62C18 58 30 66 46 60" stroke-width="0.5" stroke-dasharray="2 3" opacity="0.7" />
-  <path d="M12 58v6M30 59v6" stroke-width="0.5" opacity="0.7" />
-  <Ship transform="translate(72 66) scale(0.72)" />
-  <path d="M6 72h104" stroke-width="0.5" opacity="0.35" />
+<svg viewBox="0 0 116 62" fill="none" stroke="currentColor" stroke-width="0.7">
+  <path d={TRACK} stroke-width="0.55" stroke-dasharray="3 2.6" opacity="0.75" />
+  <path d={TICKS} stroke-width="0.55" opacity="0.75" />
+  <Ship x={62} y={54.9} scale={0.72} tilt={-1.5} />
 </svg>
 <span class="chart-mark__label">under sail 2018-19</span>
