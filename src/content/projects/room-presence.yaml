@@ -15,3 +15,7 @@ stack:
   - Caddy
 from: 2025
 to: 2025
+url: https://tower.cct-ev.de
+preview:
+  src: ../../assets/previews/room-presence.png
+  surveyed: 2026-09-06
