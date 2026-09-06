@@ -1,0 +1,20 @@
+title: Four routes out of a time-series bottleneck
+domain: data
+rank: 5
+description: >-
+  The log and measurement tables under a water-industry platform had outgrown
+  the database holding them. I benchmarked native Postgres partitioning,
+  TimescaleDB and Citus against a seven-million-row production extract and
+  generated multi-tenant data, priced vertical scaling beside them, and wrote
+  the recommendation with the numbers that led to it.
+stack:
+  - PostgreSQL
+  - Timescale
+  - OpenJDK
+  - JUnit
+  - DBeaver
+  - Docker
+  - Hetzner
+  - Bash
+from: 2025
+to: 2025

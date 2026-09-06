@@ -1,6 +1,6 @@
 title: Who is in the room, read off the WiFi
 domain: web
-rank: 5
+rank: 7
 description: >-
   Asks the router which devices are on the WiFi and answers the one
   question anyone walking over actually has: is somebody up there. I took

@@ -1,0 +1,19 @@
+title: One command to rebuild a Mac
+domain: infra
+rank: 11
+description: >-
+  Dotfiles, packages and tool configuration in one repository behind one
+  idempotent script. Symlinks round edits back into the repo instead of
+  letting it drift, templates take their secrets from the environment, and
+  anything it replaces is backed up first. Re-running it is the normal case,
+  not the recovery case.
+stack:
+  - Bash
+  - Homebrew
+  - macOS
+  - Zsh
+  - tmux
+  - Neovim
+  - Git
+from: 2024
+to: 2026

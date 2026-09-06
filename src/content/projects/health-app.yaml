@@ -1,0 +1,22 @@
+title: Sickness risk read off a phone's health data
+domain: mobile
+rank: 17
+description: >-
+  An iOS app that reads Apple Health and scores the day's sickness risk
+  against a model in the cloud. My work was the score and the data under it:
+  one definition of it pinned by a replay fixture, recalibrated once
+  measurement showed it sitting below chance, and made to hold up on a device
+  with signals missing. Underneath, a raw lake reconciled against the
+  warehouse before anything was trimmed, with retention and deletion enforced
+  by the job rather than by hand.
+stack:
+  - Swift
+  - Xcode
+  - Firebase
+  - Python
+  - Google Cloud
+  - BigQuery
+  - Apple
+  - Pytest
+from: 2026
+to: 2026

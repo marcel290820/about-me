@@ -1,0 +1,14 @@
+title: Count a document's tokens before you send it
+domain: data
+rank: 16
+description: >-
+  Pulls the text out of a PDF and counts it with the same tokenizer the model
+  uses, so you know whether it fits before you paste it. Picks the encoding
+  from a model name, and prints either per-file detail or a single number for
+  a script to read.
+stack:
+  - Python
+  - Bash
+  - Linux
+from: 2026
+to: 2026

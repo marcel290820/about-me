@@ -1,0 +1,20 @@
+title: 'This site: chart paper, then deep water'
+domain: web
+rank: 10
+description: >-
+  The page you are on. Ink on paper above the fold, open water below it, and
+  a scroll that reads as a descent. Content is markdown in typed collections,
+  search is indexed in the pipeline, and every figure in the water column is
+  sampled from one curve library rather than drawn by hand.
+stack:
+  - Astro
+  - TypeScript
+  - Tailwind CSS
+  - MDX
+  - Zod
+  - SVG
+  - GitHub Actions
+  - GitHub Pages
+from: 2026
+to: 2026
+url: https://marcel-heidebrecht.de
