@@ -63,6 +63,16 @@ const HOME_PORT = 'Berlin';
       import { readingMinutes } from '@/lib/log';
       import { slugify, SLUG_RE } from './slug.ts';
 
+      // Every save writes a content file, and the dev server answers each one
+      // with a full reload for every open page. The preview iframe should
+      // reload; the desk must not, or the caret is lost mid-sentence. A
+      // listener that throws aborts Vite's reload handler for this page.
+      if (import.meta.hot) {
+        import.meta.hot.on('vite:beforeFullReload', () => {
+          throw new Error('desk: full reload suppressed');
+        });
+      }
+
       interface Frontmatter {
         title: string;
         description: string;
@@ -195,8 +205,8 @@ const HOME_PORT = 'Berlin';
       async function save(): Promise<boolean> {
         clearTimeout(timer);
         const entry = read();
-        if (!entry.frontmatter.title) {
-          say('needs a title', 'bad');
+        if (!entry.frontmatter.title || !entry.frontmatter.description) {
+          say('needs a title and a remark', 'bad');
           return false;
         }
         const create = !locked;
