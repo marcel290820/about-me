@@ -193,9 +193,9 @@ Changed:
 - `CLAUDE.md`: a section on the writer
 - `.gitignore`: `.claude/worktrees/`
 
-Deleted: `src/components/PostCard.astro`, `src/components/PaginationNav.astro` (unused).
+Deleted: `src/components/PostCard.astro`, `src/components/PaginationNav.astro` (unused), `src/components/Pagination.astro`.
 
-`Pagination.astro` is kept for the earlier/later links and restyled.
+`Pagination.astro` is replaced by `Neighbours.astro`, which is what it is now.
 
 ## Verification
 

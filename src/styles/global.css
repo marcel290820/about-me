@@ -234,6 +234,12 @@
     font-size: clamp(2rem, 9vw, 4.5rem);
   }
 
+  /* An entry title in the display voice, one size down: a ten word title
+     takes two lines rather than five. */
+  .display-name--entry {
+    font-size: clamp(1.5rem, 5vw, 2.4rem);
+  }
+
   /* Chart place-name lettering: condensed, letterspaced, uppercase. */
   .label {
     font-family: var(--font-sans);
@@ -275,14 +281,16 @@
 
   /* --- Structure --------------------------------------------------------- */
 
-  .section-heading {
+  .section-heading,
+  .prose h2 {
     display: flex;
     align-items: center;
     gap: 0.85rem;
     margin-bottom: 1.75rem;
   }
 
-  .section-heading h2 {
+  .section-heading h2,
+  .prose h2 {
     font-family: var(--font-sans);
     font-stretch: 68%;
     font-weight: 600;
@@ -293,7 +301,8 @@
     white-space: nowrap;
   }
 
-  .section-heading::after {
+  .section-heading::after,
+  .prose h2::after {
     content: "";
     flex: 1;
     height: 1px;
@@ -301,7 +310,8 @@
   }
 
   /* The rule terminates in a sounding dot rather than fading out. */
-  .section-heading::before {
+  .section-heading::before,
+  .prose h2::before {
     content: "";
     order: 3;
     width: 4px;
@@ -1845,6 +1855,48 @@
   .prose img {
     border-radius: 2px;
     border: 1px solid var(--color-border-subtle);
+  }
+
+  /* An article heading is longer than a section head and sits among body
+     copy, so it may wrap and takes one size up. */
+  .prose h2 {
+    white-space: normal;
+    font-size: 1.0625rem;
+    margin-top: 2.6em;
+    margin-bottom: 1.1em;
+  }
+
+  .prose h3 {
+    font-size: 1.0625rem;
+    font-weight: 600;
+    margin-top: 2em;
+  }
+
+  /* On paper the accent measures 3.12:1, so body-size type never takes it:
+     links are ink with an accent underline, inline code is ink on the tint.
+     Hover thickens the underline rather than changing the colour. */
+  .zone-surface .prose {
+    --tw-prose-links: var(--color-text);
+    --tw-prose-code: var(--color-text);
+  }
+
+  .zone-surface .prose a {
+    text-decoration: underline;
+    text-decoration-color: var(--color-accent);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
+    transition: text-decoration-thickness 0.15s ease;
+  }
+
+  .zone-surface .prose a:hover {
+    color: var(--color-text);
+    text-decoration-thickness: 2px;
+  }
+
+  /* Wide content scrolls in its own box; the page never scrolls sideways. */
+  .prose pre,
+  .prose table {
+    overflow-x: auto;
   }
 
   .copy-button {
