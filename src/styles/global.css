@@ -720,30 +720,59 @@
   /* The survey of a live site sits knocked back, the way printed detail does
      next to the plate it belongs to, and comes up to full colour under the
      pointer or a keyboard focus. Nothing here moves: it is paper. */
+  .sheet__shot .portrait-inset__frame {
+    background: var(--color-surface-elevated);
+  }
+
   .sheet__shot img {
-    /* One band for every survey, whatever viewport the site was shot at, so
-       the insets line up down the page. Cropped from the top: the head of a
-       page is the part worth printing. */
+    /* Cropped from the top: the head of a page is the part worth printing.
+       Above sm the frame takes its height from the prose beside it instead,
+       so the two columns start and finish on the same lines. */
     aspect-ratio: 16 / 10;
     object-fit: cover;
     object-position: top center;
-    transition: filter 0.2s ease;
+    /* At rest the shot is printed in the water's own ink: luminosity over the
+       frame's fill leaves the site's shapes and takes its colours, which is
+       what keeps a white page from outranking the plate and stops a second
+       orange competing with the one warm mark on the page. */
+    mix-blend-mode: luminosity;
+    transition:
+      filter 0.2s ease,
+      opacity 0.2s ease;
   }
 
-  /* Aimed at a value, not stepped down by a fixed amount: a white page and a
-     black one both have to land near the plate they sit beside, or the shot
-     outranks it or sinks under it. */
+  /* The value is aimed at the plate, not stepped down by a fixed amount: a
+     white page and a black one start nowhere near each other. */
   .sheet__shot[data-tone='light'] img {
-    filter: saturate(0.5) brightness(0.62) contrast(1.06);
+    filter: brightness(0.72) contrast(1.06);
   }
 
   .sheet__shot[data-tone='dark'] img {
-    filter: saturate(0.8) brightness(1.15) contrast(1.02);
+    filter: brightness(1.25) contrast(1.02);
   }
 
+  /* Under the pointer or a keyboard focus the survey gets its real colours. */
   .sheet__shot:hover img,
   .sheet__shot a:focus-visible img {
+    mix-blend-mode: normal;
     filter: none;
+  }
+
+  @media (width >= 40rem) {
+    .sheet__shot {
+      align-self: stretch;
+    }
+
+    .sheet__shot .portrait-inset__frame {
+      display: flex;
+      flex: 1;
+      min-height: 7rem;
+    }
+
+    .sheet__shot img {
+      width: 100%;
+      height: 100%;
+    }
   }
 
   .sheet__mark:hover .sheet__name,

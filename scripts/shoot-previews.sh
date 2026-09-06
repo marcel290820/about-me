@@ -12,11 +12,11 @@ PW="playwright-core@1.60.0"
 OUT="src/assets/previews"
 SHOT="npx -y $PW screenshot --channel chrome --wait-for-timeout 2500"
 
-# Each site gets the viewport that makes its own type legible at the size
-# the inset prints, a quarter of a column. At desktop width the status page
-# is one card in a field of empty background.
+# Both sites are shot at phone width, because the inset prints a quarter of a
+# column wide: a desktop page reduced that far says only that a site exists,
+# while the site's own narrow layout still has readable type at that size.
 mkdir -p "$OUT"
-$SHOT --viewport-size=1120,700 https://www.juniter.de/ "$OUT/consultancy-website.png"
-$SHOT --viewport-size=820,680 https://tower.cct-ev.de/ "$OUT/room-presence.png"
+$SHOT --viewport-size=520,860 https://www.juniter.de/ "$OUT/consultancy-website.png"
+$SHOT --viewport-size=520,860 https://tower.cct-ev.de/ "$OUT/room-presence.png"
 
 ls -la "$OUT"

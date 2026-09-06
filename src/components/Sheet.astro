@@ -154,7 +154,7 @@ const link =
         approach. It is a survey, dated under the frame, not a window on the
         live site, so it is a picture and the caption says when it was taken. */}
     {p.preview && p.url && host && (
-      <figure class="sheet__shot portrait-inset w-full sm:w-64 sm:shrink-0" data-tone={p.preview.tone}>
+      <figure class="sheet__shot portrait-inset w-full sm:w-56 sm:shrink-0" data-tone={p.preview.tone}>
         <a class="portrait-inset__frame block" href={p.url} target="_blank" rel="noopener noreferrer">
           <Image
             src={p.preview.src}
@@ -167,7 +167,7 @@ const link =
         </a>
         {/* The host is what the reader acts on; the date is the small print
             that keeps the shot honest, so they do not carry the same weight. */}
-        <figcaption class="self-end"><span class="text-text-muted">{host}</span> surveyed {surveyed}</figcaption>
+        <figcaption class="self-start"><span class="text-text-muted">{host}</span> surveyed {surveyed}</figcaption>
       </figure>
     )}
   </div>
