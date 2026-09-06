@@ -1,0 +1,18 @@
+title: Member portal for a student consultancy
+domain: web
+description: >-
+  Members, projects, events, documents and finance requests in one internal
+  app, running since 2020 and rebuilt on a newer frontend along the way. I
+  work both ends of it: attendance statistics, a slide export service,
+  scheduled jobs, and the pipeline that ships the whole thing.
+stack:
+  - Vue 3
+  - TypeScript
+  - Python
+  - FastAPI
+  - PostgreSQL
+  - Celery
+  - Docker
+  - GitLab CI
+from: 2020
+to: 2026
