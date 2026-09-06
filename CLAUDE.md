@@ -115,7 +115,7 @@ A mark prints 118px wide, so each of the two ships in the fleet action lands at 
 
 ### The chart table (`src/writer/`)
 
-The blog is written at `/write`, which exists only under `npm run dev`. `integration.ts` injects the route and mounts the `/__writer/` API when the command is `dev`; a build has neither. The desk autosaves to `src/content/blog/<slug>.md` 800ms after typing stops, the preview is the real `/blog/<slug>` page in an iframe, and publish flips `draft: false`, commits that one file as `post: <title>` and pushes. Publish refuses while anything else is staged.
+The blog is written at `/write`, which exists only under `npm run dev`. `integration.ts` injects the route and mounts the `/__writer/` API when the command is `dev`, and the header links to it under the same gate; a build has none of it. The desk autosaves to `src/content/blog/<slug>.md` 800ms after typing stops, the preview is the real `/blog/<slug>` page in an iframe, and publish flips `draft: false`, commits that one file as `post: <title>` and pushes. Publish refuses while anything else is staged.
 
 `entry.ts` is pure (parse, serialize, validate, commit message) and has the test; `slug.ts` is split out so the browser script can import it without `js-yaml`. Frontmatter is parsed with `js-yaml` under `JSON_SCHEMA`, so an unquoted date stays the string it was typed as. Hand-edited files are fine; the slug is the filename and locks after the first save.
 
