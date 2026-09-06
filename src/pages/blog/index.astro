@@ -1,34 +1,25 @@
 ---
 import Page from '@/layouts/Page.astro';
-import PostCard from '@/components/PostCard.astro';
-import TagList from '@/components/TagList.astro';
+import Log from '@/components/Log.astro';
+import Wayfinding from '@/components/Wayfinding.astro';
 import { getCollection } from 'astro:content';
+import { newestFirst } from '@/lib/log';
 
-const allPosts = (await getCollection('blog', ({ data }) => !data.draft))
-  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
-
-const allTags = [...new Set(allPosts.flatMap((post) => post.data.tags))].sort();
+const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(newestFirst);
 ---
 
-<Page title="Blog" description="Engineering articles by Marcel Heidebrecht">
-  <h1 class="display-name mb-4">Blog</h1>
-  <p class="font-mono text-xs uppercase tracking-[0.16em] text-text-dim mb-10">thoughts on engineering, infrastructure &amp; code</p>
-
-  {allTags.length > 0 && (
-    <div class="mb-10">
-      <TagList tags={allTags} linked={true} />
-    </div>
-  )}
-
-  <div class="flex flex-col gap-3">
-    {allPosts.map((post) => (
-      <PostCard
-        title={post.data.title}
-        description={post.data.description}
-        pubDate={post.data.pubDate}
-        tags={post.data.tags}
-        slug={post.id}
-      />
-    ))}
+<Page title="Blog" description="Engineering articles by Marcel Heidebrecht" surface>
+  <div slot="surface" class="pt-8 pb-16 sm:pt-12 sm:pb-24">
+    <h1 class="display-name mb-4">Remarks</h1>
+    <p class="font-mono text-xs uppercase tracking-[0.16em] text-text-dim mb-12">
+      the remarks column of the log: what got written down
+    </p>
+    {posts.length > 0 ? (
+      <Log posts={posts} />
+    ) : (
+      <p class="text-[0.9375rem] text-text-muted">Nothing written down yet.</p>
+    )}
   </div>
+
+  <Wayfinding posts={posts} />
 </Page>

@@ -367,6 +367,44 @@
     border-left: 6px solid var(--color-accent);
   }
 
+  /* --- Log rows ----------------------------------------------------------
+     An entry in the remarks column. The title is the link and the whole row
+     is its target: the overlay sits under the tags, which are links too. */
+
+  .log-entry {
+    position: relative;
+  }
+
+  .log-entry__link {
+    color: var(--color-text);
+  }
+
+  .log-entry__link::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+  }
+
+  .log-entry:hover .log-entry__link {
+    color: var(--color-accent);
+  }
+
+  .log-entry .tag {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* A second value on the fix line, after a short dash. */
+  .log-entry__min::before {
+    content: "";
+    display: inline-block;
+    width: 12px;
+    height: 1px;
+    margin: 0 0.5rem;
+    vertical-align: middle;
+    background: var(--color-border-bright);
+  }
+
   /* --- Surfaces ---------------------------------------------------------- */
 
   .card {

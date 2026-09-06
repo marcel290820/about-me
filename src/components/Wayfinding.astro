@@ -1,0 +1,52 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  /** Every published post; topics are counted from it. */
+  posts: CollectionEntry<'blog'>[];
+  activeTag?: string;
+}
+
+const { posts, activeTag } = Astro.props;
+
+const counts = new Map<string, number>();
+for (const post of posts) {
+  for (const tag of post.data.tags) counts.set(tag, (counts.get(tag) ?? 0) + 1);
+}
+const topics = [...counts.entries()].sort(([a], [b]) => a.localeCompare(b));
+
+const linkClass =
+  'font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-text-dim hover:text-accent transition-colors';
+---
+
+<section>
+  <div class="section-heading">
+    <h2>wayfinding</h2>
+  </div>
+  {topics.length > 0 && (
+    <dl class="border-t border-border-subtle mb-8">
+      {topics.map(([tag, n]) => (
+        <div class="grid grid-cols-[6.5rem_1fr] sm:grid-cols-[9rem_1fr] gap-4 py-3.5 border-b border-border-subtle">
+          <dt class="font-mono text-xs uppercase tracking-[0.14em] pt-0.5">
+            <a
+              href={`/blog/tags/${tag}`}
+              class:list={[
+                'transition-colors',
+                tag === activeTag ? 'text-text' : 'text-accent hover:text-text',
+              ]}
+            >
+              {tag}
+            </a>
+          </dt>
+          <dd class="text-[0.9375rem] text-text-muted">
+            {n} {n === 1 ? 'entry' : 'entries'}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  )}
+  <div class="flex flex-wrap gap-6">
+    <a href="/search" class={linkClass}>search the site &rarr;</a>
+    <a href="/rss.xml" class={linkClass}>rss feed &rarr;</a>
+  </div>
+</section>
