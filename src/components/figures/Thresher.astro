@@ -1,0 +1,45 @@
+---
+import { spine, shell } from '@/lib/curves';
+
+// --- Thresher shark -------------------------------------------------------
+// The upper tail lobe is as long as the rest of the animal. It uses it to
+// crack the water like a whip and stun what it is chasing.
+const thresher = spine({
+  from: 34,
+  to: 226,
+  y: (t) => 62 - Math.sin(t * 3.1) * 3,
+  up: [
+    [0, 1.4],
+    [0.08, 5],
+    [0.34, 14.5],
+    [0.5, 15.5],
+    [0.74, 12],
+    [0.92, 5.5],
+    [1, 0.8],
+  ],
+  down: [
+    [0, 1.4],
+    [0.08, 5],
+    [0.36, 15.5],
+    [0.54, 16],
+    [0.78, 10],
+    [0.94, 4.5],
+    [1, 0.8],
+  ],
+});
+---
+
+<svg viewBox="-46 -34 288 148" fill="none" stroke="currentColor" stroke-width="1">
+  <path d={shell(thresher)} />
+  {/* The scythe. As long again as the animal it is attached to. */}
+  <path d="M36 58C10 40-14 12-40-30-24 6-8 34 20 60c-26 12-40 22-48 34 18-12 38-20 62-24Z" />
+  <path d="M14 40C0 22-14 0-28-18" stroke-width="0.5" opacity="0.6" />
+  {/* First dorsal, pectorals, keel. */}
+  <path d="M126 47c6-16 14-24 24-25-4 9-6 17-6 25Z" />
+  <path d="M164 72c14 8 24 20 28 32-16-6-28-16-36-28Z" stroke-width="0.8" />
+  <path d="M120 76c8 6 12 12 14 20" stroke-width="0.6" opacity="0.7" />
+  <path d="M78 66c8-2 14-1 18 2" stroke-width="0.5" opacity="0.6" />
+  <circle cx="208" cy="58" r="3" stroke-width="0.8" />
+  <path d="M216 66c-6 2-12 2-16 0" stroke-width="0.6" />
+  <path d="M196 50c-2 6-2 12 0 17M188 48c-2 7-2 14 0 20" stroke-width="0.5" opacity="0.55" />
+</svg>

@@ -1,0 +1,38 @@
+---
+import { spine, shell, rays } from '@/lib/curves';
+
+// --- Sea serpent ----------------------------------------------------------
+// Cartographers drew these in the blank water. What it is wrapped around is a
+// telegraph cable, and the labelled break is 1929: a slide off the Grand Banks
+// snapped twelve of them in sequence, and the order they went in is how anyone
+// worked out how fast a turbidity current travels.
+const serpent = spine({
+  from: 4,
+  to: 92,
+  steps: 44,
+  y: (t) => 32 + Math.sin(t * Math.PI * 3) * 12,
+  up: [
+    [0, 0.5],
+    [0.28, 2.8],
+    [0.62, 4.4],
+    [0.88, 4.6],
+    [1, 3],
+  ],
+});
+
+const serpentHead = serpent[serpent.length - 1];
+---
+
+<svg viewBox="0 0 120 70" fill="none" stroke="currentColor" stroke-width="0.7">
+  <path d="M0 44h118" stroke-width="0.7" opacity="0.75" />
+  <path d="M28 40v8M32 40v8" stroke-width="0.5" opacity="0.8" />
+  <path d={shell(serpent)} fill="var(--color-paper)" />
+  <path d={rays(serpent, () => 3.6, 2, 0.06)} stroke-width="0.45" opacity="0.8" />
+  {/* Head, jaws open, one horn. Nobody drew these politely. */}
+  <path d="M89 27c8-4 17-2 21 3-6 3-13 4-20 2Z" fill="var(--color-paper)" />
+  <path d="M89 35c7 4 15 4 20 0-5 5-13 6-20 4Z" fill="var(--color-paper)" />
+  <path d="M93 26c0-5 3-9 8-10-3 4-4 7-4 10" stroke-width="0.6" />
+  <path d="M107 34c3 3 7 4 10 2" stroke-width="0.5" />
+  <circle cx="96" cy="29" r="0.9" fill="currentColor" stroke="none" />
+</svg>
+<span class="chart-mark__label">subm cable, rep 1929</span>

@@ -1,0 +1,22 @@
+---
+import { shell, torpedo } from '@/lib/curves';
+
+const gliderHull = shell(torpedo(26, 148, 38, 9));
+---
+
+<svg viewBox="-4 0 180 96" fill="none" stroke="currentColor" stroke-width="1">
+  {/* No propeller anywhere on it. It changes how much it weighs and falls
+      forward, over and over, for months. */}
+  <path d={gliderHull} />
+  {/* One swept blade crossing the hull. Drawn as a wide quad it reads as a
+      paper dart wedged inside the body. */}
+  <path d="M96 44 56 60 44 60 76 45Z" stroke-width="0.8" />
+  <path d="M30 34 6 6" stroke-width="0.8" />
+  <circle cx="5" cy="4" r="2.6" stroke-width="0.7" />
+  <path d="M110 30v16M124 31v14" stroke-width="0.5" opacity="0.55" />
+  <circle cx="142" cy="38" r="2" fill="currentColor" class="drift__telemetry" />
+  {/* The sawtooth it flew to get here, drawn behind it the way a plot is. */}
+  <path d="M22 62 2 88M22 62 42 88M42 88 62 62M62 62 82 88" stroke-width="0.5" stroke-dasharray="2 4" opacity="0.45" />
+  <circle cx="72" cy="38" r="26" class="drift__ring" />
+</svg>
+<span class="drift__tag">SG-014 &middot; 1000 m</span>

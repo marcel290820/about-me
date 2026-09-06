@@ -1,0 +1,61 @@
+---
+// --- Ships ----------------------------------------------------------------
+// One rig, drawn once about its own waterline and placed where it is needed.
+//
+// A mark prints about 118px wide, so each ship lands around 30px. At that size
+// a sail has to be a shape with area: drawn as a thin arc hung on a spar it
+// reads as bunting on a pole, which is exactly how the last pair came out.
+// Bow to the right: raised stem, raised stern, deck between them.
+const HULL = 'M-27-10-22-8 18-8 30-12 26 8C10 11-10 11-22 8Z';
+
+// Mizzen, main, fore -- shortest at the stern, tallest amidships.
+const MASTS = 'M-13-8V-30M0-8V-44M14-8V-38';
+
+// The whole suit on a mast as one bellied shape, with the yards ruled across
+// it. Each ship prints about 30px wide: individual sails at that size stop
+// being canvas and become a stack of crates, which is how the last two
+// attempts came out.
+const SAIL = (x: number, top: number, hw: number, h: number) =>
+  `M${x} ${top}` +
+  `C${x + hw * 0.5} ${(top + h * 0.25).toFixed(1)} ${x + hw} ${(top + h * 0.55).toFixed(1)} ${x + hw * 0.92} ${top + h}` +
+  `L${x - hw * 0.92} ${top + h}` +
+  `C${x - hw} ${(top + h * 0.55).toFixed(1)} ${x - hw * 0.5} ${(top + h * 0.25).toFixed(1)} ${x} ${top}Z`;
+
+const YARDS = (x: number, top: number, hw: number, h: number) =>
+  [0.42, 0.72]
+    .map((f) => {
+      const w = hw * f ** 0.8;
+      return `M${(x - w).toFixed(1)} ${(top + h * f).toFixed(1)}h${(w * 2).toFixed(1)}`;
+    })
+    .join('');
+
+const RIG_SETS: [number, number, number, number][] = [
+  [-13, -27, 8, 19],
+  [0, -40, 12, 30],
+  [14, -33, 10, 24],
+];
+
+const SAILS = RIG_SETS.map((s) => SAIL(...s)).join('');
+const SPARS = RIG_SETS.map((s) => YARDS(...s)).join('');
+
+const BOWSPRIT = 'M30-12 44-18';
+const JIB = 'M41-17 26-28 30-13Z';
+const ENSIGN = 'M-27-10V-24M-27-24-17-21-27-18';
+
+interface Props {
+  transform: string;
+  ensign?: boolean;
+}
+
+const { transform, ensign = true } = Astro.props;
+---
+
+<g transform={transform}>
+  <path d={HULL} />
+  <path d={SAILS} stroke-width="0.9" />
+  <path d={SPARS} stroke-width="0.7" opacity="0.8" />
+  <path d={MASTS} stroke-width="1.1" />
+  <path d={BOWSPRIT} stroke-width="0.9" />
+  <path d={JIB} stroke-width="0.8" />
+  {ensign && <path d={ENSIGN} stroke-width="0.9" />}
+</g>

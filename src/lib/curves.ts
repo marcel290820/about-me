@@ -97,3 +97,21 @@ export function rays(
     )
     .join('');
 }
+
+// --- Hulls ----------------------------------------------------------------
+// Three built things share one profile family: a pressure hull is a pressure
+// hull whether it is towed, flown or crewed.
+export const torpedo = (from: number, to: number, y: number, r: number) =>
+  spine({
+    from,
+    to,
+    y: () => y,
+    steps: 30,
+    up: [
+      [0, r * 0.34],
+      [0.16, r * 0.9],
+      [0.62, r],
+      [0.9, r * 0.86],
+      [1, r * 0.2],
+    ],
+  });

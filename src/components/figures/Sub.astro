@@ -1,0 +1,53 @@
+---
+import { spine, shell } from '@/lib/curves';
+
+const subHull = shell(
+  spine({
+    from: 26,
+    to: 168,
+    y: () => 56,
+    steps: 34,
+    up: [
+      [0, 4],
+      [0.14, 15],
+      [0.5, 19],
+      [0.82, 18],
+      [1, 8],
+    ],
+    down: [
+      [0, 4],
+      [0.14, 14],
+      [0.5, 17],
+      [0.82, 16],
+      [1, 8],
+    ],
+  }),
+);
+---
+
+<svg viewBox="-8 0 208 128" fill="none" stroke="currentColor" stroke-width="1">
+  <path d={subHull} />
+  {/* Sail, and the personnel sphere forward: the only part that stays at one
+      atmosphere, which is why it is the only part that is round. */}
+  <path d="M74 38h44l-6-16H80z" stroke-width="0.8" />
+  <path d="M96 22v-9" stroke-width="0.6" />
+  <circle cx="150" cy="56" r="15" stroke-width="0.8" />
+  <circle cx="156" cy="56" r="6" stroke-width="0.7" />
+  <path d="M26 44v24" stroke-width="0.5" opacity="0.5" />
+  <path d="M62 40v32M110 40v32" stroke-width="0.5" opacity="0.45" />
+  {/* Two ducted thrusters aft. */}
+  <g stroke-width="0.8">
+    <circle cx="18" cy="46" r="7" />
+    <circle cx="18" cy="66" r="7" />
+  </g>
+  {/* Lamps and their throw, then the manipulator folded under the sphere. */}
+  <path d="M152 74h12v8h-12z" stroke-width="0.7" />
+  <path d="M164 76 190 66M164 82 190 92M165 79h25" stroke-width="0.5" stroke-dasharray="3 4" opacity="0.5" />
+  <circle cx="126" cy="80" r="2.6" stroke-width="0.7" />
+  <path d="M126 80 146 92 166 84" stroke-width="0.9" />
+  <path d="m166 84 8-4M166 84l7 5" stroke-width="0.7" />
+  <path d="M46 84v12M118 84v12M38 96h88" stroke-width="0.7" />
+  <circle cx="150" cy="56" r="3" fill="currentColor" class="drift__telemetry" />
+  <circle cx="110" cy="56" r="36" class="drift__ring" />
+</svg>
+<span class="drift__tag">DSV &middot; 4000 m</span>
