@@ -98,12 +98,13 @@ const HOME_PORT = 'Berlin';
 
       /** The content layer syncs a moment after the file lands, so a new
        *  entry's page answers 404 until it has. Wait for it. */
-      async function untilBuilt(name: string) {
+      async function untilBuilt(name: string): Promise<boolean> {
         for (let i = 0; i < 20; i++) {
           const res = await fetch(`/blog/${name}`, { method: 'HEAD' });
-          if (res.ok) return;
+          if (res.ok) return true;
           await new Promise((resolve) => setTimeout(resolve, 300));
         }
+        return false;
       }
 
       /** Today in local time as YYYY-MM-DD; toISOString would give UTC. */
@@ -216,22 +217,36 @@ const HOME_PORT = 'Berlin';
           return false;
         }
         say('saving', 'busy');
+        // Lock before the round trip: a second save landing while the first
+        // is in flight must not create the entry twice.
+        if (create) {
+          slug = name;
+          locked = true;
+        }
         try {
           await api('PUT', 'entry', { slug: name, ext, create, ...entry });
+          saved = true;
+          if (create) {
+            lock(name);
+            history.replaceState(null, '', `?entry=${name}`);
+            const built = await untilBuilt(name);
+            preview.src = `/blog/${name}`;
+            await list();
+            if (!built) {
+              say('saved, but the preview has not caught up; reload it', 'bad');
+              return true;
+            }
+          }
+          say(`saved ${new Date().toLocaleTimeString('en-GB')}`);
+          return true;
         } catch (err) {
+          if (create) {
+            slug = '';
+            locked = false;
+          }
           say((err as Error).message, 'bad');
           return false;
         }
-        saved = true;
-        if (create) {
-          lock(name);
-          history.replaceState(null, '', `?entry=${name}`);
-          await untilBuilt(name);
-          preview.src = `/blog/${name}`;
-          await list();
-        }
-        say(`saved ${new Date().toLocaleTimeString('en-GB')}`);
-        return true;
       }
 
       function schedule() {
@@ -302,6 +317,10 @@ const HOME_PORT = 'Berlin';
             say('opened');
           }
         } catch (err) {
+          // Nothing opened: back to a blank desk rather than a half-locked one.
+          slug = '';
+          locked = false;
+          history.replaceState(null, '', '/write');
           say((err as Error).message, 'bad');
         }
         counts();
