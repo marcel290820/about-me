@@ -53,6 +53,7 @@ export default function writer(): AstroIntegration {
         server.middlewares.use(async (req, res, next) => {
           if (!req.url?.startsWith(API)) return next();
           try {
+            checkSameOrigin(req);
             const url = new URL(req.url, 'http://localhost');
             const body = await readJson(req);
             const result = await handle(req.method ?? 'GET', url, body, paths);
@@ -204,6 +205,36 @@ async function publish(paths: Paths, body: unknown) {
 }
 
 // --- http -------------------------------------------------------------------
+
+function header(req: IncomingMessage, name: string): string | undefined {
+  const value = req.headers[name];
+  return Array.isArray(value) ? value[0] : value;
+}
+
+/** Refuse anything that is not a same-origin request from the dev server's
+ *  own page: a browser sends Sec-Fetch-Site and Origin, curl does not, and
+ *  a POST with a non-JSON content-type is CORS-simple and never preflighted. */
+function checkSameOrigin(req: IncomingMessage): void {
+  const fetchSite = header(req, 'sec-fetch-site');
+  if (fetchSite !== undefined && fetchSite !== 'same-origin' && fetchSite !== 'none') {
+    throw new HttpError(403, `cross-site request refused (Sec-Fetch-Site: ${fetchSite})`);
+  }
+
+  const origin = header(req, 'origin');
+  if (origin !== undefined) {
+    const host = header(req, 'host');
+    if (origin !== `http://${host}`) {
+      throw new HttpError(403, `cross-origin request refused (Origin: ${origin})`);
+    }
+  }
+
+  if (req.method === 'PUT' || req.method === 'POST') {
+    const contentType = header(req, 'content-type');
+    if (contentType === undefined || !contentType.startsWith('application/json')) {
+      throw new HttpError(415, 'content-type must be application/json');
+    }
+  }
+}
 
 async function readJson(req: IncomingMessage): Promise<unknown> {
   const chunks: Buffer[] = [];
