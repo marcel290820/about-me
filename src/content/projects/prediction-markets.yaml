@@ -1,5 +1,6 @@
 title: Prediction markets on Solana
 domain: web3
+rank: 2
 description: >-
   Yes/no markets anyone can open from a link, stake SOL on and settle
   on-chain. Anchor program, Vue frontend, and the pipelines that build,

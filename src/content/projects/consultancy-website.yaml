@@ -1,5 +1,6 @@
 title: Website for a student IT consultancy
 domain: web
+rank: 3
 description: >-
   Public pages plus server routes behind three forms: contact, application
   and a coffee chat. Schema validation, rate limiting, a CAPTCHA check, a

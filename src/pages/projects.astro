@@ -2,9 +2,9 @@
 import Page from '@/layouts/Page.astro';
 import Sheet from '@/components/Sheet.astro';
 import { getCollection } from 'astro:content';
-import { newestFirst } from '@/lib/projects';
+import { byRank } from '@/lib/projects';
 
-const projects = (await getCollection('projects')).sort(newestFirst);
+const projects = (await getCollection('projects')).sort(byRank);
 ---
 
 <Page title="Projects" description="Projects by Marcel Heidebrecht" surface>

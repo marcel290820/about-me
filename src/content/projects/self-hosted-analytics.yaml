@@ -1,5 +1,6 @@
 title: Self-hosted web analytics
 domain: infra
+rank: 6
 description: >-
   Traffic figures on our own hardware, so visitors are counted without
   being handed to a tracker. The app is upstream and untouched; mine is
