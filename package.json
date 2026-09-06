@@ -9,7 +9,8 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "test": "node --experimental-strip-types --test src/writer/entry.test.ts"
   },
   "dependencies": {
     "@astrojs/mdx": "^5.0.4",
@@ -20,5 +21,9 @@
     "astro": "^6.1.9",
     "astro-pagefind": "^1.8.6",
     "tailwindcss": "^4.2.4"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "4.0.9",
+    "js-yaml": "4.1.1"
   }
 }
