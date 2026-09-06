@@ -3,17 +3,17 @@ import Base from '@/layouts/Base.astro';
 import Hero from '@/components/Hero.astro';
 import Passage from '@/components/Passage.astro';
 import PostCard from '@/components/PostCard.astro';
-import ProjectCard from '@/components/ProjectCard.astro';
+import Sheet from '@/components/Sheet.astro';
 import { getCollection } from 'astro:content';
+import { newestFirst } from '@/lib/projects';
 
 const allPosts = (await getCollection('blog', ({ data }) => !data.draft))
   .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
   .slice(0, 3);
 
-const featuredProjects = (await getCollection('projects'))
-  .filter((p) => p.data.featured)
-  .sort((a, b) => b.data.sortOrder - a.data.sortOrder)
-  .slice(0, 3);
+// One sheet on home, the newest. Three would be the projects page again.
+const projects = (await getCollection('projects')).sort(newestFirst);
+const newest = projects[0];
 
 const interests = (await getCollection('interests')).sort((a, b) =>
   a.data.title.localeCompare(b.data.title),
@@ -45,22 +45,12 @@ const interests = (await getCollection('interests')).sort((a, b) =>
     </section>
   )}
 
-  {featuredProjects.length > 0 && (
+  {newest && (
     <section>
       <div class="section-heading">
-        <h2>featured projects</h2>
+        <h2>projects</h2>
       </div>
-      <div class="grid gap-3 sm:grid-cols-2">
-        {featuredProjects.map((project) => (
-          <ProjectCard
-            title={project.data.title}
-            description={project.data.description}
-            tags={project.data.tags}
-            url={project.data.url}
-            repo={project.data.repo}
-          />
-        ))}
-      </div>
+      <Sheet project={newest.data} index={1} total={projects.length} />
       <a href="/projects" class="inline-block mt-6 font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-text-dim hover:text-accent transition-colors">
         all projects &rarr;
       </a>
