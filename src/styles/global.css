@@ -2008,9 +2008,11 @@
     font-family: var(--font-mono);
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    background: var(--color-surface-elevated);
-    color: var(--color-text-muted);
-    border: 1px solid var(--color-border);
+    /* It sits on a code block, which is water wherever it prints, so it
+       takes the water's anchors rather than the zone's tokens. */
+    background: var(--color-abyss);
+    color: var(--color-cream);
+    border: 1px solid rgba(234, 227, 211, 0.24);
     border-radius: 2px;
     cursor: pointer;
     opacity: 0;
@@ -2073,14 +2075,6 @@
   --astro-code-token-string-expression: var(--color-foam);
   --astro-code-token-punctuation: #93a3a6;
   --astro-code-token-link: var(--color-foam);
-}
-
-/* The copy button belongs to the block, which is water: anchors, because it
-   prints on paper. */
-.prose pre .copy-button {
-  background: var(--color-abyss);
-  color: var(--color-cream);
-  border-color: rgba(234, 227, 211, 0.24);
 }
 
 /* A table only scrolls once it is a block. */
