@@ -1,0 +1,15 @@
+title: Self-hosted CAPTCHA service
+domain: infra
+description: >-
+  An open-source CAPTCHA run on our own machine instead of handed to a
+  third party, so the forms it guards leak nothing to anyone. All
+  infrastructure: a Swarm stack behind a reverse proxy with certificates
+  that renew themselves, shipped by tag.
+stack:
+  - Docker Swarm
+  - Traefik
+  - Let's Encrypt
+  - Bash
+  - GitLab CI
+from: 2026
+to: 2026
