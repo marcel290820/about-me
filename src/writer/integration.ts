@@ -2,6 +2,7 @@ import type { AstroIntegration } from 'astro';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { access, readdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { execFile } from 'node:child_process';
+import { randomUUID } from 'node:crypto';
 import { promisify } from 'node:util';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -144,7 +145,7 @@ async function loadEntry(dir: string, slugParam: string | null) {
 async function writeEntry(dir: string, slug: string, ext: Ext, entry: Entry): Promise<string> {
   const file = path.join(dir, `${slug}.${ext}`);
   // Temp file then rename, so a crash mid-write never leaves half an entry.
-  const tmp = `${file}.${process.pid}.tmp`;
+  const tmp = `${file}.${randomUUID()}.tmp`;
   await writeFile(tmp, serializeEntry(entry), 'utf8');
   await rename(tmp, file);
   return file;
@@ -223,7 +224,8 @@ function checkSameOrigin(req: IncomingMessage): void {
   const origin = header(req, 'origin');
   if (origin !== undefined) {
     const host = header(req, 'host');
-    if (origin !== `http://${host}`) {
+    const scheme = (req.socket as { encrypted?: boolean }).encrypted ? 'https' : 'http';
+    if (origin !== `${scheme}://${host}`) {
       throw new HttpError(403, `cross-origin request refused (Origin: ${origin})`);
     }
   }
