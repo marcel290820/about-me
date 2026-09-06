@@ -1,0 +1,20 @@
+title: Multi-app platform for a stealth startup
+domain: web3
+rank: 3
+description: >-
+  Four Next.js apps on one Fastify backend, with Postgres holding the records
+  and ClickHouse the analytics read off them. Collectors on their own boxes
+  feed on-chain, market and social data in, deployed from the repo by Ansible
+  so a machine is never edited by hand. I worked across all of it, front to
+  back, from the query layer to the boxes.
+stack:
+  - Next.js
+  - React
+  - Fastify
+  - Drizzle
+  - PostgreSQL
+  - ClickHouse
+  - Redis
+  - Ansible
+from: 2026
+to: 2026

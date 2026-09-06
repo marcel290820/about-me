@@ -1,0 +1,17 @@
+title: Two morning digests and an hourly watch
+domain: data
+rank: 13
+description: >-
+  Reads Hacker News and two news feeds, folds in two fear-and-greed indices,
+  and puts a digest in Telegram before breakfast. Three timers, one SQLite
+  file, no auth and no containers. It is one Python package on a small Linux
+  box, and that is the whole design.
+stack:
+  - Python
+  - Telegram
+  - SQLite
+  - Linux
+  - Bash
+  - Pytest
+from: 2026
+to: 2026

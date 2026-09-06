@@ -1,0 +1,18 @@
+title: A depot that says when it has drifted
+domain: data
+rank: 15
+description: >-
+  Reads a brokerage depot, compares it against a target allocation, and names
+  only the positions that have wandered far enough to be worth acting on. It
+  reads and never writes: no order passes through it, and the suggestion is
+  always where to put new money, never what to sell. Every check is stored, so
+  the report can say how long a position has been out of band.
+stack:
+  - Python
+  - Telegram
+  - SQLite
+  - Linux
+  - Pytest
+  - Ruff
+from: 2026
+to: 2026

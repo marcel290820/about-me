@@ -1,0 +1,18 @@
+title: Finding the duplicates in a software estate
+domain: data
+rank: 22
+description: >-
+  Matching an organisation's software inventory against a catalogue of
+  thousands of tools to show where it is paying twice for one capability.
+  Edit distance first, then embeddings with clustering over them, served
+  behind an API and scored against a ground-truth set built for the purpose.
+stack:
+  - Python
+  - FastAPI
+  - LangChain
+  - pandas
+  - NumPy
+  - scikit-learn
+  - Jupyter
+from: 2024
+to: 2025
