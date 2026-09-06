@@ -73,7 +73,7 @@ Body: `.prose` at its default 65ch measure, not `max-w-none`. On paper the prose
 - inline code is ink on `--color-accent-soft`, not accent text
 - `h2` takes the section-heading voice: condensed uppercase, the hairline, the dot at the end
 - `h3` stays sentence case semibold
-- code blocks keep the Dracula theme and read as dark insets on the paper; the copy button stays
+- code blocks print as water: Shiki on its css-variables theme, abyss ground, cream text, foam strings, buoy keywords. This is a site-wide change to the Shiki theme and stands unless the owner asks for Dracula back; the copy button stays
 - tables and code scroll inside their own box, the page never scrolls sideways
 - images keep the 2px radius and hairline
 
