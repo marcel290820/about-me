@@ -1,37 +1,124 @@
 ---
-// --- Windrose -------------------------------------------------------------
-// Thirty-two points, generated rather than drawn, because a rose hand-fitted
-// point by point comes out lopsided and a lopsided rose is worse than none.
-const ROSE = (() => {
-  const cx = 50;
-  const cy = 50;
-  const pt = (a: number, r: number) =>
-    `${(cx + Math.sin(a) * r).toFixed(1)} ${(cy - Math.cos(a) * r).toFixed(1)}`;
+// --- Variation rose ---------------------------------------------------------
+// Generated, not drawn: a rose fitted point by point comes out lopsided, and a
+// lopsided rose is worse than none.
+//
+// Three things separate a rose from a sunburst, and the first drafts missed
+// all three. The points spring from a hub, not from one dot, because
+// thirty-two lines converging on a point is a knot and is not how a rose is
+// engraved. Their lengths are a hierarchy, cardinal over inter-cardinal over
+// half over quarter. And every long point is a kite with one half inked and
+// one half open, which is the single feature that says compass rose and
+// nothing else; drawn as open outlines they read as spikes however carefully
+// the lengths are graded.
+const CX = 52;
+const CY = 55;
 
-  const point = (i: number, r: number, w: number) => {
-    const a = (i * Math.PI) / 8;
-    return `M${cx} ${cy}L${pt(a - Math.PI / 2, w)}L${pt(a, r)}L${pt(a + Math.PI / 2, w)}Z`;
-  };
+// Radii, outside in. The gap between the ticks and the points is where the
+// degree numbers would print; they would be three pixels tall here, so it is
+// left empty rather than filled with mud.
+const RING = 45;
+const HUB = 5;
 
-  return {
-    major: [0, 2, 4, 6, 8, 10, 12, 14].map((i) => point(i, 42, 5)).join(''),
-    minor: [1, 3, 5, 7, 9, 11, 13, 15].map((i) => point(i, 28, 3.2)).join(''),
-    rhumbs: Array.from({ length: 16 }, (_, i) => {
-      const a = (i * Math.PI) / 8 + Math.PI / 16;
-      return `M${pt(a, 43)}L${pt(a, 49)}`;
-    }).join(''),
+const pt = (deg: number, r: number) => {
+  const a = (deg * Math.PI) / 180;
+  return `${(CX + Math.sin(a) * r).toFixed(2)} ${(CY - Math.cos(a) * r).toFixed(2)}`;
+};
+const every = (n: number, off = 0) =>
+  Array.from({ length: n }, (_, i) => off + (360 / n) * i);
+
+// One point, as two shapes off the same three corners so the halves cannot
+// come apart: the open half strokes its outer edge and the spine, the inked
+// half is solid. Both are left open at the base, because the hub circle is
+// drawn over them and closes them.
+const open = (deg: number, r: number, w: number) =>
+  `M${pt(deg - 90, w)}L${pt(deg, r)}L${pt(deg, HUB)}`;
+const ink = (deg: number, r: number, w: number) =>
+  `M${pt(deg, HUB)}L${pt(deg, r)}L${pt(deg + 90, w)}Z`;
+
+// A half-arrowhead: one barb, not two. It is the convention that separates a
+// magnetic north line from anything else on the sheet, and it stops the head
+// reading as a second north mark stacked over the star.
+const halfArrow = (deg: number, r: number, len: number, spread = 26) => {
+  const [x, y] = pt(deg, r).split(' ').map(Number);
+  const a = ((deg + 180 + spread) * Math.PI) / 180;
+  return `M${x} ${y}L${(x + Math.sin(a) * len).toFixed(2)} ${(y - Math.cos(a) * len).toFixed(2)}`;
+};
+
+// North runs longer than the other three cardinals and is crowned by the star,
+// which is what makes it the north point rather than the fourth of four.
+const MAIN: [deg: number, r: number, w: number][] = [
+  [0, 33, 4],
+  [90, 33, 4.6],
+  [180, 33, 4.6],
+  [270, 33, 4.6],
+  ...every(4, 45).map((d) => [d, 30, 3.4] as [number, number, number]),
+];
+
+const ROSE = {
+  // Quarter points as needles. A diamond this narrow is a line anyway.
+  quarter: every(16, 11.25)
+    .map((d) => `M${pt(d, HUB)}L${pt(d, 16)}`)
+    .join(''),
+  half: every(8, 22.5)
+    .map((d) => `M${pt(d - 90, 1.9)}L${pt(d, 24)}L${pt(d + 90, 1.9)}`)
+    .join(''),
+  open: MAIN.map(([d, r, w]) => open(d, r, w)).join(''),
+  ink: MAIN.map(([d, r, w]) => ink(d, r, w)).join(''),
+  // Graduated inward from the ring at ten degrees, with the thirties long.
+  // Five-degree ticks are the graduation a real rose carries and they turn to
+  // a grey band at the one size this is ever printed. Bounding the ticks with
+  // a second circle made it worse again, a cog rim.
+  ticks10: every(36)
+    .filter((d) => d % 30 !== 0)
+    .map((d) => `M${pt(d, RING)}L${pt(d, 42.2)}`)
+    .join(''),
+  ticks30: every(12)
+    .map((d) => `M${pt(d, RING)}L${pt(d, 40.5)}`)
+    .join(''),
+};
+
+// The star crowns the north point, inside the ring. Sitting out on the ring it
+// landed under the head of the magnetic line and got read as magnetic north,
+// which is the one thing on this mark that must not happen.
+const STAR = (() => {
+  const cy = CY - 37;
+  const p = (deg: number, r: number) => {
+    const a = (deg * Math.PI) / 180;
+    return `${(CX + Math.sin(a) * r).toFixed(2)} ${(cy - Math.cos(a) * r).toFixed(2)}`;
   };
+  return `M${Array.from({ length: 10 }, (_, i) => p(i * 36, i % 2 ? 1.8 : 4.2)).join('L')}Z`;
 })();
+
+// Magnetic north at the label's variation and no more. Four degrees is what a
+// compass is actually off by here; a line swung wide enough to be obvious at a
+// glance would be a different chart's variation. It runs out past the star so
+// the two marks sit at different radii and cannot be read as one.
+const VAR = 4 + 10 / 60;
+const MAG = `M${pt(VAR, HUB)}L${pt(VAR, 51)}`;
 ---
 
-<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="0.7">
-  <circle cx="50" cy="50" r="43" opacity="0.5" />
-  <circle cx="50" cy="50" r="28" opacity="0.35" />
-  <path d={ROSE.rhumbs} stroke-width="0.5" opacity="0.6" />
-  <path d={ROSE.minor} stroke-width="0.5" opacity="0.75" />
-  <path d={ROSE.major} />
-  <circle cx="50" cy="50" r="3.2" />
-  <path d="M50 50 60.6 8.7" stroke-width="0.6" stroke-dasharray="2 2" />
-  <path d="m46 14 4-8 4 8" stroke-width="0.8" />
+<svg
+  viewBox="0 0 104 106"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="0.6"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <circle cx={CX} cy={CY} r={RING} stroke-width="0.6" />
+  <path d={ROSE.ticks10} stroke-width="0.4" opacity="0.9" />
+  <path d={ROSE.ticks30} stroke-width="0.45" />
+  <path d={ROSE.quarter} stroke-width="0.35" opacity="0.7" />
+  <path d={ROSE.half} stroke-width="0.45" opacity="0.9" />
+  <path d={ROSE.ink} fill="currentColor" fill-opacity="0.78" stroke="none" />
+  <path d={ROSE.open} stroke-width="0.6" />
+  <path d={MAG} stroke-width="0.55" stroke-dasharray="2.2 1.6" />
+  <path d={halfArrow(VAR, 51, 4)} stroke-width="0.6" />
+  <path d={STAR} stroke-width="0.5" fill="var(--color-paper)" />
+  {/* Over the points, so they read as springing from the hub rather than
+      crossing in it. */}
+  <circle cx={CX} cy={CY} r={HUB} stroke-width="0.55" fill="var(--color-paper)" />
+  <circle cx={CX} cy={CY} r="0.65" fill="currentColor" stroke="none" />
 </svg>
 <span class="chart-mark__label">var 4&deg;10'E</span>
