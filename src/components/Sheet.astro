@@ -137,9 +137,11 @@ const link =
           </li>
         ))}
       </ul>
-      {(p.url || p.repo) && (
+      {((p.url && !p.preview) || p.repo) && (
         <div class="flex items-center gap-5 mt-3">
-          {p.url && (
+          {/* The survey inset is itself the link out, so a sheet that carries
+              one does not repeat it here. */}
+          {p.url && !p.preview && (
             <a href={p.url} target="_blank" rel="noopener noreferrer" class={link}>live &rarr;</a>
           )}
           {p.repo && (
@@ -152,7 +154,7 @@ const link =
         approach. It is a survey, dated under the frame, not a window on the
         live site, so it is a picture and the caption says when it was taken. */}
     {p.preview && p.url && host && (
-      <figure class="sheet__shot portrait-inset w-full sm:w-64 sm:shrink-0">
+      <figure class="sheet__shot portrait-inset w-full sm:w-64 sm:shrink-0" data-tone={p.preview.tone}>
         <a class="portrait-inset__frame block" href={p.url} target="_blank" rel="noopener noreferrer">
           <Image
             src={p.preview.src}
@@ -163,7 +165,9 @@ const link =
             quality={70}
           />
         </a>
-        <figcaption class="self-end">{host} surveyed {surveyed}</figcaption>
+        {/* The host is what the reader acts on; the date is the small print
+            that keeps the shot honest, so they do not carry the same weight. */}
+        <figcaption class="self-end"><span class="text-text-muted">{host}</span> surveyed {surveyed}</figcaption>
       </figure>
     )}
   </div>

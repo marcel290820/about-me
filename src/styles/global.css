@@ -727,8 +727,18 @@
     aspect-ratio: 16 / 10;
     object-fit: cover;
     object-position: top center;
-    filter: saturate(0.5) brightness(0.8) contrast(1.05);
     transition: filter 0.2s ease;
+  }
+
+  /* Aimed at a value, not stepped down by a fixed amount: a white page and a
+     black one both have to land near the plate they sit beside, or the shot
+     outranks it or sinks under it. */
+  .sheet__shot[data-tone='light'] img {
+    filter: saturate(0.5) brightness(0.62) contrast(1.06);
+  }
+
+  .sheet__shot[data-tone='dark'] img {
+    filter: saturate(0.8) brightness(1.15) contrast(1.02);
   }
 
   .sheet__shot:hover img,
