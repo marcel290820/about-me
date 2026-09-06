@@ -1,0 +1,39 @@
+---
+import { spine, shell } from '@/lib/curves';
+
+// --- Tripod fish ----------------------------------------------------------
+// Stands on three stiffened fin rays, facing into the current, and waits.
+// Nearly blind; the two long pectoral rays held out in front are how it finds
+// anything at all.
+const tripod = spine({
+  from: 32,
+  to: 152,
+  y: () => 44,
+  steps: 32,
+  up: [
+    [0, 1],
+    [0.1, 4],
+    [0.42, 9],
+    [0.72, 8],
+    [0.9, 5],
+    [1, 1.6],
+  ],
+});
+---
+
+<svg viewBox="0 -12 200 148" fill="none" stroke="currentColor" stroke-width="1">
+  <path d={shell(tripod)} />
+  {/* Three stilts: two pelvic rays and the bottom lobe of the tail. It plants
+      them in the mud and holds station without swimming at all. */}
+  <path d="M32 48c-6 26-9 50-10 74M102 52c-4 22-5 46-4 70M112 52c2 22 3 46 4 70" stroke-width="0.8" />
+  <path d="M17 122h10M95 122h10M111 122h10" stroke-width="0.6" />
+  <path d="M32 40c-8-8-14-12-20-13 4 6 6 12 6 18" stroke-width="0.7" />
+  {/* And the two long rays held out ahead, which is the whole reason it can
+      catch anything without being able to see it. */}
+  <path d="M144 38c16-8 26-20 30-36M148 43c18-4 32-13 40-26" stroke-width="0.6" opacity="0.85" />
+  <path d="M86 36c4-9 9-14 15-15-2 6-3 11-2 16Z" stroke-width="0.7" />
+  <path d="M66 52c6 5 12 7 18 7" stroke-width="0.5" opacity="0.6" />
+  <circle cx="141" cy="43" r="1.4" fill="currentColor" opacity="0.7" />
+  <path d="M148 46c-4 1-8 1-11 0" stroke-width="0.5" opacity="0.7" />
+  <path d="M0 122h200" stroke-width="0.6" opacity="0.45" />
+</svg>

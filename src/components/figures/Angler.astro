@@ -1,0 +1,71 @@
+---
+import { spine, shell } from '@/lib/curves';
+
+// --- Anglerfish -----------------------------------------------------------
+// The body stops at the jaw hinge. Both jaws are drawn from there as their own
+// shapes, because a gape that is only teeth painted onto a silhouette reads as
+// a smile rather than as a mouth that opens.
+const angler = spine({
+  from: 18,
+  to: 124,
+  y: () => 64,
+  up: [
+    [0, 1.4],
+    [0.12, 5],
+    [0.36, 17],
+    [0.64, 28],
+    [0.86, 31],
+    [1, 26],
+  ],
+  down: [
+    [0, 1.4],
+    [0.12, 5],
+    [0.36, 18],
+    [0.64, 30],
+    [0.86, 30],
+    [1, 24],
+  ],
+});
+
+/** Teeth stood on a jaw line, so they sit on it rather than near it. */
+function teeth(
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+  n: number,
+  len: number,
+  dir: number,
+) {
+  return Array.from({ length: n }, (_, i) => {
+    const t = (i + 0.5) / n;
+    const x = x0 + (x1 - x0) * t;
+    const y = y0 + (y1 - y0) * t;
+    const l = len * (0.55 + 0.75 * Math.sin(t * Math.PI));
+    return `M${(x - 3.2).toFixed(1)} ${y.toFixed(1)}L${(x + 1.4).toFixed(1)} ${(y + dir * l).toFixed(1)}L${(x + 3.2).toFixed(1)} ${y.toFixed(1)}`;
+  }).join('');
+}
+---
+
+<svg viewBox="0 -26 200 130" fill="none" stroke="currentColor" stroke-width="1">
+  <path d={shell(angler)} />
+  {/* Both jaws hinge at the back of the head, which is why it can swallow
+      something its own size. Each is its own shape off that hinge. */}
+  <path d="M124 38C144 32 168 34 180 44C160 48 140 52 124 56Z" />
+  <path d="M124 88C146 96 172 88 180 72C162 76 140 76 124 72Z" />
+  <path d={teeth(126, 55, 176, 45, 7, 9, 1)} stroke-width="0.6" />
+  <path d={teeth(126, 73, 174, 72, 7, 9, -1)} stroke-width="0.6" />
+  <circle cx="112" cy="48" r="2.6" stroke-width="0.8" />
+  <path d="M124 56 118 64l6 8" stroke-width="0.5" opacity="0.6" />
+  {/* Illicium: a modified first dorsal ray, arched forward over the mouth.
+      The bulb on the end is a pouch of luminous bacteria it farms. */}
+  <path d="M104 33C102 6 122-16 148-9" stroke-width="0.9" />
+  <path d="M148-9c5-4 11-5 16-3M148-9c1 5 0 10-3 15" stroke-width="0.5" opacity="0.7" />
+  <g class="drift__lure">
+    <circle cx="150" cy="-8" r="3.6" fill="currentColor" />
+    <circle cx="150" cy="-8" r="8" stroke-width="0.6" opacity="0.5" />
+  </g>
+  <path d="M84 92c6 6 8 12 8 18M64 92c4 6 5 12 4 17" stroke-width="0.5" opacity="0.6" />
+  <path d="M18 64 2 50v28Z" stroke-width="0.8" />
+  <path d="M56 40c8-2 14-1 18 2" stroke-width="0.5" opacity="0.45" />
+</svg>

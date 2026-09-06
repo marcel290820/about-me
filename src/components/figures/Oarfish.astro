@@ -1,0 +1,75 @@
+---
+import { type Node, spine, shell, ridge, rays } from '@/lib/curves';
+
+// --- Oarfish --------------------------------------------------------------
+// The longest bony fish there is: a silver ribbon that stands a scarlet crest
+// over its head, and the reason sailors kept coming home reporting serpents.
+const oar = spine({
+  from: 20,
+  to: 292,
+  steps: 52,
+  y: (t) => 52 + Math.sin((1 - t) * 7.4) * 7 + Math.sin((1 - t) * 15) * 2,
+  up: [
+    [0, 1],
+    [0.2, 7],
+    [0.5, 13],
+    [0.78, 16],
+    [0.92, 16.5],
+    [1, 12],
+  ],
+  down: [
+    [0, 1],
+    [0.2, 7.5],
+    [0.5, 13.5],
+    [0.8, 16.5],
+    [0.93, 15.5],
+    [1, 10],
+  ],
+});
+
+// The dorsal fin runs the whole animal and stays low. Letting it swell toward
+// the head instead is what turned the crest into a flag last time round.
+const oarFin = (p: Node) => 4 + p.t * 5;
+const oarHead = oar[oar.length - 1];
+
+// The crest is a separate thing: the first ten or so dorsal rays, standing
+// well clear of the fin behind them and trailing aft. Nothing joins their tips
+// -- a line across them is a sail, and a sail is a different fish.
+const oarCrest = (() => {
+  const mane = oar.filter((p) => p.t >= 0.84);
+  return mane
+    .map((p, i) => {
+      const f = i / (mane.length - 1);
+      const h = 17 + f * 27;
+      const base = p.y - p.u - 2;
+      const top = base - h;
+      return (
+        `M${p.x.toFixed(1)} ${base.toFixed(1)}` +
+        `C${(p.x - 3).toFixed(1)} ${(top + h * 0.55).toFixed(1)}` +
+        ` ${(p.x - 6).toFixed(1)} ${(top + h * 0.28).toFixed(1)}` +
+        ` ${(p.x - 8 - f * 5).toFixed(1)} ${top.toFixed(1)}`
+      );
+    })
+    .join('');
+})();
+---
+
+<svg viewBox="0 -20 316 158" fill="none" stroke="currentColor" stroke-width="1">
+  <path d={shell(oar)} />
+  <path d={ridge(oar, oarFin)} stroke-width="0.5" opacity="0.7" />
+  <path d={rays(oar, oarFin, 3, 0)} stroke-width="0.5" opacity="0.65" />
+  {/* On a live one the crest is scarlet. Buoy is the one warm mark down here. */}
+  <path d={oarCrest} stroke-width="0.9" class="drift__crest" />
+  {/* The face is near vertical and the eye is enormous, which is what a fish
+      that lives on the edge of the light ends up with. */}
+  <circle cx={oarHead.x - 13} cy={oarHead.y - 5} r="4.4" stroke-width="0.7" />
+  <circle cx={oarHead.x - 13} cy={oarHead.y - 5} r="1.6" fill="currentColor" stroke="none" />
+  {/* The mouth is protrusible: it shoots forward off that face to feed. */}
+  <path d={`M${oarHead.x} ${oarHead.y + 3}c5 0 8 2 9 5-4 0-7-1-9-3Z`} stroke-width="0.7" />
+  <path d={`M${oarHead.x} ${oarHead.y}h-4M${oarHead.x - 6} ${oarHead.y - 9}c3 3 4 6 4 9`} stroke-width="0.5" opacity="0.6" />
+  <path d={`M${oarHead.x - 26} ${oarHead.y - 12}c3 6 4 12 3 18`} stroke-width="0.5" opacity="0.5" />
+  {/* Two pelvic fins trail like oars, each one ray with a blade on the end.
+      That is where the name came from. */}
+  <path d="M266 74C258 92 242 104 225 110M262 75C254 96 238 110 219 118" stroke-width="0.6" opacity="0.8" />
+  <path d="M225 110c-6 2-10 6-10 10 6-1 10-5 11-9ZM219 118c-6 2-10 6-10 10 6-1 10-5 11-9Z" stroke-width="0.5" opacity="0.8" />
+</svg>

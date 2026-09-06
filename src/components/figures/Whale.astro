@@ -1,0 +1,51 @@
+---
+import { spine, shell } from '@/lib/curves';
+
+// --- Sperm whale ----------------------------------------------------------
+// A quarter of it is the case: a tank of oil it uses to focus the loudest
+// sound any animal makes. Square on top, undercut below.
+const whale = spine({
+  from: 44,
+  to: 268,
+  y: (t) => 62 - t * 5,
+  up: [
+    [0, 2],
+    [0.08, 6],
+    [0.34, 18],
+    [0.6, 22],
+    [0.72, 24],
+    [0.95, 24],
+    [1, 22],
+  ],
+  down: [
+    [0, 2],
+    [0.08, 6],
+    [0.36, 17],
+    [0.62, 17],
+    [0.78, 15],
+    [0.92, 13],
+    [1, 11],
+  ],
+});
+---
+
+<svg viewBox="-10 24 310 82" fill="none" stroke="currentColor" stroke-width="1">
+  <path d={shell(whale)} />
+  {/* Blowhole, sitting on the outline at the front left corner of the head,
+      which is why a sperm whale's spout goes forward and to one side. */}
+  <path d="M250 34.6c2-2.4 5-2.4 7 0" stroke-width="0.7" />
+  {/* The lower jaw is a rod slung under all that head: narrow, set back, and
+      the only part of the animal with teeth in it. */}
+  <path d="M206 73C226 74 246 73 259 70v3c-13 3-33 5-51 4Z" stroke-width="0.8" />
+  <path d="M218 73.4v2.6M226 73.6v2.6M234 73.4v2.6M242 73v2.6M250 72.4v2.6" stroke-width="0.5" opacity="0.7" />
+  <circle cx="214" cy="58" r="1.9" fill="currentColor" opacity="0.85" />
+  {/* A hump two thirds back and knuckles running aft from it, in place of the
+      dorsal fin it does not have. */}
+  <path d="M140 41c4-5 9-6 14-2" stroke-width="0.8" />
+  <path d="M124 43c4-4 8-4 11-1M108 45c3-3 7-3 10 0M94 47c3-3 6-3 9 0" stroke-width="0.7" />
+  <path d="M196 72c-2 12-8 20-16 24 0-10 5-19 12-24Z" stroke-width="0.8" />
+  {/* Fluke, on the downstroke. */}
+  <path d="M46 60C30 44 8 34-6 36c12 10 18 18 18 24 0 7-6 16-20 28 16 2 36-10 52-26Z" />
+  <path d="M40 56C26 46 12 42 2 42" stroke-width="0.5" opacity="0.55" />
+  <path d="M60 52c-8 4-12 8-14 12" stroke-width="0.5" opacity="0.5" />
+</svg>

@@ -1,0 +1,37 @@
+<svg viewBox="-14 -22 190 104" fill="none" stroke="currentColor" stroke-width="1">
+  {/* One ship, broken amidships and settled in two pieces at different
+      angles. The break edges are cut to match each other, so the two halves
+      read as parts of the same hull rather than as two smaller ships. */}
+  <g transform="rotate(-13 60 50)">
+    <path d="M8 30 96 27 90 34 98 40 90 46 96 52 86 58 34 60C20 57 11 50 8 38Z" />
+    <path d="M12 33 94 30" stroke-width="0.5" opacity="0.6" />
+    {/* Bridge and funnel. */}
+    <path d="M52 27V11h32v16" stroke-width="0.8" />
+    <path d="M56 16h4M64 16h4M72 16h4" stroke-width="0.5" opacity="0.8" />
+    <path d="M65 11V-8h10v19" stroke-width="0.8" />
+    <path d="M64-8h12" stroke-width="0.6" />
+    {/* Main mast, with the one yard that is still on it. */}
+    <path d="M42 27V-12M34-6h16" stroke-width="0.7" />
+    {/* Rudder, and the screw she is not turning any more. */}
+    <path d="M12 47 8 57" stroke-width="0.7" />
+    <circle cx="17" cy="53" r="1.8" stroke-width="0.6" />
+    <path d="m17 53-6-4M17 53l6-3M17 53l-1 6" stroke-width="0.6" />
+  </g>
+  <g transform="rotate(5 128 44)">
+    <path d="M100 27 150 25C154 30 152 38 148 42L142 58 112 60 104 52 112 46 104 40 112 34Z" />
+    <path d="M104 30 148 28" stroke-width="0.5" opacity="0.6" />
+    {/* Foremast, hawse pipe, and the anchor still catted at the bow. */}
+    <path d="M128 26V-14M120-8h16" stroke-width="0.7" />
+    <circle cx="142" cy="33" r="1.8" stroke-width="0.6" />
+    <path d="M144 36v6M141 42h6" stroke-width="0.6" opacity="0.8" />
+  </g>
+  {/* Debris field downslope, and the sand she is sitting in. */}
+  <path d="M-14 66c22 5 48 7 80 6 34-1 62-4 84-9" stroke-width="0.5" opacity="0.4" />
+  <path d="M14 63h6M38 66h4M118 62h5M142 59h4" stroke-width="0.5" opacity="0.5" />
+  {/* Sonar reticle. What moves down here is the sweep finding her again. */}
+  <g stroke-width="0.8" opacity="0.6">
+    <path d="M-12-20h10M-12-20v10M166-20h-10M166-20v10M-12 78h10M-12 78v-10M166 78h-10M166 78v-10" />
+  </g>
+  <circle cx="76" cy="30" r="62" class="drift__ring" />
+</svg>
+<span class="drift__tag drift__tag--dim">WRECK &middot; SONAR</span>

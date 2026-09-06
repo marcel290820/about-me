@@ -1,0 +1,51 @@
+---
+import { spine, shell } from '@/lib/curves';
+
+// --- Barreleye ------------------------------------------------------------
+// The two spots on the front of its face are nostrils. The eyes are the green
+// barrels inside the transparent head, and they are pointed straight up.
+const barrel = spine({
+  from: 16,
+  to: 124,
+  y: () => 54,
+  up: [
+    [0, 1],
+    [0.12, 4],
+    [0.44, 11],
+    [0.7, 12.5],
+    [0.9, 10],
+    [1, 6.5],
+  ],
+  down: [
+    [0, 1],
+    [0.12, 4],
+    [0.44, 12],
+    [0.72, 12.5],
+    [0.9, 9],
+    [1, 5],
+  ],
+});
+---
+
+<svg viewBox="0 0 148 100" fill="none" stroke="currentColor" stroke-width="1">
+  <path d={shell(barrel)} />
+  {/* The head is a clear fluid-filled dome. It was photographed intact for
+      the first time in 2004; every specimen before that arrived collapsed. */}
+  <path d="M86 47C88 26 106 17 118 22c10 5 12 17 8 26" stroke-width="0.6" opacity="0.7" />
+  {/* Two barrels, pointed straight up through the roof of its own head. The
+      lens on top is what makes them eyes rather than two doorways. */}
+  {/* Tall and narrow. Squat and wide they come out as two doorways. */}
+  <g class="drift__telemetry">
+    <path d="M97 48V34a3.5 3.5 0 0 1 7 0v14z" stroke-width="0.9" />
+    <circle cx="100.5" cy="34" r="1.3" fill="currentColor" stroke="none" />
+    <path d="M109 48V37a3.2 3.2 0 0 1 6.4 0v11z" stroke-width="0.9" />
+    <circle cx="112.2" cy="37" r="1.2" fill="currentColor" stroke="none" />
+  </g>
+  {/* And the two spots on the front of the face, which are not eyes. */}
+  <circle cx="119" cy="53" r="1.6" fill="currentColor" opacity="0.8" />
+  <circle cx="118" cy="58" r="1.2" fill="currentColor" opacity="0.6" />
+  <path d="M84 64c10 5 18 6 24 3" stroke-width="0.5" opacity="0.5" />
+  <path d="M52 43c4-6 10-8 15-6-3 3-4 6-4 9Z" stroke-width="0.7" />
+  <path d="M16 54 2 40v28Z" stroke-width="0.8" />
+  <path d="M44 66c5 7 7 12 7 17" stroke-width="0.5" opacity="0.5" />
+</svg>

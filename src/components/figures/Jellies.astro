@@ -1,0 +1,60 @@
+---
+// --- Moon jellies ---------------------------------------------------------
+// Four horseshoes in the bell are the gonads, and they are the only reliable
+// way to tell a moon jelly from every other bell in the water.
+// Authored at final size rather than drawn once and scaled, so the hairline
+// stays a hairline whichever bell it belongs to.
+const JELLY = (x: number, y: number, r: number) => {
+  const n = (v: number) => v.toFixed(1);
+  const scallop = (r * 2) / 8;
+
+  // Ribbons, not threads. Two near-parallel edges per arm is the cheapest
+  // thing that reads as a ribbon and not as a tassel.
+  const arm = (o: number) => {
+    const sx = x + o * r;
+    const dx = o * r * 0.9;
+    const dy = r * 1.35;
+    const seg = `c${n(dx * 0.2)} ${n(dy * 0.4)} ${n(dx * 0.7)} ${n(dy * 0.72)} ${n(dx)} ${n(dy)}`;
+    return (
+      `M${n(sx - r * 0.07)} ${n(y + r * 0.06)}${seg}` +
+      `M${n(sx + r * 0.07)} ${n(y + r * 0.06)}${seg}`
+    );
+  };
+
+  return {
+    // A saucer, not a dome. Anything taller than about two thirds of its own
+    // radius stops being a jellyfish and becomes an umbrella.
+    bell: `M${n(x - r)} ${n(y)}A${n(r)} ${n(r * 0.66)} 0 0 1 ${n(x + r)} ${n(y)}`,
+    rim:
+      `M${n(x - r)} ${n(y)}` +
+      Array(8).fill(`q${n(scallop / 2)} ${n(r * 0.15)} ${n(scallop)} 0`).join(''),
+    gonads: [-0.5, -0.17, 0.17, 0.5]
+      .map(
+        (o) =>
+          `M${n(x + o * r - r * 0.17)} ${n(y - r * 0.2)}a${n(r * 0.17)} ${n(r * 0.24)} 0 1 0 ${n(r * 0.34)} 0`,
+      )
+      .join(''),
+    // Marginal tentacles: many, fine and uneven. Evenly spaced ticks of one
+    // length read as a fringe sewn on.
+    fringe: Array.from({ length: 25 }, (_, i) => {
+      const f = i / 24;
+      return `M${n(x - r + f * 2 * r)} ${n(y + r * 0.13 * Math.sin(f * Math.PI))}v${n(r * (0.14 + 0.22 * Math.abs(Math.sin(i * 2.1))))}`;
+    }).join(''),
+    arms: [-0.46, -0.16, 0.16, 0.46].map(arm).join(''),
+  };
+};
+
+const JELLIES = [JELLY(40, 30, 20), JELLY(23, 94, 12), JELLY(55, 134, 9)];
+---
+
+<svg viewBox="0 0 80 176" fill="none" stroke="currentColor" stroke-width="0.9">
+  {JELLIES.map((j) => (
+    <g>
+      <path d={j.bell} />
+      <path d={j.rim} stroke-width="0.6" />
+      <path d={j.gonads} stroke-width="0.6" opacity="0.8" />
+      <path d={j.fringe} stroke-width="0.4" opacity="0.55" />
+      <path d={j.arms} stroke-width="0.5" opacity="0.75" />
+    </g>
+  ))}
+</svg>

@@ -1,0 +1,37 @@
+---
+// --- Windrose -------------------------------------------------------------
+// Thirty-two points, generated rather than drawn, because a rose hand-fitted
+// point by point comes out lopsided and a lopsided rose is worse than none.
+const ROSE = (() => {
+  const cx = 50;
+  const cy = 50;
+  const pt = (a: number, r: number) =>
+    `${(cx + Math.sin(a) * r).toFixed(1)} ${(cy - Math.cos(a) * r).toFixed(1)}`;
+
+  const point = (i: number, r: number, w: number) => {
+    const a = (i * Math.PI) / 8;
+    return `M${cx} ${cy}L${pt(a - Math.PI / 2, w)}L${pt(a, r)}L${pt(a + Math.PI / 2, w)}Z`;
+  };
+
+  return {
+    major: [0, 2, 4, 6, 8, 10, 12, 14].map((i) => point(i, 42, 5)).join(''),
+    minor: [1, 3, 5, 7, 9, 11, 13, 15].map((i) => point(i, 28, 3.2)).join(''),
+    rhumbs: Array.from({ length: 16 }, (_, i) => {
+      const a = (i * Math.PI) / 8 + Math.PI / 16;
+      return `M${pt(a, 43)}L${pt(a, 49)}`;
+    }).join(''),
+  };
+})();
+---
+
+<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="0.7">
+  <circle cx="50" cy="50" r="43" opacity="0.5" />
+  <circle cx="50" cy="50" r="28" opacity="0.35" />
+  <path d={ROSE.rhumbs} stroke-width="0.5" opacity="0.6" />
+  <path d={ROSE.minor} stroke-width="0.5" opacity="0.75" />
+  <path d={ROSE.major} />
+  <circle cx="50" cy="50" r="3.2" />
+  <path d="M50 50 60.6 8.7" stroke-width="0.6" stroke-dasharray="2 2" />
+  <path d="m46 14 4-8 4 8" stroke-width="0.8" />
+</svg>
+<span class="chart-mark__label">var 4&deg;10'E</span>
