@@ -67,6 +67,8 @@ const HOME_PORT = 'Berlin';
       // with a full reload for every open page. The preview iframe should
       // reload; the desk must not, or the caret is lost mid-sentence. A
       // listener that throws aborts Vite's reload handler for this page.
+      // It also swallows the reload after editing write.astro itself; refresh
+      // the desk by hand then.
       if (import.meta.hot) {
         import.meta.hot.on('vite:beforeFullReload', () => {
           throw new Error('desk: full reload suppressed');
@@ -243,6 +245,7 @@ const HOME_PORT = 'Berlin';
           if (create) {
             slug = '';
             locked = false;
+            slugEl.readOnly = false;
           }
           say((err as Error).message, 'bad');
           return false;

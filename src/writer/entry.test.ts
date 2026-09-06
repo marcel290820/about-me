@@ -72,7 +72,7 @@ test('validateFrontmatter fills defaults', () => {
 test('slugify', () => {
   assert.equal(slugify('Hello, World!  Unicode: Uebung fuer Anfaenger'), 'hello-world-unicode-uebung-fuer-anfaenger');
   assert.equal(slugify('  --Trim me--  '), 'trim-me');
-  assert.equal(slugify('Cafe au lait'), 'cafe-au-lait');
+  assert.equal(slugify('Caf\u00e9 au lait'), 'cafe-au-lait');
   assert.ok(SLUG_RE.test(slugify('Any Title 2026')));
   assert.ok(!SLUG_RE.test('-leading'));
   assert.ok(!SLUG_RE.test('Upper'));

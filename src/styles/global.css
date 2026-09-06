@@ -317,26 +317,6 @@
     flex: none;
   }
 
-  .hr-glow {
-    position: relative;
-    height: 1px;
-    border: none;
-    background: var(--color-border);
-    overflow: visible;
-  }
-
-  .hr-glow::after {
-    content: "";
-    position: absolute;
-    left: 50%;
-    top: -2px;
-    width: 5px;
-    height: 5px;
-    margin-left: -2.5px;
-    border-radius: 50%;
-    background: var(--color-accent);
-  }
-
   /* Log-book row: one hairline down the margin. The dot it used to carry was
      the third orange dot on the page, after the rule ends and the soundings. */
   .rail {
@@ -393,6 +373,12 @@
 
   .log-entry:hover .log-entry__link {
     color: var(--color-accent);
+  }
+
+  /* On paper the accent measures 3.12:1, which fails at this size; the
+     dim accent passes. The deep zone keeps the bright one. */
+  .zone-surface .log-entry:hover .log-entry__link {
+    color: var(--color-accent-dim);
   }
 
   .log-entry .tag {
@@ -477,6 +463,10 @@
   .tag:hover {
     color: var(--color-accent);
     border-color: var(--color-accent);
+  }
+
+  .zone-surface .tag:hover {
+    color: var(--color-accent-dim);
   }
 
   /* --- Controls ---------------------------------------------------------- */
@@ -2083,6 +2073,14 @@
   --astro-code-token-string-expression: var(--color-foam);
   --astro-code-token-punctuation: #93a3a6;
   --astro-code-token-link: var(--color-foam);
+}
+
+/* The copy button belongs to the block, which is water: anchors, because it
+   prints on paper. */
+.prose pre .copy-button {
+  background: var(--color-abyss);
+  color: var(--color-cream);
+  border-color: rgba(234, 227, 211, 0.24);
 }
 
 /* A table only scrolls once it is a block. */

@@ -1,9 +1,9 @@
 import rss from '@astrojs/rss';
 import { getCollection } from 'astro:content';
+import { newestFirst } from '@/lib/log';
 
 export async function GET(context: any) {
-  const posts = (await getCollection('blog', ({ data }) => !data.draft))
-    .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+  const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(newestFirst);
 
   return rss({
     title: 'Marcel Heidebrecht',
