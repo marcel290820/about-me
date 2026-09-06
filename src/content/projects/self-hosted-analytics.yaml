@@ -1,0 +1,17 @@
+title: Self-hosted web analytics
+domain: infra
+description: >-
+  Traffic figures on our own hardware, so visitors are counted without
+  being handed to a tracker. The app is upstream and untouched; mine is
+  everything under it, from the database and the certificates to the tagged
+  release that puts it live.
+stack:
+  - Umami
+  - PostgreSQL
+  - Docker Swarm
+  - Traefik
+  - Let's Encrypt
+  - Bash
+  - GitLab CI
+from: 2026
+to: 2026
