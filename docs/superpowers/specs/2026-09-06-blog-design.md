@@ -43,7 +43,7 @@ The slug is the filename. Slugs match `^[a-z0-9]+(-[a-z0-9]+)*$`.
 
 ### The log: `/blog`
 
-Surface slot, on paper. Heading "Remarks" in `.display-name`, under it one mono line: "the remarks column of the log: what got written down". Below that the entries, newest first, grouped by year. Each year is a `.section-heading`. The entries in a year sit on one `.rail`.
+Surface slot, on paper. Heading "Remarks" in `.display-name`, under it one mono line: "the remarks column of the log". Below that the entries, newest first, grouped by year. Each year is a `.section-heading`. The entries in a year sit on one `.rail`.
 
 A row is a log line, not a card:
 
@@ -85,7 +85,7 @@ Nothing else. No comments, no share buttons, no hero image, no related posts, no
 
 ### Tag pages: `/blog/tags/<tag>`
 
-Same page as `/blog` with the list filtered, heading `#tag` in the display voice, and the entry count on the mono line. The wayfinding section under the waterline lists the other topics.
+Same page as `/blog` with the list filtered, heading `#tag` in the display voice, and no count line, the wayfinding table carries the count. The wayfinding section under the waterline lists the other topics.
 
 ### Home
 
