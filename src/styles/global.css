@@ -1796,8 +1796,10 @@
     color: #5e6e75;
     border: 1px solid var(--color-border-bright);
     border-radius: 2px;
-    /* No fill: it is the rail condensed, not a notification. The blur alone
-       keeps the text readable over the fade. */
+    /* Nearly the zone's own fill, the way the plate's title block is printed
+       on the plate: the blur alone held up over the fade, but not over a
+       survey inset, where dark type on a pale screenshot read as a fault. */
+    background: color-mix(in srgb, var(--color-paper) 88%, transparent);
     backdrop-filter: blur(8px);
     transition:
       color 0.4s ease,
@@ -1805,6 +1807,9 @@
   }
 
   :root[data-zone-low="deep"] .depth-badge {
+    /* The badge is fixed chrome outside both zones, so its fill is switched
+       here with its ink rather than inherited from a zone's tokens. */
+    background: color-mix(in srgb, var(--color-abyss) 88%, transparent);
     color: #93a3a6;
     border-color: rgba(234, 227, 211, 0.22);
   }
