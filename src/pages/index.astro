@@ -57,17 +57,14 @@ const interests = (await getCollection('interests')).sort((a, b) =>
     </section>
   )}
 
-  {/* The landing page has to descend too. The first screen under the line is
-      left as water, with the buoy riding in it; this sits below that. Taller
-      than one viewport on purpose: the water column only wakes once the
-      waterline has left the top of the frame, and a deep zone shorter than
-      the screen never gets there. */}
-  <section class="min-h-[108vh] pt-[25rem] sm:pt-[31rem] xl:pt-[16rem] flex flex-col justify-end">
-    {/* What you find down here: the owner's own track, before the list. The
-        top padding clears the buoy's mooring where the two can share a
-        column (the buoy rides at 74 to 86 percent, the column ends at 75 at
-        1208px), and drops once the frame is clear of it so the plot's top
-        edge sits inside the first screen of water. */}
+  {/* This used to hold a screen of open water back for the buoy and stand
+      taller than the viewport, from when nothing else was under the line: the
+      water column only wakes once the waterline has left the top of the
+      frame. The sheet above now does both jobs, riding alongside the buoy and
+      carrying the deep zone well past one screen on its own, so the reserved
+      screen had become a hole between two sections. */}
+  <section class="pt-24 sm:pt-32">
+    {/* What you find down here: the owner's own track, before the list. */}
     <Passage detail class="mb-20 sm:mb-28" />
     <div class="section-heading">
       <h2>beyond code</h2>
