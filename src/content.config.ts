@@ -22,6 +22,8 @@ const projects = defineCollection({
     // sheet's title block to a third line.
     title: z.string().max(48),
     domain: z.enum(['web3', 'web', 'infra', 'data', 'mobile']),
+    // Reading order, lowest first. Hand-set: see src/lib/projects.ts.
+    rank: z.number().int().positive(),
     description: z.string(),
     // Each name is a mark on the sheet's frame. Longer than sixteen
     // characters and it no longer fits its slot; see src/lib/sheet.ts.
