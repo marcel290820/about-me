@@ -1,37 +1,288 @@
-<svg viewBox="-14 -22 190 104" fill="none" stroke="currentColor" stroke-width="1">
-  {/* One ship, broken amidships and settled in two pieces at different
-      angles. The break edges are cut to match each other, so the two halves
-      read as parts of the same hull rather than as two smaller ships. */}
-  <g transform="rotate(-13 60 50)">
-    <path d="M8 30 96 27 90 34 98 40 90 46 96 52 86 58 34 60C20 57 11 50 8 38Z" />
-    <path d="M12 33 94 30" stroke-width="0.5" opacity="0.6" />
-    {/* Bridge and funnel. */}
-    <path d="M52 27V11h32v16" stroke-width="0.8" />
-    <path d="M56 16h4M64 16h4M72 16h4" stroke-width="0.5" opacity="0.8" />
-    <path d="M65 11V-8h10v19" stroke-width="0.8" />
-    <path d="M64-8h12" stroke-width="0.6" />
-    {/* Main mast, with the one yard that is still on it. */}
-    <path d="M42 27V-12M34-6h16" stroke-width="0.7" />
-    {/* Rudder, and the screw she is not turning any more. */}
-    <path d="M12 47 8 57" stroke-width="0.7" />
-    <circle cx="17" cy="53" r="1.8" stroke-width="0.6" />
-    <path d="m17 53-6-4M17 53l6-3M17 53l-1 6" stroke-width="0.6" />
+---
+import { at, type Prof } from '@/lib/curves';
+
+// One hull, sheared amidships and settled in two pieces. Both halves and both
+// edges are sampled from the same two profiles, and the tear below is read
+// forward on one half and backward on the other -- that is the only reason
+// the broken edges still match after the pieces are rotated apart.
+const LEN = 246; // sternpost to stem
+const D = 27; // keel to main deck amidships
+const XB = 108; // she failed just forward of the bridge front
+const FC = 228; // forecastle break
+
+// Sheer: low point aft of amidships, most of the rise packed into the forward
+// quarter. Ruled straight, the forward half came out a barge.
+const SHEER: Prof = [
+  [0, 4.6],
+  [0.2, 1.5],
+  [0.48, 0],
+  [0.7, 2.6],
+  [0.87, 8.0],
+  [1, 12],
+];
+
+// Underbody. Aft it climbs almost to deck level, so the counter overhangs the
+// rudder post instead of ending in a wall; forward it turns up hard over the
+// last few units, which leaves the forefoot a corner under the stem.
+const BOT: Prof = [
+  [0, 0.6],
+  [0.03, 4.6],
+  [0.06, 11],
+  [0.09, 17.5],
+  [0.13, 24],
+  [0.18, D],
+  [0.62, D],
+  [0.955, 26.4],
+  [0.99, 24.5],
+  [1, 21],
+];
+
+type P = [number, number];
+const deckY = (x: number) => -at(SHEER, x / LEN);
+const botY = (x: number) => at(BOT, x / LEN);
+const f = (n: number) => n.toFixed(1);
+const run = (x0: number, x1: number, g: (x: number) => number, n: number): P[] =>
+  Array.from({ length: n + 1 }, (_, i) => {
+    const x = x0 + ((x1 - x0) * i) / n;
+    return [x, g(x)] as P;
+  });
+const d = (pts: P[], close = false) =>
+  'M' + pts.map(([x, y]) => `${f(x)} ${f(y)}`).join('L') + (close ? 'Z' : '');
+
+// The tear, deck to keel. Uneven in step as well as in throw: teeth of one
+// pitch are a saw blade, and a saw blade is the cartoon of a crack.
+const SHEAR: P[] = [
+  [XB, deckY(XB)],
+  [103.8, 3.2],
+  [110.8, 5.6],
+  [104.6, 11.4],
+  [109.2, 13.2],
+  [102.0, 19.6],
+  [110.6, 21.8],
+  [105.2, 25.0],
+  [109.4, D],
+];
+
+const sternOut: P[] = [
+  ...run(0, XB, deckY, 34),
+  ...SHEAR.slice(1),
+  ...run(109.4, 0, botY, 34),
+];
+// Raised forecastle over a stem raked well forward of the forefoot. Tapered
+// at both ends and flush-decked it read as a pontoon, and a stem ruled
+// vertical off a long flat deck is a wall. The front of a ship needs a
+// profile of its own.
+const bowOut: P[] = [
+  ...[...SHEAR].reverse(),
+  ...run(XB, FC, deckY, 24),
+  [FC, deckY(FC) - 10],
+  ...run(FC, LEN, (x) => deckY(x) - 10, 6),
+  [255, deckY(LEN) - 10],
+  [LEN, botY(LEN)],
+  ...run(LEN, 109.4, botY, 26),
+];
+
+// Seabed. A wreck cuts a scour pit off each end and banks sediment against
+// its flank, and the banks are what matter: a hull crossed by a level mudline
+// shows the same slab of freeboard end to end, which is a barge. Buried to
+// the deck amidships and standing clear at both ends, it is a ship. The hatch
+// ticks under the line are what make it ground rather than a waterline.
+const pit = (x: number, c: number, w: number, a: number) =>
+  a * Math.exp(-(((x - c) / w) ** 2));
+const bed = (x: number) =>
+  40 +
+  (x + 20) * 0.0318 +
+  pit(x, -6, 32, 5.5) +
+  pit(x, 290, 30, 4) -
+  pit(x, 125, 24, 2.6) -
+  pit(x, 70, 28, 5) -
+  pit(x, 200, 32, 8) -
+  pit(x, 262, 25, 5);
+
+const place = (
+  pts: P[],
+  deg: number,
+  cx: number,
+  cy: number,
+  dx: number,
+  dy: number,
+): P[] => {
+  const a = (deg * Math.PI) / 180;
+  const c = Math.cos(a);
+  const s = Math.sin(a);
+  return pts.map(([x, y]) => {
+    const px = x - cx;
+    const py = y - cy;
+    return [cx + dx + px * c - py * s, cy + dy + px * s + py * c] as P;
+  });
+};
+
+// Split a closed outline where it crosses the mudline, so the buried run can
+// be drawn dashed and light. An unfilled hull with a line ruled across it
+// still shows its whole silhouette, and the sediment then reads as a scratch
+// over a ship afloat rather than as ground the ship is sitting in.
+const cut = (pts: P[]) => {
+  const loop = [...pts, pts[0]];
+  const up: P[][] = [];
+  const down: P[][] = [];
+  let seg: P[] = [loop[0]];
+  let above = loop[0][1] < bed(loop[0][0]);
+  for (let i = 1; i < loop.length; i++) {
+    const a = loop[i - 1];
+    const b = loop[i];
+    const ha = a[1] - bed(a[0]);
+    const hb = b[1] - bed(b[0]);
+    if (ha < 0 !== hb < 0) {
+      const k = ha / (ha - hb);
+      const m: P = [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k];
+      seg.push(m);
+      (above ? up : down).push(seg);
+      seg = [m];
+      above = !above;
+    }
+    seg.push(b);
+  }
+  (above ? up : down).push(seg);
+  return {
+    up: up.map((s) => d(s)).join(''),
+    down: down.map((s) => d(s)).join(''),
+  };
+};
+
+// She went down by the head. The after section trimmed at seven degrees with
+// its counter reared clear of the mud; the forward section drove in at ten
+// and its deck at the tear stands nine higher than the deck it tore from.
+// That step is what stops the pair reading as one hull with a bite out of it.
+const stern = cut(place(sternOut, 7, 108, 14, 0, 29.4));
+const bow = cut(place(bowOut, 8, 109, 14, 38, 20.4));
+
+// A coaming is fabricated, so its top is level; the sheer under it leaves the
+// two sides unequal on its own.
+const hatch = (x0: number, x1: number, h: number) => {
+  const top = Math.min(deckY(x0), deckY(x1)) - h;
+  return `M${f(x0)} ${f(deckY(x0))}V${f(top)}H${f(x1)}V${f(deckY(x1))}`;
+};
+const posts = (xs: number[], y: number) =>
+  xs.map((x) => `M${f(x)} ${f(y)}V${f(deckY(x) - 0.4)}`).join('');
+
+const mudline = d(run(-20, 306, bed, 68));
+const sediment = [-12, 26, 76, 128, 186, 244, 298]
+  .map((x) => `M${f(x)} ${f(bed(x))}l-2 3.6`)
+  .join('');
+---
+
+<svg
+  viewBox="-20 -36 326 108"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.3"
+>
+  <path d={mudline} stroke-width="0.6" opacity="0.45" />
+  <path d={sediment} stroke-width="0.5" opacity="0.3" />
+
+  {/* Buried below the mudline: interpreted, not surveyed. */}
+  <g stroke-width="0.45" opacity="0.24" stroke-dasharray="2.6 2.8">
+    <path d={stern.down} />
+    <path d={bow.down} />
   </g>
-  <g transform="rotate(5 128 44)">
-    <path d="M100 27 150 25C154 30 152 38 148 42L142 58 112 60 104 52 112 46 104 40 112 34Z" />
-    <path d="M104 30 148 28" stroke-width="0.5" opacity="0.6" />
-    {/* Foremast, hawse pipe, and the anchor still catted at the bow. */}
-    <path d="M128 26V-14M120-8h16" stroke-width="0.7" />
-    <circle cx="142" cy="33" r="1.8" stroke-width="0.6" />
-    <path d="M144 36v6M141 42h6" stroke-width="0.6" opacity="0.8" />
+
+  <path d={stern.up} />
+  <g transform="translate(0 29.4) rotate(7 108 14)">
+    <path d={hatch(20, 34, 4)} stroke-width="0.5" opacity="0.85" />
+    {/* Mainmast aft of the engine casing, leaning where she settled. One
+        derrick topped and one dropped nearly flat: two booms at matched
+        angles radiate off the mast like an aerial, a yard across it is a
+        crucifix, and a boom closed to the masthead by its topping lift comes
+        out a lateen sail. */}
+    <path d="M42-2.1 39.4-32" stroke-width="0.85" />
+    <path d="M39.4-32 38-48" stroke-width="0.6" />
+    <path d="M41.6-9 66-21" stroke-width="0.6" />
+    <path d="M41.9-8 22-11" stroke-width="0.55" />
+    {/* One boat deck on posts and one wheelhouse, open where it tore away.
+        Four rectangles of one size ganged edge to edge read as crates, and
+        the funnel disappeared into the row. It carries the heaviest line here
+        now, and has air on both sides. */}
+    <path d="M54-13H106" stroke-width="0.65" />
+    <path d={posts([58, 68, 80, 96], -13)} stroke-width="0.45" />
+    <path d="M105-13V-26H90" stroke-width="0.7" />
+    <path d="M78-13 65-42 57-42 68-13" stroke-width="0.9" />
+    <path d="M64.2-38H57.5" stroke-width="0.55" opacity="0.8" />
+    {/* Rudder hung aft of the sternpost, open where it goes under the
+        counter, and a four-blade screw in its aperture with the lower blade
+        down in the mud. */}
+    <g stroke-width="0.5" opacity="0.85">
+      <path d="M16 9 13 25 20 23 23 11" />
+      <circle cx="30" cy="17" r="1.8" stroke-width="0.45" />
+      <path d="M30 10.5V15.2M31.6 18.2 36.4 21.2M28.4 18.4 24.2 22.4M28.6 15.4 25.6 12.2" />
+    </g>
+    {/* Frames standing where the plating tore off them, and two plates peeled
+        forward off the teeth. */}
+    <path
+      d="M99 3.6V9.4M97.4 13.4V19M100.4 22.4V26M110.8 5.6l4.4 1.4M110.6 21.8l3.8-1.2"
+      stroke-width="0.45"
+      opacity="0.55"
+    />
   </g>
-  {/* Debris field downslope, and the sand she is sitting in. */}
-  <path d="M-14 66c22 5 48 7 80 6 34-1 62-4 84-9" stroke-width="0.5" opacity="0.4" />
-  <path d="M14 63h6M38 66h4M118 62h5M142 59h4" stroke-width="0.5" opacity="0.5" />
-  {/* Sonar reticle. What moves down here is the sweep finding her again. */}
-  <g stroke-width="0.8" opacity="0.6">
-    <path d="M-12-20h10M-12-20v10M166-20h-10M166-20v10M-12 78h10M-12 78v-10M166 78h-10M166 78v-10" />
+
+  <path d={bow.up} />
+  <g transform="translate(38 20.4) rotate(8 109 14)">
+    <path
+      d={`${hatch(122, 152, 4.5)}${hatch(158, 176, 7)}${hatch(184, 212, 4.5)}`}
+      stroke-width="0.5"
+      opacity="0.85"
+    />
+    {/* Foremast stepped through its house, between the two holds. */}
+    <path d="M167-2.9 168.9-32" stroke-width="0.85" />
+    <path d="M168.9-32 169.9-47" stroke-width="0.6" />
+    <path d="M167.6-9 193-20" stroke-width="0.6" />
+    <path d="M167.8-8 145-12" stroke-width="0.55" />
+    {/* Anchor still catted: hawse pipe, a fathom of cable, and a stockless
+        anchor hanging against the plating where it always hung. It is drawn
+        big enough to read, because it is what tells you which end this is. */}
+    <g stroke-width="0.5" opacity="0.85">
+      <path d="M251-14.5h-4.5" />
+      <path d="M250-14 250.5-9.5 246.5 1.5" />
+      <path d="M242-1 246.5 1.5 250.5-1.5" />
+    </g>
+    {/* Forecastle deck inside its bulwark, main deck inside its rail, and two
+        frames stripped bare at the tear. */}
+    <path d="M228-17.6 251-20" stroke-width="0.45" opacity="0.55" />
+    <path
+      d={d(run(116, 220, (x) => deckY(x) + 3, 18))}
+      stroke-width="0.45"
+      opacity="0.55"
+    />
+    <path
+      d="M116 3V12M121.5 3.8V13.4M103.8 3.2l-4.4-1.6"
+      stroke-width="0.45"
+      opacity="0.55"
+    />
   </g>
-  <circle cx="76" cy="30" r="62" class="drift__ring" />
+
+  {/* The gap is the whole argument that this is one ship. Her mainmast went
+      over as she parted and lies from the after deck down across the gap
+      against the forward section's torn face, a boiler rolled out of the
+      engine room and is in the mud to its hoops, and the plating litters
+      outward from both tears, smaller as it goes. */}
+  <g opacity="0.6">
+    <path d="M90 26 126 30.5" stroke-width="0.7" />
+    <path d="M126 30.5 150 33.5" stroke-width="0.5" />
+    <path d="M110 28.5 126 38" stroke-width="0.5" />
+  </g>
+  <g stroke-width="0.5" opacity="0.45">
+    <path d="M117 42.6A14 14 0 0 1 135 42.6" />
+    <path d="M135 42.6V39.4M122 39.8V43M130 40V43.2" stroke-width="0.45" />
+    <path
+      d="M102 40.4l5.4 1.6M112 42.6l4.4-1.3M120 40.6l3.4 1.2M128 42.4l2.8-0.9M139 41.6l5 1.5M150 44.2l4.2-1.2M166 42.4l2.6 0.8M-10 44.6l3.2 1"
+    />
+  </g>
+
+  {/* Sonar framing: the contact bracketed, with nothing closed around it. */}
+  <path
+    d="M-16-32h17M-16-32v11M302-32h-17M302-32v11M-16 68h17M-16 68v-11M302 68h-17M302 68v-11"
+    stroke-width="0.7"
+    opacity="0.45"
+  />
+  <circle cx="145" cy="18" r="68" class="drift__ring" />
 </svg>
 <span class="drift__tag drift__tag--dim">WRECK &middot; SONAR</span>

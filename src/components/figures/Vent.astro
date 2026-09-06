@@ -1,39 +1,496 @@
-<svg viewBox="0 -38 196 160" fill="none" stroke="currentColor" stroke-width="1">
-  {/* A black smoker runs at 350 degrees and still cannot boil the water
-      around it, because down here water has nowhere to expand to. The plume
-      has to billow: four thin threads over a tapered cone is a candle. */}
-  <g class="drift__plume" stroke-width="0.5">
-    <path d="M50 12C34-2 48-16 32-32M62 12C78-2 64-16 80-32M54 10C46-4 58-16 48-30M60 10C68-4 58-16 68-30M57 10C55-6 59-18 57-28" />
-    <path d="M40-10c-7-3-7-10 0-13M72-14c7-3 7-10 0-13M52-24c-5-2-5-7 0-9" stroke-width="0.4" opacity="0.7" />
+---
+import { at, type Prof } from '@/lib/curves';
+
+const f = (v: number) => v.toFixed(1);
+
+// --- Mineral columns ------------------------------------------------------
+// A sulphide chimney is precipitate, not growth: it stacks wherever the flow
+// happens to be, so it leans, it is faceted, and the two edges never match.
+// Both edges come off one girth profile with the wobble phased differently
+// per side, then the fractures and flanges are placed by hand. Three shapes
+// are designed out here. Matching zigzags on both edges read as a fir tree;
+// a smooth taper reads as a candle or a boot; and many small teeth read as
+// crumpled foil, which is why the step count is low -- the polyline itself
+// is the faceting, at about seven units of a 196-unit box per facet.
+interface Column {
+  foot: number;
+  top: number;
+  /** x of the axis by t, t = 0 at the foot. */
+  centre: Prof;
+  /** Half-width by t. Step it, do not ramp it: the shoulders are what say
+      one growth stage was built on top of the last. */
+  half: Prof;
+  /** Fractures cut into one edge: [t, side, depth]. */
+  notches?: [number, 1 | -1, number][];
+  /** Flanges, where an older orifice sealed over: [t, side, reach, plate]. */
+  shelves?: [number, 1 | -1, number, number][];
+  /** Wobble phase, so no two columns gnarl alike. */
+  seed: number;
+  steps: number;
+  /** Radians, clockwise from vertical, about (pivot, foot). */
+  tilt?: number;
+  pivot?: number;
+}
+
+/** Edge x at t on one side, gnarl and hand-placed fractures included. The
+    gnarl is a fraction of the local girth, not a fixed distance: a wobble
+    worth two units is a facet on a wide base and a bite out of a narrow
+    head, and the same absolute figure tore the stump into a fin. */
+function edgeX(c: Column, side: 1 | -1, t: number) {
+  const p = c.seed + (side === 1 ? 2.4 : 0);
+  let hw =
+    at(c.half, t) *
+    (1 +
+      0.15 * Math.sin(t * 8.3 + p) +
+      0.085 * Math.sin(t * 14.1 + p * 2.1) +
+      0.05 * Math.sin(t * 23.7 + p * 0.7));
+  for (const [tn, s, depth] of c.notches ?? []) {
+    if (s === side) hw -= depth * Math.max(0, 1 - Math.abs(t - tn) * 14);
+  }
+  return at(c.centre, t) + side * Math.max(hw, 2);
+}
+
+const yAt = (c: Column, t: number) => c.foot + (c.top - c.foot) * t;
+
+/** Local column coordinates into world coordinates. */
+function place(c: Column, x: number, y: number): [number, number] {
+  if (!c.tilt) return [x, y];
+  const ox = c.pivot ?? at(c.centre, 0);
+  const s = Math.sin(c.tilt);
+  const k = Math.cos(c.tilt);
+  const dx = x - ox;
+  const dy = y - c.foot;
+  return [ox + dx * k - dy * s, c.foot + dx * s + dy * k];
+}
+const P = (c: Column, x: number, y: number) => {
+  const [wx, wy] = place(c, x, y);
+  return `${f(wx)} ${f(wy)}`;
+};
+
+/** One edge from t = from up to t = to, as "x y" points. */
+function edge(c: Column, side: 1 | -1, from = 0, to = 1) {
+  const ts = new Set<number>();
+  for (let i = 0; i <= c.steps; i++) ts.add(i / c.steps);
+  // A fracture or a lip is only there if its own t lands on a sample.
+  for (const [t] of c.half) ts.add(t);
+  for (const [tn, s] of c.notches ?? []) {
+    if (s === side) [tn - 0.07, tn, tn + 0.07].forEach((v) => ts.add(v));
+  }
+  const list = [...ts]
+    .filter((t) => t >= from - 1e-9 && t <= to + 1e-9)
+    .sort((a, b) => a - b);
+  const shelves = (c.shelves ?? []).filter(
+    (s) => s[1] === side && s[0] >= from && s[0] <= to,
+  );
+  const pts: string[] = [];
+  let prev = -1;
+  for (const t of list) {
+    for (const [tsh, , reach, plate] of shelves) {
+      if (tsh <= prev || tsh > t) continue;
+      // Walking up the wall: under the plate, out to the lip, over the top.
+      // A flange is a shelf with fluid trapped beneath it, so the underside
+      // gets the deeper corner. Long and thin it reads as an arm; two of a
+      // size stacked read as a pair of brackets. So there are two and they
+      // are nothing like each other, a shelf low down and a nub high up.
+      const x = edgeX(c, side, tsh);
+      const ys = yAt(c, tsh);
+      pts.push(
+        P(c, x, ys + plate),
+        P(c, x + side * reach * 0.7, ys + plate * 0.85),
+        P(c, x + side * reach, ys + plate * 0.25),
+        P(c, x + side * reach * 0.8, ys - plate * 0.3),
+        P(c, x + side * reach * 0.3, ys - plate * 0.5),
+      );
+    }
+    pts.push(P(c, edgeX(c, side, t), yAt(c, t)));
+    prev = t;
+  }
+  return pts;
+}
+
+/** First t at which a spire's wall clears its parent's flank, so the join is
+    left open instead of drawn as a line across the parent's face. */
+function clears(c: Column, side: 1 | -1, parent: Column) {
+  for (let i = 0; i <= 60; i++) {
+    const t = i / 60;
+    const [wx, wy] = place(c, edgeX(c, side, t), yAt(c, t));
+    const pt = (parent.foot - wy) / (parent.foot - parent.top);
+    if (pt < 0 || pt > 1 || wx > edgeX(parent, 1, pt)) return t;
+  }
+  return 0;
+}
+
+const smoker: Column = {
+  foot: 108,
+  top: 6,
+  // The axis stands almost straight through the mound and takes its lean
+  // higher up. Lean it from the foot and the girth shrinking cancels the
+  // axis moving: the right edge comes out vertical, the flare shows on one
+  // side only, and the stack reads as a torn strip rather than a column.
+  centre: [
+    [0, 50],
+    [0.2, 51],
+    [0.55, 56],
+    [0.8, 61],
+    [1, 64],
+  ],
+  half: [
+    [0, 22],
+    [0.06, 19.5],
+    [0.2, 18.6],
+    [0.28, 15.8],
+    [0.45, 15],
+    [0.55, 12.6],
+    [0.75, 11.4],
+    [0.88, 9.6],
+    [1, 8.6],
+  ],
+  notches: [
+    [0.72, -1, 3],
+    [0.55, 1, 3],
+  ],
+  shelves: [
+    [0.4, -1, 9, 5.5],
+    [0.68, -1, 3.5, 2],
+  ],
+  seed: 0.7,
+  steps: 15,
+};
+// The head is a crater, not a point, and the two walls do not match: the far
+// wall carries up to a lip and turns down into the throat, the near one is
+// broken off lower and only nubs inward, and the orifice between them is
+// left as a gap. Closed across the top it is a tree with a canopy; flared
+// evenly on both sides it is a pair of horns, which is what it was.
+const NEAR_T = 0.9;
+const smokerL = edge(smoker, -1);
+const smokerR = edge(smoker, 1, 0, NEAR_T).reverse();
+const mouthL = edgeX(smoker, -1, 1);
+const mouthR = edgeX(smoker, 1, NEAR_T);
+const nearY = yAt(smoker, NEAR_T);
+const smokerPath =
+  `M${smokerL.join('L')}L${f(mouthL + 3.5)} ${f(smoker.top + 3)}L${f(mouthL + 6.5)} ${f(smoker.top + 5.5)}` +
+  `M${f(mouthR - 2.5)} ${f(nearY - 2.5)}L${smokerR.join('L')}`;
+// The far wall of the bore, seen down through the opening.
+const borePath = `M${f(mouthL + 5)} ${f(smoker.top + 7)}Q${f(mouthL + 8)} ${f(smoker.top + 10)} ${f(mouthR - 3.5)} ${f(nearY - 0.5)}`;
+// Fractures across the face at the shoulders, stopped well short of the far
+// edge. Run one right across and the column reads as a stack of tyres.
+const bed = (t: number, reach: number) =>
+  `M${f(edgeX(smoker, -1, t) + 1)} ${f(yAt(smoker, t))}L${f(edgeX(smoker, -1, t) + reach)} ${f(yAt(smoker, t) + 2)}`;
+const beds = bed(0.3, 17) + bed(0.66, 12);
+
+// A live secondary spire off the main stack's flank. Smokers branch, and a
+// single column standing alone reads as a totem however good its edges are.
+// Short and nearly as wide as it is long, so it cannot read as a branch.
+const spire: Column = {
+  foot: 58,
+  top: 36,
+  centre: [
+    [0, 60],
+    [1, 61],
+  ],
+  half: [
+    [0, 8],
+    [0.5, 7],
+    [1, 6],
+  ],
+  notches: [[0.5, -1, 2]],
+  seed: 5.2,
+  steps: 5,
+  tilt: 0.85,
+  pivot: 60,
+};
+// Both feet start inside the main stack and each wall is picked up where it
+// leaves the flank, so the join is never drawn across the parent's face.
+const spireL = edge(spire, -1, clears(spire, -1, smoker));
+const spireR = edge(spire, 1, clears(spire, 1, smoker)).reverse();
+const spirePath = `M${spireL.join('L')}L${P(spire, edgeX(spire, -1, 1) + 4, spire.top + 2)}L${spireR.join('L')}`;
+
+// A dead stump beside it: vents come in fields, and one spire alone in the
+// middle of a frame is a fir tree whatever its edges do. A broken shaft,
+// taller than it is wide, with the same stacked ledges as the live stack so
+// the eye pairs the two. Two matching points on top read as a sitting cat
+// and one long slant reads as a fin, so the break is jagged, off-horizontal
+// and shows the hollow throat -- without that it is just an eroded rock.
+const stump: Column = {
+  foot: 108,
+  top: 72,
+  centre: [
+    [0, 12],
+    [1, 14],
+  ],
+  half: [
+    [0, 10.5],
+    [0.12, 9.4],
+    [0.34, 9],
+    [0.44, 7.8],
+    [0.72, 7.4],
+    [1, 7],
+  ],
+  seed: 3.4,
+  steps: 6,
+};
+const BREAK_T = 0.9;
+const stumpL = edge(stump, -1);
+const stumpR = edge(stump, 1, 0, BREAK_T).reverse();
+const sxl = edgeX(stump, -1, 1);
+const stumpPath = `M${stumpL.join('L')}L${f(sxl + 4)} ${f(stump.top + 3.5)}L${f(sxl + 8)} ${f(stump.top + 0.5)}L${f(sxl + 12)} ${f(stump.top + 3)}L${stumpR.join('L')}`;
+const stumpBore = `M${f(sxl + 3)} ${f(stump.top + 4.5)}Q${f(sxl + 8)} ${f(stump.top + 9)} ${f(sxl + 13)} ${f(stump.top + 5)}`;
+
+// --- Tube worms -----------------------------------------------------------
+// Riftia: a chitin tube a metre or two long with a blood-red gill plume held
+// out of the open end, in bushes at the foot of the chimney with the tubes
+// leaning the way the current sets. Each tube is one bowed centre line
+// offset to both sides so the walls cannot come apart. The mouth flares, the
+// plume waists in at the rim and swells past it, then tapers to a rounded
+// end: a closed cap on a parallel tube is a nail and a shape that widens
+// straight out of the shaft is a leaf. Both were drawn here first.
+interface Tube {
+  x0: number;
+  y0: number;
+  x1: number;
+  y1: number;
+  /** Sideways bow of the centre line; positive bows a rising tube right. */
+  bend: number;
+  w: number;
+  /** Lopsides the plume, so eight of them are not one drawing eight times. */
+  bias: number;
+}
+
+function tube({ x0, y0, x1, y1, bend, w, bias }: Tube) {
+  const dx = x1 - x0;
+  const dy = y1 - y0;
+  const len = Math.hypot(dx, dy);
+  const cx = (x0 + x1) / 2 + (-dy / len) * bend;
+  const cy = (y0 + y1) / 2 + (dx / len) * bend;
+  const pts = Array.from({ length: 9 }, (_, i) => {
+    const t = i / 8;
+    const s = 1 - t;
+    const tx = 2 * s * (cx - x0) + 2 * t * (x1 - cx);
+    const ty = 2 * s * (cy - y0) + 2 * t * (y1 - cy);
+    const tl = Math.hypot(tx, ty);
+    return {
+      x: s * s * x0 + 2 * s * t * cx + t * t * x1,
+      y: s * s * y0 + 2 * s * t * cy + t * t * y1,
+      nx: -ty / tl,
+      ny: tx / tl,
+      tx: tx / tl,
+      ty: ty / tl,
+    };
+  });
+  const h = w / 2;
+  const flare = h * 1.35;
+  // Only the last span opens out. Flare it over two and the shaft stops
+  // being parallel-sided and the whole tube reads as a leaf.
+  const wall = (k: number) =>
+    pts
+      .map((p, i) => {
+        const g = i === pts.length - 1 ? flare : h;
+        return `${f(p.x + p.nx * g * k)} ${f(p.y + p.ny * g * k)}`;
+      })
+      .join('L');
+  const tip = pts[pts.length - 1];
+  const out = (n: number, a: number) =>
+    `${f(tip.x + tip.nx * n + tip.tx * a)} ${f(tip.y + tip.ny * n + tip.ty * a)}`;
+  const collar = (i: number) => {
+    const p = pts[i];
+    return `M${f(p.x + p.nx * h)} ${f(p.y + p.ny * h)}L${f(p.x - p.nx * h)} ${f(p.y - p.ny * h)}`;
+  };
+  return {
+    // Open at both ends: the tube comes out of the rubble and the plume
+    // comes out of the tube, and neither join is drawn.
+    walls: `M${wall(1)}M${wall(-1)}`,
+    collars: collar(3) + collar(6),
+    plume:
+      `M${out(flare, 0)}` +
+      `C${out(flare * 0.85, 0.22 * w)} ${out(h * 1.45 * bias, 0.5 * w)} ${out(h * 1.5 * bias, 0.9 * w)}` +
+      `C${out(h * 1.35, 1.45 * w)} ${out(h * 0.6, 1.72 * w)} ${out(0, 1.8 * w)}` +
+      `C${out(-h * 0.6, 1.72 * w)} ${out((-h * 1.28) / bias, 1.4 * w)} ${out((-h * 1.45) / bias, 0.85 * w)}` +
+      `C${out(-h * 1.3, 0.45 * w)} ${out(-flare * 0.85, 0.22 * w)} ${out(-flare, 0)}`,
+    fils:
+      `M${out(h * 0.5, 0.28 * w)}L${out(h * 0.8, 1.35 * w)}` +
+      `M${out(0, 0.35 * w)}L${out(0.1 * w, 1.55 * w)}` +
+      `M${out(-h * 0.5, 0.28 * w)}L${out(-h * 0.85, 1.25 * w)}`,
+  };
+}
+
+// Two ranks, because nothing here is filled and depth has to come from
+// weight. The back rank is short and stops well below the front tips rather
+// than shadowing them: a dim copy of the same bush reads as blur, not depth.
+// The clump sits beside the foot rather than over it -- rooted further left
+// it buried the whole right flank and the stack read as half a column. Two
+// One tube leans back across the rest: one girth, one lean and one tip and
+// the bush reads as a bundle of fingers, but two crossings make a knot.
+const wormsBack = [
+  { x0: 74, y0: 107, x1: 82, y1: 82, bend: 1.4, w: 3.4, bias: 1.1 },
+  { x0: 84, y0: 108, x1: 91, y1: 93, bend: 1.2, w: 2.8, bias: 0.9 },
+  { x0: 89, y0: 108, x1: 103, y1: 87, bend: 1.6, w: 3.8, bias: 1.05 },
+].map(tube);
+const wormsFront = [
+  { x0: 72, y0: 108, x1: 78, y1: 86, bend: 1.6, w: 5.2, bias: 0.85 },
+  { x0: 75, y0: 108, x1: 81, y1: 92, bend: 0.6, w: 3.2, bias: 1 },
+  { x0: 77, y0: 108, x1: 85, y1: 68, bend: 0.8, w: 4.8, bias: 1.15 },
+  { x0: 88, y0: 108, x1: 81, y1: 90, bend: -1.4, w: 4.2, bias: 0.9 },
+  { x0: 82, y0: 108, x1: 98, y1: 82, bend: 2.2, w: 3.6, bias: 0.92 },
+  { x0: 92, y0: 108, x1: 111, y1: 80, bend: 2.6, w: 4.4, bias: 0.95 },
+].map(tube);
+
+// --- Plume ----------------------------------------------------------------
+// 350 C fluid meets 2 C seawater and the dissolved metal drops out of it as
+// black sulphide, so the smoke is precipitate. It is buoyant and it entrains
+// water as it rises: a narrow jet at the lip and a bank of eddies a metre
+// up, shearing off with the current. Drawn as one boundary that bulges
+// convex between its corners, tucks in twice where an eddy has been pulled
+// apart, and is broken in three places including the crown. Threads read as
+// a candle, a closed outline reads as a cloud, and a pile of near-complete
+// circles reads as tangled wire; all three have been tried on this figure.
+const PLUME_TOP = -38;
+type Pt = [number, number];
+// The boundary starts and ends ON the two lips, so the plume issues from
+// between them instead of balancing on the rim, and the join cannot drift
+// when the girth profile is retuned.
+const lipL: Pt = [mouthL + 6.5, smoker.top + 5.5];
+const lipR: Pt = [mouthR - 2.5, nearY - 2.5];
+const throat: Pt = [(lipL[0] + lipR[0]) / 2, (lipL[1] + lipR[1]) / 2];
+/** Axis of the plume by s: shear right, slowly at first while it is a jet. */
+const ax = (s: number) => throat[0] + 26 * s ** 1.7;
+const ay = (s: number) => throat[1] + (PLUME_TOP - throat[1]) * s;
+const PW: Prof = [
+  [0, 4],
+  [0.15, 6.5],
+  [0.4, 12.5],
+  [0.7, 19.5],
+  [1, 24],
+];
+const edgePt = (s: number, side: 1 | -1, k = 1): Pt => [
+  ax(s) + side * at(PW, s) * k,
+  ay(s),
+];
+/** Up the left, over the head, down the right. */
+const ring: Pt[] = [
+  lipL,
+  edgePt(0.14, -1),
+  edgePt(0.3, -1, 1.05),
+  edgePt(0.48, -1),
+  edgePt(0.66, -1, 1.08),
+  edgePt(0.82, -1),
+  edgePt(0.93, -1, 0.9),
+  [ax(1) - at(PW, 1) * 0.55, ay(1) - 3],
+  [ax(1) + at(PW, 1) * 0.55, ay(1) + 2.5],
+  edgePt(0.93, 1, 0.88),
+  edgePt(0.78, 1, 1.06),
+  edgePt(0.6, 1),
+  edgePt(0.44, 1, 1.04),
+  edgePt(0.26, 1),
+  edgePt(0.12, 1),
+  lipR,
+];
+/** Bulge per segment as a fraction of its length. Equal bulges are a doily,
+    so no two neighbours match; two are negative, where the boundary is being
+    pulled back into the mass, and the neck is left nearly straight. */
+const BULGE = [
+  0.1, 0.34, -0.16, 0.46, 0.3, 0.36, 0.34, 0.24, 0.16, -0.14, 0.42, 0.3, 0.24,
+  0.12, 0.08,
+];
+/** Three segments left undrawn: a closed outline is a cloud. The crown
+    itself stays drawn -- broken there it hangs a loose hook in open water. */
+const BREAKS = new Set([3, 10, 13]);
+
+let plumeWall = '';
+let pen = false;
+for (let i = 0; i < ring.length - 1; i++) {
+  if (BREAKS.has(i)) {
+    pen = false;
+    continue;
+  }
+  const [x0, y0] = ring[i];
+  const [x1, y1] = ring[i + 1];
+  const dx = x1 - x0;
+  const dy = y1 - y0;
+  const len = Math.hypot(dx, dy);
+  const amp = BULGE[i] * len;
+  // Outward is the perpendicular on the walking side, so the boundary bulges
+  // away from the axis all the way round without knowing where the axis is.
+  const cx = (x0 + x1) / 2 + (dy / len) * amp;
+  const cy = (y0 + y1) / 2 + (-dx / len) * amp;
+  if (!pen) {
+    plumeWall += `M${f(x0)} ${f(y0)}`;
+    pen = true;
+  }
+  plumeWall += `Q${f(cx)} ${f(cy)} ${f(x1)} ${f(y1)}`;
+}
+
+/** One curl in the shear: a short open arc, never closed and never spanning
+    the mass, because an inner lobe inside an outer lobe is a comic puff. */
+const curl = (s0: number, o0: number, s1: number, o1: number, k: number) => {
+  const [x0, y0] = [ax(s0) + o0 * at(PW, s0), ay(s0)];
+  const [x1, y1] = [ax(s1) + o1 * at(PW, s1), ay(s1)];
+  return `M${f(x0)} ${f(y0)}Q${f((x0 + x1) / 2 + (y1 - y0) * k)} ${f((y0 + y1) / 2 - (x1 - x0) * k)} ${f(x1)} ${f(y1)}`;
+};
+const curls =
+  curl(0.28, 0.1, 0.4, 0.7, 0.5) +
+  curl(0.5, 0.2, 0.62, 0.8, 0.44) +
+  curl(0.72, 0.25, 0.86, 0.7, 0.4);
+/** One shear line up the leading edge, so the plume is going somewhere
+    rather than sitting on the stack. It stops inside the crown: run out past
+    the boundary and it is a stray hook, not a shear. */
+const shear = `M${f(ax(0.08) + at(PW, 0.08))} ${f(ay(0.08))}C${f(ax(0.42) + at(PW, 0.42) * 1.35)} ${f(ay(0.42))} ${f(ax(0.74) + at(PW, 0.74) * 1.3)} ${f(ay(0.74))} ${f(ax(0.94) + at(PW, 0.94) * 0.55)} ${f(ay(0.94))}`;
+---
+
+<svg viewBox="0 -52 196 164" fill="none" stroke="currentColor" stroke-width="1.15">
+  <g class="drift__plume" stroke-width="1.5">
+    <path d={plumeWall} />
+    <path d={shear} stroke-width="0.85" opacity="0.6" />
+    <path d={curls} stroke-width="0.9" opacity="0.6" />
   </g>
-  {/* The chimney is a mineral pile: every edge is a fracture and the whole
-      thing leans, because it grew wherever the flow happened to be. Drawn
-      with smooth curves it comes out a candle; drawn symmetrically it comes
-      out a fir tree. */}
-  <path d="M28 108 32 99 27 92 31 84 25 76 33 68 30 58 36 50 33 40 40 32 44 23 50 15 58 12 63 20 67 30 63 38 71 46 68 55 77 62 72 70 80 78 75 88 84 96 80 108Z" />
-  <path d="M44 23 50 15 58 12" stroke-width="0.8" />
-  {/* A dead stump beside it. Vents come in fields, and one spire on its own
-      in the middle of a frame is a fir tree. */}
-  <path d="M4 108 8 98 2 90 9 82 6 74 12 68 18 74 15 84 21 92 16 100 22 108Z" stroke-width="0.8" opacity="0.75" />
-  {/* Flanges, where an older orifice sealed over and the flow moved. */}
-  <path d="M25 76 17 78 24 81M77 62 86 64 78 67M33 40 25 41 32 44" stroke-width="0.5" opacity="0.6" />
+  <path d={smokerPath} stroke-linejoin="round" />
+  <path d={spirePath} stroke-width="0.95" stroke-linejoin="round" opacity="0.9" />
+  <path d={borePath} stroke-width="0.6" opacity="0.55" />
+  <path d={beds} stroke-width="0.5" opacity="0.4" />
+  {/* Its own rubble banked against the foot, on the side the worms leave
+      clear. One line: pinching the column into the seabed read as a candle
+      stood in a holder. */}
+  <path d="M12 108 20 105 27 103M2 108 6 106" stroke-width="0.6" opacity="0.45" />
+  <path d={stumpPath} stroke-width="0.7" opacity="0.65" />
+  <path d={stumpBore} stroke-width="0.5" opacity="0.45" />
+  {/* Diffuse flow: warm water seeping out around the flanges and through the
+      clump, too dilute to precipitate. Broken hairlines, because it is a
+      shimmer in the water and not a second plume. */}
+  <path
+    d="M39 62v-4M39 55v-2.5M34 66v-3M44 50v-3"
+    stroke-width="0.5"
+    opacity="0.3"
+  />
   {/* Tube worms. No mouth and no gut: they farm bacteria inside themselves,
       and they are the reason anyone still argues about where life started. */}
-  <g stroke-width="0.7">
-    <path d="M88 108C87 94 90 82 88 76M93 108C94 92 91 78 94 64M98 108C97 94 100 86 98 80M103 108C104 92 101 80 104 68M108 108C107 96 110 90 108 85M113 108C114 94 111 84 114 74M118 108C117 96 120 88 118 82M123 108C124 92 121 82 124 70" />
-    <path d="M85 76a3 4 0 0 1 6 0M91 64a3 4 0 0 1 6 0M95 80a3 4 0 0 1 6 0M101 68a3 4 0 0 1 6 0M105 85a3 4 0 0 1 6 0M111 74a3 4 0 0 1 6 0M115 82a3 4 0 0 1 6 0M121 70a3 4 0 0 1 6 0" stroke-width="0.5" opacity="0.75" />
+  <g opacity="0.55" stroke-width="0.5">
+    <path d={wormsBack.map((t) => t.walls).join('')} />
+    <path d={wormsBack.map((t) => t.plume).join('')} stroke-width="0.65" />
+  </g>
+  <g>
+    <path d={wormsFront.map((t) => t.walls).join('')} stroke-width="0.6" />
+    <path d={wormsFront.map((t) => t.collars).join('')} stroke-width="0.4" opacity="0.45" />
+    <path d={wormsFront.map((t) => t.plume).join('')} stroke-width="0.85" />
+    <path d={wormsFront.map((t) => t.fils).join('')} stroke-width="0.4" opacity="0.6" />
   </g>
   <path d="M0 108h196" stroke-width="0.6" opacity="0.5" />
-  <path d="M24 108c8-4 16-5 24-4M128 106c6-2 12-3 18-2" stroke-width="0.5" opacity="0.35" />
-  {/* And the thing watching it, wired back to a shore station. */}
-  <path d="M136 104V88h40v16z" stroke-width="0.8" />
-  <path d="M136 97h40" stroke-width="0.5" opacity="0.6" />
-  <path d="M131 92h5M131 100h5" stroke-width="0.6" opacity="0.8" />
-  <path d="M150 88a8 8 0 0 1 16 0" stroke-width="0.7" />
-  <path d="M172 88V77" stroke-width="0.6" />
-  <path d="M138 104v6M174 104v6M132 110h48" stroke-width="0.7" />
-  <path d="M176 96c8 2 12 5 20 6" stroke-width="0.5" opacity="0.5" />
-  <circle cx="172" cy="75" r="1.8" fill="currentColor" class="drift__telemetry" />
-  <circle cx="156" cy="94" r="32" class="drift__ring" />
+  {/* And the thing watching it, wired back to a shore station: a pressure
+      housing slung in an open frame with its optic turned on the vent, a
+      light on the mast, the cable away along the bottom. The top rail is cut
+      either side of the housing so the middle bay is open at the top -- run
+      it right across and the frame reads as a table. */}
+  <path d="M132 87H150M162 87H180M134 103H178M138 87V103M174 87V103" stroke-width="0.7" />
+  <path d="M174 103 163 87" stroke-width="0.55" opacity="0.7" />
+  <path d="M140 103v5M150 103v5M162 103v5M172 103v5" stroke-width="0.55" />
+  <path d="M136 108h8M167 108h8" stroke-width="0.5" opacity="0.55" />
+  <path d="M152 90h9a5 5 0 0 1 0 10h-9a5 5 0 0 1 0-10Z" stroke-width="0.6" />
+  <path d="M154 90v10M159 90v10" stroke-width="0.4" opacity="0.55" />
+  <path d="M145 88v3M168 88v3" stroke-width="0.45" opacity="0.7" />
+  <path d="M138 95h-6M132 91.5 128 93.5v3l4 2" stroke-width="0.55" />
+  <path d="M174 87V78" stroke-width="0.55" />
+  <path d="M172 100h5" stroke-width="0.5" opacity="0.7" />
+  <path d="M176 100c1 4 3 6 6 7 5 2 9 1 14 1" stroke-width="0.7" opacity="0.9" />
+  <circle cx="129.5" cy="95" r="1.1" fill="currentColor" />
+  <circle cx="174" cy="76" r="1.9" fill="currentColor" class="drift__telemetry" />
+  <circle cx="96" cy="52" r="42" class="drift__ring" />
 </svg>
 <span class="drift__tag">NODE 07</span>

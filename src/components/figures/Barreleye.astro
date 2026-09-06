@@ -1,51 +1,261 @@
 ---
-import { spine, shell } from '@/lib/curves';
+import { spine, at, type Prof, type Node } from '@/lib/curves';
 
 // --- Barreleye ------------------------------------------------------------
-// The two spots on the front of its face are nostrils. The eyes are the green
-// barrels inside the transparent head, and they are pointed straight up.
-const barrel = spine({
-  from: 16,
-  to: 124,
-  y: () => 54,
-  up: [
-    [0, 1],
-    [0.12, 4],
-    [0.44, 11],
-    [0.7, 12.5],
-    [0.9, 10],
-    [1, 6.5],
-  ],
-  down: [
-    [0, 1],
-    [0.12, 4],
-    [0.44, 12],
-    [0.72, 12.5],
-    [0.9, 9],
-    [1, 5],
-  ],
+// Macropinna microstoma. The shield is the whole figure and it is drawn the
+// way glass over a body is drawn: a light elliptical arc, wider than it is
+// tall, coming up out from behind the back and carrying forward until it seals
+// on the snout, with the body's own contour running on underneath it at half
+// weight. Three things this has already been through: sit the arc on the
+// dorsal line and it is a fish with a hump; stand it on two vertical rims
+// under a flat crown and it is a box; and run any second curve down from its
+// rear and the two close into a circle the fish appears to be sitting inside.
+const Y = 44;
+const TAIL = 58;
+const SNOUT = 150;
+const LEN = SNOUT - TAIL;
+// Where the shield crosses the back. Forward of here the outline is behind
+// glass, so it is drawn lighter -- the only notation that says transparent.
+const GLASS = 102;
+
+// Deep and stubby, with the head the biggest event: a long trunk behind the
+// pectoral turned this into a filefish. Few knots on purpose -- the smoothstep
+// between them is not slope-continuous, so every extra knot puts another small
+// kink in the silhouette and the trace starts to look like tremor.
+const UP: Prof = [
+  [0, 4.5],
+  [0.28, 14],
+  [0.5217, 18.5],
+  [0.64, 11],
+  [0.81, 7.5],
+  [1, 5.5],
+];
+const DOWN: Prof = [
+  [0, 4.5],
+  [0.28, 16],
+  [0.545, 20],
+  [0.755, 15],
+  [1, 5.5],
+];
+// Steps chosen so nodes land on even x, which is what lets the fins and the
+// glass weight break be spliced in at exact node positions.
+const body = spine({ from: TAIL, to: SNOUT, y: () => Y, up: UP, down: DOWN, steps: 46 });
+
+const pt = (x: number, y: number) => `${x.toFixed(1)} ${y.toFixed(1)}`;
+const top = (p: Node) => pt(p.x, p.y - p.u);
+const bot = (p: Node) => pt(p.x, p.y + p.d);
+const backAt = (x: number) => Y - at(UP, (x - TAIL) / LEN);
+const bellyAt = (x: number) => Y + at(DOWN, (x - TAIL) / LEN);
+
+const faceTop = Y - at(UP, 1);
+const faceBot = Y + at(DOWN, 1);
+
+// Dorsal and anal are cut INTO the body line rather than laid over it: the
+// outline runs up into the lobe and out the far side. Drawn on top, the lobe
+// and the contour it spans enclose a lens and read as a drafting slip. Each
+// curve is written in the direction its edge is travelled -- the belly is
+// walked back to front, and an anal lobe written the other way ties a knot.
+// Each base makes a corner: the lobe has to leave and rejoin the contour at a
+// plainly different angle, or a fin sitting on a back that is rising anyway
+// just extends the rise.
+const dorsal = {
+  rear: 70,
+  front: 88,
+  d: `C${pt(72, 32)} ${pt(75.5, 25.8)} ${pt(79, 25.6)}C${pt(83.5, 25.4)} ${pt(86.5, 26.3)} ${pt(88, backAt(88))}`,
+  rays: [84, 81, 77.5, 74],
+  h: 5.2,
+};
+const anal = {
+  rear: 72,
+  front: 90,
+  d: `C${pt(88.5, 62.4)} ${pt(84, 63.4)} ${pt(81, 63.4)}C${pt(77.5, 63.4)} ${pt(74.5, 58.5)} ${pt(72, bellyAt(72))}`,
+  rays: [86, 83, 79.5, 76],
+  h: 3.8,
+};
+// sign -1 draws up off the back, +1 down off the belly. Both directions wrong
+// once, which put eight ticks of hatching on the flank.
+const finRays = (f: typeof dorsal, edge: (x: number) => number, sign: number) =>
+  f.rays
+    .map((x) => {
+      const t = (x - f.rear) / (f.front - f.rear);
+      const h = f.h * Math.sin(Math.PI * t);
+      return `M${pt(x, edge(x))}L${pt(x + sign * 0.5, edge(x) + sign * h)}`;
+    })
+    .join('');
+
+// Two paths across the back, not one, so the stretch under the glass can drop
+// weight. They meet at GLASS, where the shield crosses, so the line stays
+// continuous and only its weight changes.
+const hull =
+  'M' +
+  body.filter((p) => p.x <= dorsal.rear).map(top).join('L') +
+  dorsal.d +
+  'L' +
+  body.filter((p) => p.x >= dorsal.front && p.x <= GLASS).map(top).join('L');
+const submerged =
+  'M' +
+  body.filter((p) => p.x >= GLASS).map(top).join('L') +
+  `C${pt(SNOUT + 2.5, faceTop + 1.5)} ${pt(SNOUT + 2.5, faceBot - 1.5)} ${pt(SNOUT, faceBot)}`;
+const underside =
+  'M' +
+  body.filter((p) => p.x >= anal.front).map(bot).reverse().join('L') +
+  anal.d +
+  'L' +
+  body.filter((p) => p.x <= anal.rear).map(bot).reverse().join('L');
+
+// A true half-ellipse over the chord between the shield's seats, skewed so the
+// crown falls a little forward of centre. Hand-knotted bulges gave it a flat
+// top and vertical sides; the arc has to be one curve or it is a hood.
+const DOME_H = 23;
+const domeProf: Prof = Array.from({ length: 17 }, (_, i) => {
+  const t = i / 16;
+  const u = t ** 1.08;
+  return [t, DOME_H * Math.sqrt(Math.max(0, 1 - (2 * u - 1) ** 2))];
 });
+const domeNodes = spine({
+  from: GLASS,
+  to: 152,
+  y: (t) => 27 + 14.5 * t,
+  steps: 90,
+  up: domeProf,
+});
+// The rear of the arc is behind the fish, so it is cut where it comes out from
+// under the back rather than landed on a foot of its own. One node is kept
+// below the outline so the two lines visibly cross.
+const emerge = Math.max(0, domeNodes.findIndex((p) => p.y - p.u < backAt(p.x)) - 1);
+const dome = 'M' + domeNodes.slice(emerge).map(top).join('L');
+
+// Tubular eyes, stood on the shelf and raked a little forward, the walls
+// bellied at mid-height. Parallel-sided, level and the same size they were two
+// chimneys -- a front view smuggled into a profile -- so the far one sits back
+// and lower and shows only its outer wall and the shoulder of its lens behind
+// the near barrel. The lens is a foam band under a cream rim rather than a
+// solid cap: filled solid they were the only closed shapes in an unfilled
+// drawing and the whole animal came down to two green lights. The cup under
+// each lens is the opaque part of the eye, seen through the fluid.
+const wall = (x0: number, y0: number, x1: number, y1: number, belly: number) =>
+  `M${pt(x0, y0)}Q${pt((x0 + x1) / 2 + belly, (y0 + y1) / 2)} ${pt(x1, y1)}`;
+const cap = (x: number, y: number, r: number) =>
+  `M${pt(x - r, y)}A${r} ${r} 0 0 1 ${pt(x + r, y)}`;
+const cup = (x: number, y: number, r: number) =>
+  `M${pt(x - r + 0.7, y + 1.8)}Q${pt(x, y + 4)} ${pt(x + r - 0.7, y + 1.8)}`;
+
+const NEAR = { footX: 129, footW: 6.4, lensX: 131.5, lensY: 22, r: 3.5 };
+const FAR = { footX: 124, footW: 5.4, lensX: 126, lensY: 24.5, r: 2.9 };
+const nearWalls =
+  wall(NEAR.footX - NEAR.footW / 2, backAt(NEAR.footX), NEAR.lensX - NEAR.r, NEAR.lensY, -0.8) +
+  wall(NEAR.footX + NEAR.footW / 2, backAt(NEAR.footX), NEAR.lensX + NEAR.r, NEAR.lensY, 0.8);
+// Cut where the near barrel's own wall hides the far one.
+const CUT = NEAR.lensX - NEAR.r;
+const farRise = FAR.lensY - Math.sqrt(FAR.r ** 2 - (CUT - FAR.lensX) ** 2);
+const farWall = wall(
+  FAR.footX - FAR.footW / 2,
+  backAt(FAR.footX),
+  FAR.lensX - FAR.r,
+  FAR.lensY,
+  -0.7,
+);
+const farCap = `M${pt(FAR.lensX - FAR.r, FAR.lensY)}A${FAR.r} ${FAR.r} 0 0 1 ${pt(CUT, farRise)}`;
+const farFill = `${farCap}L${pt(CUT, FAR.lensY)}Z`;
+
+// One fan serves the tail and the pectoral: margin and rays read the same
+// polar samples, so a ray cannot end up outside the edge it belongs to. A fin
+// is really rigged this way.
+type Ray = { s: number; x: number; y: number };
+type Fan = { cx: number; cy: number; pts: Ray[] };
+const fan = (
+  cx: number,
+  cy: number,
+  a0: number,
+  a1: number,
+  r: (s: number) => number,
+  steps = 20,
+): Fan => ({
+  cx,
+  cy,
+  pts: Array.from({ length: steps + 1 }, (_, i) => {
+    const s = i / steps;
+    const a = ((a0 + (a1 - a0) * s) * Math.PI) / 180;
+    return { s, x: cx + Math.cos(a) * r(s), y: cy + Math.sin(a) * r(s) };
+  }),
+});
+// The margin joins an edge that already ends on its first sample, so it goes
+// on as a run of L with that sample dropped.
+const margin = (f: Fan) => 'L' + f.pts.slice(1).map((p) => pt(p.x, p.y)).join('L');
+const spokes = (f: Fan, where: number[], inner: number, outer: number) =>
+  where
+    .map((s) => {
+      const p = f.pts[Math.round(s * (f.pts.length - 1))];
+      const len = Math.hypot(p.x - f.cx, p.y - f.cy);
+      const ux = (p.x - f.cx) / len;
+      const uy = (p.y - f.cy) / len;
+      return `M${pt(f.cx + ux * inner, f.cy + uy * inner)}L${pt(f.cx + ux * len * outer, f.cy + uy * len * outer)}`;
+    })
+    .join('');
+
+// Pectoral: the fish hangs on these, spread. The trailing edge runs out into
+// the flank rather than turning back to the root, which put a square corner on
+// it, and this is the one fin that keeps its hatching -- the same radiating
+// rays on three fins at once flatten the whole drawing.
+const PEC = fan(101, 45, 106, 178, (s) => 10 + 10 * Math.sin(Math.PI * s) ** 0.55);
+const pecRoot = PEC.pts[0];
+const pectoral =
+  `M${pt(103, 42.5)}C${pt(103, 47.5)} ${pt(100.5, 51)} ${pt(pecRoot.x, pecRoot.y)}` + margin(PEC);
+
+// Caudal, rounded, radiating off the peduncle with the upper lobe a touch
+// longer and the middle held back a little. Spread wide it flared like a
+// filefish tail. The peduncle is left open into it: a wall across the base cut
+// the tail off.
+const CAUD = fan(
+  TAIL,
+  Y,
+  141,
+  219,
+  (s) => 13 + 1 * s + 2.4 * Math.sin(Math.PI * s) - 1.7 * Math.exp(-(((s - 0.5) / 0.22) ** 2)),
+);
+const caudRoot = CAUD.pts[0];
+const caudal =
+  `M${pt(TAIL, Y + at(DOWN, 0))}C${pt(55.5, 50.5)} ${pt(51, 51.8)} ${pt(caudRoot.x, caudRoot.y)}` +
+  margin(CAUD) +
+  `C${pt(50.5, 35.8)} ${pt(55.5, 37.8)} ${pt(TAIL, Y - at(UP, 0))}`;
 ---
 
-<svg viewBox="0 0 148 100" fill="none" stroke="currentColor" stroke-width="1">
-  <path d={shell(barrel)} />
-  {/* The head is a clear fluid-filled dome. It was photographed intact for
-      the first time in 2004; every specimen before that arrived collapsed. */}
-  <path d="M86 47C88 26 106 17 118 22c10 5 12 17 8 26" stroke-width="0.6" opacity="0.7" />
-  {/* Two barrels, pointed straight up through the roof of its own head. The
-      lens on top is what makes them eyes rather than two doorways. */}
-  {/* Tall and narrow. Squat and wide they come out as two doorways. */}
+<svg
+  viewBox="38 8 118 60"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="0.65"
+  stroke-linejoin="round"
+  stroke-linecap="round"
+>
+  <path d={hull} />
+  {/* Everything forward of here is behind the glass and drops weight for it. */}
+  <path d={submerged} stroke-width="0.55" opacity="0.9" />
+  <path d={underside} />
+  {/* The shield. It was photographed intact for the first time in 2004; every
+      specimen before that arrived with it collapsed. */}
+  <path d={dome} stroke-width="0.5" opacity="0.8" />
+  <path d={caudal} stroke-width="0.55" />
+  <path d={spokes(CAUD, [0.3, 0.7], 4, 0.85)} stroke-width="0.3" opacity="0.22" />
+  <path d={finRays(dorsal, backAt, -1)} stroke-width="0.38" opacity="0.45" />
+  <path d={finRays(anal, bellyAt, 1)} stroke-width="0.38" opacity="0.45" />
+  <path d={pectoral} stroke-width="0.5" opacity="0.8" />
+  <path d={spokes(PEC, [0.25, 0.55, 0.82], 4, 0.9)} stroke-width="0.32" opacity="0.3" />
+  {/* Barrels in cream so the eyes keep their shape between blinks. */}
+  <path d={`${farWall}${farCap}`} stroke-width="0.45" opacity="0.7" />
+  <path d={cup(FAR.lensX, FAR.lensY, FAR.r)} stroke-width="0.4" opacity="0.45" />
+  <path d={nearWalls} stroke-width="0.6" />
+  <path d={cap(NEAR.lensX, NEAR.lensY, NEAR.r)} stroke-width="0.5" />
+  <path d={cup(NEAR.lensX, NEAR.lensY, NEAR.r)} stroke-width="0.45" opacity="0.6" />
   <g class="drift__telemetry">
-    <path d="M97 48V34a3.5 3.5 0 0 1 7 0v14z" stroke-width="0.9" />
-    <circle cx="100.5" cy="34" r="1.3" fill="currentColor" stroke="none" />
-    <path d="M109 48V37a3.2 3.2 0 0 1 6.4 0v11z" stroke-width="0.9" />
-    <circle cx="112.2" cy="37" r="1.2" fill="currentColor" stroke="none" />
+    <path d={farFill} fill="currentColor" stroke="none" opacity="0.7" />
+    <path d={`${cap(NEAR.lensX, NEAR.lensY, NEAR.r)}Z`} fill="currentColor" stroke="none" />
   </g>
-  {/* And the two spots on the front of the face, which are not eyes. */}
-  <circle cx="119" cy="53" r="1.6" fill="currentColor" opacity="0.8" />
-  <circle cx="118" cy="58" r="1.2" fill="currentColor" opacity="0.6" />
-  <path d="M84 64c10 5 18 6 24 3" stroke-width="0.5" opacity="0.5" />
-  <path d="M52 43c4-6 10-8 15-6-3 3-4 6-4 9Z" stroke-width="0.7" />
-  <path d="M16 54 2 40v28Z" stroke-width="0.8" />
-  <path d="M44 66c5 7 7 12 7 17" stroke-width="0.5" opacity="0.5" />
+  {/* The two pits at the front of the face are nostrils, not eyes. Same size
+      as each other: one big and one small read as an eye with a highlight. */}
+  <circle cx="151.3" cy="41" r="1" fill="currentColor" stroke="none" opacity="0.8" />
+  <circle cx="150.4" cy="43.6" r="1" fill="currentColor" stroke="none" opacity="0.8" />
+  {/* Mouth: small, terminal and turned down, below the pits and clear of the
+      glass. Longer and flatter it hung under the snout like a barbel. */}
+  <path d={`M${pt(152.4, 46.4)}C${pt(150.8, 47.8)} ${pt(149.4, 48.2)} ${pt(148, 48.1)}`} stroke-width="0.55" />
 </svg>
