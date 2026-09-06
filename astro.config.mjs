@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite';
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import pagefind from 'astro-pagefind';
+import writer from './src/writer/integration.ts';
 
 export default defineConfig({
   site: 'https://marcel-heidebrecht.de',
@@ -19,6 +20,7 @@ export default defineConfig({
     }),
     sitemap(),
     pagefind(),
+    writer(),
   ],
   markdown: {
     shikiConfig: {
