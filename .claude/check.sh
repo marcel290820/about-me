@@ -1,6 +1,7 @@
 #!/bin/sh
 # The one check: stop gate, commit gate and CI all run this. There is no
-# lint, typecheck or test script, so the build is what proves a change.
+# lint or typecheck; the sheet geometry check and the build prove a change.
 set -eu
 cd "$(dirname "$0")/.."
+npm test
 npm run build
