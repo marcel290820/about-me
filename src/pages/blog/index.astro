@@ -12,7 +12,7 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(newe
   <div slot="surface" class="pt-8 pb-16 sm:pt-12 sm:pb-24">
     <h1 class="display-name mb-4">Remarks</h1>
     <p class="font-mono text-xs uppercase tracking-[0.16em] text-text-dim mb-12">
-      the remarks column of the log
+      whatever the instruments did not record
     </p>
     {posts.length > 0 ? (
       <Log posts={posts} />

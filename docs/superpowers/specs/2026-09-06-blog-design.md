@@ -43,7 +43,7 @@ The slug is the filename. Slugs match `^[a-z0-9]+(-[a-z0-9]+)*$`.
 
 ### The log: `/blog`
 
-Surface slot, on paper. Heading "Remarks" in `.display-name`, under it one mono line: "the remarks column of the log". Below that the entries, newest first, grouped by year. Each year is a `.section-heading`. The entries in a year sit on one `.rail`.
+Surface slot, on paper. Heading "Remarks" in `.display-name`, under it one mono line: "whatever the instruments did not record". Below that the entries, newest first, grouped by year. Each year is a `.section-heading`. The entries in a year sit on one `.rail`.
 
 A row is a log line, not a card:
 
