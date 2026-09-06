@@ -17,7 +17,7 @@ The desk is one page, `/write`, and it only exists under `npm run dev`. It saves
 - The slug fills itself from the title until the first save, then locks.
 - Publish flips the draft flag, commits the file and pushes it.
 
-Code blocks keep the Dracula theme and read as dark insets on the paper:
+Code blocks print as water, abyss ground and cream text, so the one dark object in an entry is the sea:
 
 ```sh
 npm run dev

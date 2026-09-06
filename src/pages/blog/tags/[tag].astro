@@ -29,12 +29,9 @@ const { tag, all, posts } = Astro.props;
     <a href="/blog" class="inline-block mb-8 font-mono text-[0.625rem] uppercase tracking-[0.14em] text-text-muted hover:text-accent transition-colors">
       &larr; all remarks
     </a>
-    <h1 class="display-name mb-4">
+    <h1 class="display-name mb-12">
       <span class="text-accent">#</span>{tag}
     </h1>
-    <p class="font-mono text-xs uppercase tracking-[0.16em] text-text-dim mb-12">
-      {posts.length} {posts.length === 1 ? 'entry' : 'entries'}
-    </p>
     <Log posts={posts} />
   </div>
 
