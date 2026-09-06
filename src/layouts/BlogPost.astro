@@ -37,7 +37,7 @@ const linkClass =
 <Base title={title} description={description} surface>
   {/* The whole entry is read on paper. The rail runs down its margin the way
       it does on the CV, with the fix pinned at the top. */}
-  <article slot="surface" class="rail pt-8 pb-16 sm:pt-12 sm:pb-24">
+  <article slot="surface" class="entry-sheet rail pt-8 pb-16 sm:pt-12 sm:pb-24">
     <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
     <header class="mb-10">
       <p class="rail__fix font-mono text-xs text-text-dim mb-4">
@@ -61,10 +61,14 @@ const linkClass =
   </article>
 
   <nav aria-label="Neighbouring entries">
-    <div class="section-heading">
-      <h2>earlier and later</h2>
-    </div>
-    <Neighbours earlier={earlier} later={later} />
+    {(earlier || later) && (
+      <>
+        <div class="section-heading">
+          <h2>earlier and later</h2>
+        </div>
+        <Neighbours earlier={earlier} later={later} />
+      </>
+    )}
     <a href="/blog" class:list={[linkClass, 'mt-8']}>&larr; back to the remarks</a>
   </nav>
 

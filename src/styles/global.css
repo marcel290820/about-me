@@ -411,6 +411,21 @@
     background: var(--color-border-bright);
   }
 
+  /* An entry is read on the sheet. The chart's contours are knocked out
+     behind the whole column, fading back in at its edges, the way a chart
+     masks its own linework behind a printed block. Paper, not a token: the
+     knockout must match the ground it sits on in both zones' terms, and this
+     block only ever prints on the surface. */
+  .entry-sheet {
+    background: linear-gradient(
+      to right,
+      transparent,
+      var(--color-paper) 2.5rem,
+      var(--color-paper) calc(100% - 2.5rem),
+      transparent
+    );
+  }
+
   /* --- Surfaces ---------------------------------------------------------- */
 
   .card {
@@ -2047,11 +2062,27 @@
   --tw-prose-td-borders: var(--color-border-subtle);
 }
 
-/* Wide content scrolls in its own box; the page never scrolls sideways. */
+/* Wide content scrolls in its own box; the page never scrolls sideways.
+
+   Code is the one dark object on the paper, so it is water: abyss ground,
+   cream text, foam for strings the way foam is telemetry, buoy for keywords
+   the way buoy is the one warm mark. Shiki prints its colours through these
+   variables (theme: css-variables in astro.config.mjs). */
 .prose pre {
   border: 1px solid var(--color-border-subtle);
   border-radius: 2px;
   overflow-x: auto;
+  --astro-code-foreground: var(--color-cream);
+  --astro-code-background: var(--color-abyss);
+  --astro-code-token-constant: var(--color-cream);
+  --astro-code-token-string: var(--color-foam);
+  --astro-code-token-comment: var(--color-sounding);
+  --astro-code-token-keyword: var(--color-buoy);
+  --astro-code-token-parameter: var(--color-cream);
+  --astro-code-token-function: var(--color-cream);
+  --astro-code-token-string-expression: var(--color-foam);
+  --astro-code-token-punctuation: #93a3a6;
+  --astro-code-token-link: var(--color-foam);
 }
 
 /* A table only scrolls once it is a block. */
@@ -2071,6 +2102,17 @@
   background: var(--color-accent-soft);
   padding: 0.1rem 0.3rem;
   border-radius: 2px;
+}
+
+/* Inside a block the code is the block. The inline tint and padding would
+   otherwise print a pale band across the dark ground, and unlayering put
+   this rule above the plugin's own reset, so it has to be restated. */
+.prose pre code {
+  background: none;
+  padding: 0;
+  font-size: inherit;
+  font-weight: inherit;
+  color: inherit;
 }
 
 .prose img {

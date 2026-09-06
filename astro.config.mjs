@@ -14,7 +14,7 @@ export default defineConfig({
   integrations: [
     mdx({
       shikiConfig: {
-        theme: 'dracula',
+        theme: 'css-variables',
         wrap: true,
       },
     }),
@@ -24,7 +24,7 @@ export default defineConfig({
   ],
   markdown: {
     shikiConfig: {
-      theme: 'dracula',
+      theme: 'css-variables',
       wrap: true,
     },
   },
