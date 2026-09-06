@@ -724,11 +724,21 @@
     background: var(--color-surface-elevated);
   }
 
+  /* The plan's caption belongs to the plan, so it wraps inside its width
+     rather than running past the neat line the way the sheet number, which
+     has the whole column, can afford to. */
+  .sheet__shot figcaption {
+    white-space: normal;
+    max-width: 100%;
+  }
+
   .sheet__shot img {
     /* Cropped from the top: the head of a page is the part worth printing.
        Above sm the frame takes its height from the prose beside it instead,
        so the two columns start and finish on the same lines. */
-    aspect-ratio: 16 / 10;
+    /* Deep enough that the neat line lands under the head of the page it
+       shows, instead of through the middle of the site's own headline. */
+    aspect-ratio: 4 / 3;
     object-fit: cover;
     object-position: top center;
     /* At rest the shot is printed in the water's own ink: luminosity over the
@@ -744,7 +754,7 @@
   /* The value is aimed at the plate, not stepped down by a fixed amount: a
      white page and a black one start nowhere near each other. */
   .sheet__shot[data-tone='light'] img {
-    filter: brightness(0.72) contrast(1.06);
+    filter: brightness(0.56) contrast(1.08);
   }
 
   .sheet__shot[data-tone='dark'] img {
@@ -766,7 +776,7 @@
     .sheet__shot .portrait-inset__frame {
       display: flex;
       flex: 1;
-      min-height: 7rem;
+      min-height: 10rem;
     }
 
     .sheet__shot img {
