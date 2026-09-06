@@ -1,38 +1,9 @@
 ---
-import { type Node, type Prof } from '@/lib/curves';
+import { type Node, type Prof, fair } from '@/lib/curves';
 
 // --- Sailfish -------------------------------------------------------------
 // The fastest fish there is, and it wears a sail. Body, bill and tail are the
 // silhouette; the sail is the identification.
-
-/** Cubic Hermite through [t, v] points, tangents by finite difference.
-    at() in curves.ts is smoothstep and goes flat at every control point;
-    on this fish that put a staircase up the front of the sail and a bead
-    of a head on the bill, so every profile here is sampled through this. */
-const hermite = (pts: [number, number][], s: number) => {
-  const slope = (i: number) => {
-    const a = pts[Math.max(0, i - 1)];
-    const b = pts[Math.min(pts.length - 1, i + 1)];
-    return (b[1] - a[1]) / (b[0] - a[0]);
-  };
-  for (let i = 1; i < pts.length; i++) {
-    if (s <= pts[i][0]) {
-      const [s0, v0] = pts[i - 1];
-      const [s1, v1] = pts[i];
-      const h = s1 - s0;
-      const k = (s - s0) / h;
-      const k2 = k * k;
-      const k3 = k2 * k;
-      return (
-        (2 * k3 - 3 * k2 + 1) * v0 +
-        (k3 - 2 * k2 + k) * h * slope(i - 1) +
-        (-2 * k3 + 3 * k2) * v1 +
-        (k3 - k2) * h * slope(i)
-      );
-    }
-  }
-  return pts[pts.length - 1][1];
-};
 
 // The body is deepest at the shoulder, right where the sail begins, and runs
 // out to a peduncle no thicker than the bill. The forehead is one straight
@@ -62,14 +33,14 @@ const down: Prof = [
 const STEPS = 60;
 const body: Node[] = Array.from({ length: STEPS + 1 }, (_, i) => {
   const t = i / STEPS;
-  return { t, x: FROM + (TO - FROM) * t, y: Y, u: hermite(up, t), d: hermite(down, t) };
+  return { t, x: FROM + (TO - FROM) * t, y: Y, u: fair(up, t), d: fair(down, t) };
 });
 
 const f = (n: number) => n.toFixed(1);
 const pt = (x: number, y: number) => `${f(x)} ${f(y)}`;
 const xAt = (t: number) => FROM + (TO - FROM) * t;
 const tAt = (x: number) => (x - FROM) / (TO - FROM);
-const backAt = (t: number) => Y - hermite(up, t);
+const backAt = (t: number) => Y - fair(up, t);
 
 // The outline is one open stroke, not shell(): the bill and the lower jaw
 // grow straight out of the head, so the head end must not be walled off,
@@ -113,7 +84,7 @@ const LIFT: [number, number][] = [
 ];
 const sAt = (t: number) => (SAIL.front - t) / (SAIL.front - SAIL.rear);
 const tOf = (s: number) => SAIL.front - (SAIL.front - SAIL.rear) * s;
-const edgeAt = (t: number) => backAt(t) - hermite(LIFT, sAt(t));
+const edgeAt = (t: number) => backAt(t) - fair(LIFT, sAt(t));
 
 /** Ray from the back at t, leaning aft, stopped `short` of the margin. */
 const ray = (t: number, short: number) => {
