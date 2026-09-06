@@ -1,0 +1,18 @@
+title: Website for a student IT consultancy
+domain: web
+description: >-
+  Public pages plus server routes behind three forms: contact, application
+  and a coffee chat. Schema validation, rate limiting, a CAPTCHA check, a
+  honeypot and mail out over SMTP. Lead developer, from the architecture to
+  the image the pipeline deploys.
+stack:
+  - Astro
+  - TypeScript
+  - Tailwind CSS
+  - Zod
+  - Node.js
+  - Nginx
+  - Docker
+  - GitLab CI
+from: 2025
+to: 2026
