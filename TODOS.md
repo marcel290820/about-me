@@ -1,6 +1,6 @@
 # TODOS
 
-Open work, in rough priority. Content placeholders live in `PLACEHOLDERS.md`.
+Open work, in rough priority.
 
 ## Site
 

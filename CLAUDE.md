@@ -121,10 +121,6 @@ Pagefind indexes the built site. CI runs `npx pagefind --site dist` after `astro
 
 GitHub Pages via `.github/workflows/deploy.yml` on push to `master`. CI: `npm ci` → `npm run build` → `npx pagefind --site dist` → deploy. Custom domain `marcel-heidebrecht.de` is set via `public/CNAME`.
 
-## Placeholders
-
-`PLACEHOLDERS.md` tracks unfilled content slots (profile image, OG image, etc.). Check it before assuming a missing asset is a bug.
-
 ## Commit messages
 
 Never add `Co-Authored-By: Claude ...` trailers to commit messages. No Claude attribution in commits at all.
