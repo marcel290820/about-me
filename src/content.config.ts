@@ -37,7 +37,16 @@ const projects = defineCollection({
         // A screenshot of the live site, taken by scripts/shoot-previews.sh.
         // The date is when it was taken: the plate is a survey of the site,
         // not a window on it, and it says so under the frame.
-        preview: z.object({ src: image(), surveyed: z.coerce.date() }).optional(),
+        preview: z
+          .object({
+            src: image(),
+            surveyed: z.coerce.date(),
+            // Whether the site itself is light or dark. One knock-back for
+            // both lands a white page brighter than the plate it belongs to
+            // and a dark one below legibility; each tone gets its own.
+            tone: z.enum(['light', 'dark']),
+          })
+          .optional(),
       })
       .refine((p) => !p.preview || p.url, {
         message: 'a preview needs the url it was surveyed from',
