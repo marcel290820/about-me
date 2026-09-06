@@ -1,0 +1,17 @@
+title: Eleven network labs, from fat-tree to QUIC
+domain: infra
+rank: 20
+description: >-
+  A term of protocol assignments built rather than answered: emulated
+  data-centre topologies with a learning switch on a software-defined network,
+  queueing simulations, message-passing benchmarks across hosts, crafted
+  packet captures, and a QUIC client and server written against the protocol's
+  own stream semantics. Each one written up as a paper.
+stack:
+  - Python
+  - Linux
+  - C
+  - Bash
+  - LaTeX
+from: 2025
+to: 2026

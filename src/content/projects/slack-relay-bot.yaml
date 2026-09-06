@@ -1,6 +1,6 @@
 title: Slack bot that relays and tracks tickets
 domain: web
-rank: 4
+rank: 6
 description: >-
   Forwards messages into private channels and turns them into support
   tickets, with modals, reactions, a home tab and a slash command. Started

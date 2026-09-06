@@ -1,0 +1,16 @@
+title: A CV that compiles, one PDF per application
+domain: infra
+rank: 12
+description: >-
+  Content in YAML, layout in Typst, and a thin file per application that
+  overrides only the fields a role needs. The build deep-merges a variant over
+  the base and compiles it, so tailoring a CV is a few lines rather than a
+  copy that will go stale. Motivation letters run through the same split.
+stack:
+  - Typst
+  - YAML
+  - Bash
+  - Python
+  - Git
+from: 2026
+to: 2026

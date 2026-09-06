@@ -1,0 +1,20 @@
+title: Teaching an agent to spend fewer tokens
+domain: data
+rank: 19
+description: >-
+  A master thesis on reward shaping in GRPO: a cosine length reward and a
+  penalty for never stopping, applied to a tool-calling policy trained against
+  live environments instead of a graded answer string. Experiments are
+  configuration rather than code, and every measurement is pinned by a test,
+  because a silent change to how tokens are counted quietly invalidates runs
+  that cost GPU hours.
+stack:
+  - Python
+  - PyTorch
+  - Hugging Face
+  - NVIDIA
+  - Qwen
+  - Linux
+  - Pytest
+  - uv
+from: 2026
