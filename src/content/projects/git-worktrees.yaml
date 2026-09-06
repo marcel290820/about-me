@@ -1,0 +1,14 @@
+title: Git worktrees, one command per feature
+domain: infra
+rank: 14
+description: >-
+  Branches, creates a worktree beside the repository rather than inside it,
+  and opens each one in its own editor window. Names are sanitised on the way
+  in, the base branch is a flag, and several features can be set up in a
+  single call.
+stack:
+  - Bash
+  - Git
+  - macOS
+from: 2025
+to: 2026

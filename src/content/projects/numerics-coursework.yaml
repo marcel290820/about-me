@@ -1,0 +1,17 @@
+title: Numerics, from a draining reservoir to flow
+domain: data
+rank: 21
+description: >-
+  Engineering computation in Python: a two-dimensional lattice-Boltzmann
+  simulation of flow past an obstacle, a reservoir emptied one time step at a
+  time, and cycling counts regressed against Berlin weather. Graded
+  automatically against hidden assertions, so the numbers had to come out
+  right, not merely look right.
+stack:
+  - Python
+  - NumPy
+  - SciPy
+  - pandas
+  - Jupyter
+from: 2025
+to: 2026
