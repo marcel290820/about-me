@@ -7,7 +7,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run dev` — dev server on `localhost:4321`
 - `npm run build` — production build to `dist/`
 - `npm run preview` — preview the built site locally
-- No test, lint, or typecheck scripts exist. Verify changes with `npm run build`. `.claude/check.sh` wraps it for the stop and commit gates.
+- `npm test` - one `node --test` file for the writer's core (`src/writer/entry.test.ts`)
+- No lint or typecheck scripts exist. `.claude/check.sh` runs `npm test` then `npm run build` and is what the stop and commit gates run.
 
 Node 22+ is required (`engines` in `package.json`). Deploy is automated — never run a manual deploy step.
 
@@ -19,7 +20,7 @@ Astro 6 static site, no JS framework islands (no React/Vue/Svelte). Pages are `.
 - **Content collections** are defined in `src/content.config.ts` with a `glob` loader. The Zod schemas there are the source of truth for frontmatter — when adding a new field, update the schema first.
 - Three collections: `blog` (md/mdx, has `draft` field), `projects`, `interests`. Blog posts with `draft: true` are filtered out of listings.
 - `src/content/` files are read via Astro's content collections API (`getCollection`), not raw filesystem reads.
-- Routes live in `src/pages/`; layouts (`Base`, `Page`, `BlogPost`) in `src/layouts/`; reusable UI in `src/components/`.
+- Routes live in `src/pages/`; layouts (`Base`, `Page`, `BlogPost`) in `src/layouts/`; reusable UI in `src/components/`. The blog reads on paper: the log at `/blog` and every entry sit in the surface slot, and only earlier/later, topics, search and the feed sit under the waterline.
 
 ## Styling
 
@@ -109,6 +110,16 @@ Charts carry two registers and so does this: the notation (variation rose, wreck
 Paper does not move, so none of it animates. It is hidden below 1180px, where the content column takes the whole page and there is no margin to print in.
 
 A mark prints 118px wide, so each of the two ships in the fleet action lands at about 30px. At that size a suit of sail has to be **one bellied shape per mast** with the yards ruled across it: six separate sails read as crates stacked on a raft, and thin arcs hung on spars read as bunting. Size the detail to where it is seen, not to the viewBox.
+
+### The chart table (`src/writer/`)
+
+The blog is written at `/write`, which exists only under `npm run dev`. `integration.ts` injects the route and mounts the `/__writer/` API when the command is `dev`; a build has neither. The desk autosaves to `src/content/blog/<slug>.md` 800ms after typing stops, the preview is the real `/blog/<slug>` page in an iframe, and publish flips `draft: false`, commits that one file as `post: <title>` and pushes. Publish refuses while anything else is staged.
+
+`entry.ts` is pure (parse, serialize, validate, commit message) and has the test; `slug.ts` is split out so the browser script can import it without `js-yaml`. Frontmatter is parsed with `js-yaml` under `JSON_SCHEMA`, so an unquoted date stays the string it was typed as. Hand-edited files are fine; the slug is the filename and locks after the first save.
+
+The API middleware refuses cross-site requests: it rejects a `Sec-Fetch-Site` other than `same-origin` or `none`, rejects an `Origin` that is not the dev server's own host, and requires `application/json` on `PUT` and `POST` so no write is a CORS-simple request. Every save writes a content file, and the dev server answers that with a full reload of every open page. The desk suppresses its own through a `vite:beforeFullReload` listener that throws, so the editor stays still and keeps the caret while the preview iframe reloads.
+
+Drafts build in dev so they can be previewed and are skipped in a production build (`[...slug].astro`). The API runs git in the project root, so never start the dev server with `--host` while the writer is mounted.
 
 ## Search
 
