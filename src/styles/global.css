@@ -717,6 +717,25 @@
     opacity: 1;
   }
 
+  /* The survey of a live site sits knocked back, the way printed detail does
+     next to the plate it belongs to, and comes up to full colour under the
+     pointer or a keyboard focus. Nothing here moves: it is paper. */
+  .sheet__shot img {
+    /* One band for every survey, whatever viewport the site was shot at, so
+       the insets line up down the page. Cropped from the top: the head of a
+       page is the part worth printing. */
+    aspect-ratio: 16 / 10;
+    object-fit: cover;
+    object-position: top center;
+    filter: saturate(0.5) brightness(0.8) contrast(1.05);
+    transition: filter 0.2s ease;
+  }
+
+  .sheet__shot:hover img,
+  .sheet__shot a:focus-visible img {
+    filter: none;
+  }
+
   .sheet__mark:hover .sheet__name,
   .sheet__mark:hover .sheet__deg {
     fill: var(--color-accent);
