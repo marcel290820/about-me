@@ -1,0 +1,16 @@
+title: Who is in the room, read off the WiFi
+domain: web
+description: >-
+  Asks the router which devices are on the WiFi and answers the one
+  question anyone walking over actually has: is somebody up there. I took
+  over an existing app to containerise the deploy, redesign the page and
+  make presence detection stop lying.
+stack:
+  - Python
+  - FastAPI
+  - Jinja2
+  - Pydantic
+  - Docker
+  - Caddy
+from: 2025
+to: 2025
