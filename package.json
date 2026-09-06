@@ -9,8 +9,8 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro",
-    "test": "node --experimental-strip-types --test src/writer/entry.test.ts"
+    "test": "node --experimental-strip-types --test src/lib/sheet.test.ts src/writer/entry.test.ts",
+    "astro": "astro"
   },
   "dependencies": {
     "@astrojs/mdx": "^5.0.4",

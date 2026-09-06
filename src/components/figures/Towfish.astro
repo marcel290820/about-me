@@ -1,0 +1,106 @@
+---
+import { torpedo } from '@/lib/curves';
+
+// Nose first: t=0 is the blunt end of the profile, so run the spine from the
+// nose back to the tail and the fish gets its rounded end forward and the
+// taper aft under the fins. The other way round it was a dart, and a dart
+// with the warp on it swam backwards.
+//
+// Slender: a Klein or EdgeTech fish is eleven or twelve diameters long. At
+// eight it read as an AUV, and the fins keep their span regardless, because
+// real ones overhang the hull by a factor of three.
+//
+// Both ends of the profile are replaced. The first two nodes flatten into a
+// nipple where the smoothstep goes level, so the nose is closed with a cubic
+// whose handles lie along the ogive's own last segment; an elliptical arc
+// leaves its endpoints level and that kink read as a collar at 3x. Aft of
+// node 26 the profile falls to a point over eight units, and a towfish ends
+// in a cone about a seventh of its length long with a flat cap: cut flat it
+// was a sausage, run to the point it was a dart. shell() would close both
+// ends with a wall.
+const y = 40;
+const n = torpedo(136, 14, y, 5);
+const body = n.slice(2, 27);
+const nose = body[0];
+const root = body[body.length - 1];
+const cap = { x: 15, h: 2.4 };
+const top = body.map((p) => `${p.x.toFixed(1)} ${(p.y - p.u).toFixed(1)}`);
+const bot = body.map((p) => `${p.x.toFixed(1)} ${(p.y + p.d).toFixed(1)}`).reverse();
+const run = nose.x - body[1].x;
+const rise = body[1].u - nose.u;
+const reach = 6 / Math.hypot(run, rise);
+const hx = (nose.x + run * reach).toFixed(1);
+const noseCap =
+  `C${hx} ${(nose.y + nose.d - rise * reach).toFixed(1)} ` +
+  `${hx} ${(nose.y - nose.u + rise * reach).toFixed(1)} ${top[0]}`;
+const towHull =
+  `M${top.join('L')}L${cap.x} ${y - cap.h}L${cap.x} ${y + cap.h}L${bot.join('L')}${noseCap}Z`;
+
+// Seams, bail, fin root and the transducer window all read off the spine so
+// they sit on the hull whatever the profile does. The fins root where the
+// cone begins.
+const seam = (p: (typeof n)[number]) =>
+  `M${p.x.toFixed(1)} ${(p.y - p.u).toFixed(1)}V${(p.y + p.d).toFixed(1)}`;
+const fwd = n[6];
+const aft = n[24];
+const bail = n[9];
+const bx = bail.x.toFixed(1);
+const bt = bail.y - bail.u;
+const rx = root.x.toFixed(1);
+const fins =
+  `M${rx} ${(root.y - root.u).toFixed(1)}L24 25H17.5L${cap.x} ${y - cap.h}` +
+  `M${rx} ${(root.y + root.d).toFixed(1)}L24 55H17.5L${cap.x} ${y + cap.h}`;
+const win = n[22];
+const window = `M${fwd.x.toFixed(1)} 42H${win.x.toFixed(1)}V${(win.y + win.d).toFixed(1)}`;
+---
+
+<svg viewBox="4 -28 164 98" fill="none" stroke="currentColor" stroke-width="1">
+  <defs>
+    {/* The warp fades rather than stops: it goes to a ship you cannot see,
+        and a line that ends in open water reads as cut. */}
+    <linearGradient id="warp-fade" gradientUnits="userSpaceOnUse" x1="108" y1="26" x2="164" y2="-26">
+      <stop offset="0" stop-color="currentColor" stop-opacity="0.8" />
+      <stop offset="0.45" stop-color="currentColor" stop-opacity="0.6" />
+      <stop offset="1" stop-color="currentColor" stop-opacity="0" />
+    </linearGradient>
+  </defs>
+  {/* Towed on a warp that runs up and AHEAD to a ship you cannot see. A
+      towed body goes where its cable goes, so the bail sits forward of
+      centre and the warp leaves toward the nose. With the warp off the tail
+      the fish swam backwards for every visitor. A straight lead at the bail
+      is the strain relief; without it the cable bent from the first pixel
+      like string. Shallow at the fish and steepening toward the ship: drag
+      holds the cable down near the fish. */}
+  <path d={`M${(bail.x - 3).toFixed(1)} ${bt.toFixed(1)}v-3.2a3 3 0 0 1 6 0v3.2`} stroke-width="0.7" />
+  <path d={`M${bx} ${(bt - 3.2).toFixed(1)}L108 26`} stroke-width="0.9" />
+  <path d="M108 26C122 19.5 142 3.6 164 -26" stroke="url(#warp-fade)" stroke-width="0.65" />
+  <path d={towHull} />
+  {/* Nose cone and tail cone bolt on to the body. Two seams say sections;
+      a third across the transducer read as a crack. */}
+  <path d={seam(fwd) + seam(aft)} stroke-width="0.5" opacity="0.55" />
+  {/* The transducer window, low on the flank and more than half the fish.
+      It is the part that makes this a sonar and not a torpedo. Its lower
+      edge is the hull's own underside, so it is one line and an end wall;
+      drawn as a box inside the hull its edge and the hull's were one smear
+      at true size. The seam closes the forward end. */}
+  <path d={window} stroke-width="0.5" opacity="0.75" />
+  {/* Cruciform fins on the tail cone, swept, trailing edges raked a touch
+      off the cap so they do not wall it in, left open at the root so they
+      grow out of the hull instead of standing on it. The horizontal pair is
+      edge-on: one hairline down the cone to the cap. */}
+  <path d={fins} stroke-width="0.7" />
+  <path d={`M${rx} ${y}H${cap.x}`} stroke-width="0.5" opacity="0.5" />
+  {/* Port and starboard fans from one point under the array, and the bottom
+      they are imaging. Side-scan flies low and looks sideways: the outer
+      edges run out at fifteen degrees to the frame and the floor is a fifth
+      of the half swath below the fish. Steeper and it was a multibeam. The
+      floor is ruled, blank under the fish where neither beam looks, and
+      broken once more where something threw a shadow. */}
+  <path d="M78 46.3 70 66M78 46.3 6 66M78 46.3 86 66M78 46.3 150 66" stroke-width="0.7" stroke-dasharray="2.5 3.5" opacity="0.85" />
+  <path d="M6 66H70M86 66H122M125.5 66H150" stroke-width="0.5" opacity="0.5" />
+  {/* The light sits on the underside where the beams leave: the thing that
+      pings. Mid-hull it read as a porthole. */}
+  <circle cx="78" cy="44.9" r="1.3" fill="currentColor" class="drift__telemetry" />
+  <circle cx="78" cy="42" r="24" class="drift__ring" />
+</svg>
+<span class="drift__tag">SSS 400 kHz</span>

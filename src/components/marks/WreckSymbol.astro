@@ -1,0 +1,79 @@
+---
+// --- Wreck, masts showing ---------------------------------------------------
+// The chart symbol for the only kind of wreck a chart has to argue about: one
+// sunk upright in water shallower than her masts are tall, so the tops still
+// break the surface. The label's sounding is the depth beside her.
+//
+// A section, not a portrait: the surface at the top, the bottom at the bottom,
+// and the ship between them. Left out, the seabed took the whole reading with
+// it -- nothing in the drawing said which way was down and she floated on a
+// rule. She is dug into the sand by the stern, so the sand is drawn over her
+// and her after end simply stops inside it. Where a hull enters the bottom
+// there is no line anybody can draw.
+//
+// Everything about her is one angle: down by the stern by sixteen degrees, so
+// the deck falls aft, the masts rake aft the same amount and the yards lean
+// with them. Plumb and evenly spaced they were three crosses on a rule.
+---
+
+<svg
+  viewBox="0 0 104 68"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="0.6"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  {/* Chart datum. Two strokes well outboard, not a row of them: a second line
+      the length of the first is just a doubled rule. */}
+  <path d="M10 22h84" stroke-width="0.8" />
+  <path d="M13 25.5h7M84 25.5h7" stroke-width="0.4" opacity="0.5" />
+
+  {/* Hull: a squared transom aft, the sheer falling away from it, a straight
+      raked stem forward, and a straight run of keel between the forefoot and
+      the stern. Both ends have to be different shapes or she is reversible and
+      the trim is doing all the work by itself. The keel is what stops her
+      reading as a clog: a hull curved end to end has no bottom to sit on.
+      Paper-filled, because the danger line runs behind her and a chart symbol
+      knocks out what it sits on. */}
+  <path
+    d="M24.5 47.5 74 34 77.5 30.5 75.5 41Q68 47 58 49.6L37 52.2Q30 52.9 26.5 53Z"
+    stroke-width="0.75"
+    fill="var(--color-paper)"
+  />
+
+  {/* The bottom, over her. Sand as a solid first, then its own top edge:
+      one shape would have to stroke the edges of the page as well. */}
+  <path
+    d="M4 57.8Q12 57 21 52.5Q27 49 34 51.5Q45 54.5 58 56Q76 57.5 90 56.5Q96 56 100 56.8L100 68 4 68Z"
+    fill="var(--color-paper)"
+    stroke="none"
+  />
+  <path
+    d="M4 57.8Q12 57 21 52.5Q27 49 34 51.5Q45 54.5 58 56Q76 57.5 90 56.5Q96 56 100 56.8"
+    stroke-width="0.5"
+  />
+  {/* Mizzen, main, fore. The mizzen is a bare pole a stroke above the water:
+      her spanker gaff is well under. */}
+  <path d="M34 45.43 26.74 20M48 41.43 38.16 7M63 37.14 55.96 12.5" stroke-width="0.7" />
+  {/* Two yards on the main, one on the fore, none on the mizzen. Spaced up
+      near the tops rather than down the mast: a yard low on a long bare pole
+      is a flagpole with a crosstree, and the water is where the rest of her
+      rigging is. */}
+  <path
+    d="M31.89 19.61 50.15 14.39M33.2 12.2 45.12 8.8M49.75 18.06 64.17 13.94"
+    stroke-width="0.55"
+  />
+
+  {/* A danger line is dotted and it follows the danger, so it is a closed loop
+      drawn round this wreck rather than an ellipse centred on nothing. Coarse
+      dots on purpose: fine ones disappear entirely at 118px, and with them the
+      only thing on the mark that says danger. */}
+  <path
+    d="M17 34C18 19 27 6 44 2C63-1 83 8 89 23C94 37 89 53 74 58C57 63 31 61 22 50C17 44 16 40 17 34Z"
+    stroke-width="0.55"
+    stroke-dasharray="0.55 3.6"
+    opacity="0.8"
+  />
+</svg>
+<span class="chart-mark__label">Wk 32m</span>

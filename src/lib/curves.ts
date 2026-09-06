@@ -32,6 +32,38 @@ export function at(prof: Prof, t: number): number {
   return prof[prof.length - 1][1];
 }
 
+/** Cubic Hermite through the control points, tangents by finite difference.
+ *
+ * `at()` is a smoothstep and goes flat at every control point, which rounds a
+ * snout into a bulb, puts a wobble in a straight back and a staircase up the
+ * front of a sail. Use this wherever a profile has to carry slope through its
+ * points; use `at()` where a flat spot at each point is wanted. Past the last
+ * point it holds the last value. */
+export function fair(prof: Prof, t: number): number {
+  const slope = (i: number) => {
+    const a = prof[Math.max(0, i - 1)];
+    const b = prof[Math.min(prof.length - 1, i + 1)];
+    return (b[1] - a[1]) / (b[0] - a[0]);
+  };
+  for (let i = 1; i < prof.length; i++) {
+    if (t <= prof[i][0]) {
+      const [t0, v0] = prof[i - 1];
+      const [t1, v1] = prof[i];
+      const h = t1 - t0;
+      const k = (t - t0) / h;
+      const k2 = k * k;
+      const k3 = k2 * k;
+      return (
+        (2 * k3 - 3 * k2 + 1) * v0 +
+        (k3 - 2 * k2 + k) * h * slope(i - 1) +
+        (-2 * k3 + 3 * k2) * v1 +
+        (k3 - k2) * h * slope(i)
+      );
+    }
+  }
+  return prof[prof.length - 1][1];
+}
+
 export interface SpineOpts {
   from: number;
   to: number;
@@ -97,3 +129,21 @@ export function rays(
     )
     .join('');
 }
+
+// --- Hulls ----------------------------------------------------------------
+// Three built things share one profile family: a pressure hull is a pressure
+// hull whether it is towed, flown or crewed.
+export const torpedo = (from: number, to: number, y: number, r: number) =>
+  spine({
+    from,
+    to,
+    y: () => y,
+    steps: 30,
+    up: [
+      [0, r * 0.34],
+      [0.16, r * 0.9],
+      [0.62, r],
+      [0.9, r * 0.86],
+      [1, r * 0.2],
+    ],
+  });

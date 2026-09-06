@@ -1,0 +1,131 @@
+---
+// --- Three-bearing fix ------------------------------------------------------
+// Three position lines, and the small triangle they leave instead of a point.
+// The triangle has a name and you are somewhere inside it.
+const rad = (d: number) => (d * Math.PI) / 180;
+type P = [number, number];
+const fmt = ([x, y]: P) => `${x.toFixed(2)} ${y.toFixed(2)}`;
+const dir = (b: number): P => [Math.sin(rad(b)), -Math.cos(rad(b))];
+// A bearing error moves its position line sideways and nothing else, so the
+// perpendicular is the only direction the plot can be wrong in.
+const nrm = (b: number): P => [Math.cos(rad(b)), Math.sin(rad(b))];
+
+// Where the ship actually was. Nothing is drawn here; the errors below are
+// measured off it.
+const TRUE: P = [47.4, 46.6];
+
+// Bearing to each object, and how far the line runs toward it and past the
+// ship. The three cut at 60, 55 and 65 degrees, which is what makes this a fix
+// worth plotting: three bearings inside thirty degrees of each other leave a
+// hat you could anchor in. They are also spread on the page and not only on
+// the compass, because two lines at the same steepness read as one crossing
+// whatever their bearings say. The lengths run just far enough past the hat to
+// carry an arrowhead and a stop tick; running them to the edges of the mark
+// left an asterisk with the subject lost in the middle of it.
+const LINES = [
+  { b: 20, out: 48, back: 16 },
+  { b: 140, out: 23, back: 43 },
+  { b: 265, out: 38, back: 46 },
+];
+
+// The hat is opened far wider than a decent plot would leave it. Drawn to
+// scale against position lines this long it is four pixels across and the fix
+// symbol covers it, and a mark about the cocked hat that does not show one has
+// failed at the only job it has.
+//
+// The first two lines are placed by their own errors and cross wherever they
+// cross. The third is placed by how far it MISSES that crossing, which is the
+// only way to size the hat: three errors chosen by eye are very nearly
+// consistent, and three nearly consistent errors put all three lines through
+// one point. The first draft did exactly that and drew a hat under a unit
+// across, and scaling the errors up did not help, because scaling all three
+// scales the agreement with them.
+const E1 = 5;
+const E2 = -7.5;
+const MISS = 18;
+
+const meet = (() => {
+  const [n1, n2] = [nrm(LINES[0].b), nrm(LINES[1].b)];
+  const det = n1[0] * n2[1] - n1[1] * n2[0];
+  return [
+    TRUE[0] + (E1 * n2[1] - E2 * n1[1]) / det,
+    TRUE[1] + (n1[0] * E2 - n2[0] * E1) / det,
+  ] as P;
+})();
+const n3 = nrm(LINES[2].b);
+const E = [E1, E2, (meet[0] - TRUE[0]) * n3[0] + (meet[1] - TRUE[1]) * n3[1] + MISS];
+
+const PLOT = LINES.map(({ b, out, back }, i) => {
+  const d = dir(b);
+  const n = nrm(b);
+  const p: P = [TRUE[0] + n[0] * E[i], TRUE[1] + n[1] * E[i]];
+  const at = (t: number): P => [p[0] + d[0] * t, p[1] + d[1] * t];
+  return { b, d, p, obj: at(out), far: at(-back) };
+});
+
+// The hat is not a shape that gets drawn. It is where the lines already cross,
+// so it is computed from them rather than inked by hand a few units off.
+const cut = (a: (typeof PLOT)[number], b: (typeof PLOT)[number]): P => {
+  const det = a.d[0] * b.d[1] - a.d[1] * b.d[0];
+  const t = ((b.p[0] - a.p[0]) * b.d[1] - (b.p[1] - a.p[1]) * b.d[0]) / det;
+  return [a.p[0] + a.d[0] * t, a.p[1] + a.d[1] * t];
+};
+const HAT: P[] = [cut(PLOT[0], PLOT[1]), cut(PLOT[1], PLOT[2]), cut(PLOT[0], PLOT[2])];
+
+// The fix goes at the incentre, the point furthest from all three sides, so
+// the symbol sits clear of the lines instead of touching whichever side the
+// hat is thinnest against.
+const OPP = HAT.map((_, i) =>
+  Math.hypot(HAT[(i + 1) % 3][0] - HAT[(i + 2) % 3][0], HAT[(i + 1) % 3][1] - HAT[(i + 2) % 3][1]),
+);
+const PERIM = OPP[0] + OPP[1] + OPP[2];
+const FIX: P = [
+  HAT.reduce((s, q, i) => s + q[0] * OPP[i], 0) / PERIM,
+  HAT.reduce((s, q, i) => s + q[1] * OPP[i], 0) / PERIM,
+];
+
+// One arrowhead per line, at the end away from the object. It is what says the
+// line is a bearing rather than a rule, and without it the three of them are a
+// hash.
+const head = (l: (typeof PLOT)[number], len = 3.4, half = 19) => {
+  const barb = (s: number) =>
+    fmt([
+      l.far[0] + Math.sin(rad(l.b + s)) * len,
+      l.far[1] - Math.cos(rad(l.b + s)) * len,
+    ]);
+  return `M${barb(-half)}L${fmt(l.far)}L${barb(half)}`;
+};
+
+// A tick square across the object end of each line. The objects themselves are
+// off the mark, but three lines that simply stop at the edge read as a scratch;
+// a stop mark says each one was drawn from something.
+const foot = (l: (typeof PLOT)[number], len = 1.6) =>
+  `M${fmt([l.obj[0] - l.d[1] * len, l.obj[1] + l.d[0] * len])}L${fmt([
+    l.obj[0] + l.d[1] * len,
+    l.obj[1] - l.d[0] * len,
+  ])}`;
+---
+
+<svg
+  viewBox="0 0 104 66"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="0.6"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  {PLOT.map((l) => (
+    <path d={`M${fmt(l.obj)}L${fmt(l.far)}`} stroke-width="0.6" opacity="0.85" />
+  ))}
+  {PLOT.map((l) => (
+    <path d={head(l)} stroke-width="0.7" />
+  ))}
+  {PLOT.map((l) => (
+    <path d={foot(l)} stroke-width="0.6" opacity="0.9" />
+  ))}
+  {/* A dot in a circle is a fix, here and on the satellite diagram. Plotted
+      inside the hat, which is all anyone can honestly say. */}
+  <circle cx={FIX[0].toFixed(2)} cy={FIX[1].toFixed(2)} r="2.4" stroke-width="0.75" />
+  <circle cx={FIX[0].toFixed(2)} cy={FIX[1].toFixed(2)} r="0.7" fill="currentColor" stroke="none" />
+</svg>
+<span class="chart-mark__label">0412 &middot; 52&deg;31'N 013&deg;24'E</span>

@@ -1,0 +1,278 @@
+---
+// --- Moon jellies ---------------------------------------------------------
+// Two bells, one near and one far, drifting up. The near one is seen from a
+// little above, so the disc opens into an ellipse and the four horseshoe
+// gonads show through it as a cloverleaf: that cloverleaf is the only sure
+// way to tell a moon jelly from every other bell in the water. The far one
+// is nearly edge-on and heeled over, arms swept out in the drift, so the
+// pair are two animals and not one stamp printed twice. Three bells were
+// tried; the third was too small to read and the row was a size chart.
+// Authored at final size rather than drawn once and scaled, so the hairline
+// stays a hairline whichever bell it belongs to.
+
+const n = (v: number) => v.toFixed(1);
+// Deterministic jitter: the build is stable and no two parts match.
+const jit = (i: number) => {
+  const s = Math.sin(i * 12.9898 + 4.1) * 43758.5453;
+  return s - Math.floor(s);
+};
+
+interface Bell {
+  x: number;
+  y: number;
+  r: number;
+  // Height of the eye above the disc, as the sine of the elevation. Every
+  // part of a bell is a point on that disc pushed through this one number,
+  // which is what keeps the rim, the gonads and the arm root from coming
+  // apart.
+  eye: number;
+  // Rise of the dome over the disc, in radii. The near bell is seen mostly
+  // from above and shows little of it; the far one is edge-on and shows
+  // nothing else.
+  dome: number;
+  // +1 or -1: which way the peak of the dome and the trail of the arms go.
+  // A bell symmetrical about its own axis is a lampshade.
+  lean: number;
+  // How far the arms are swept off the vertical, in radians: the drift.
+  sweep: number;
+  seed: number;
+}
+
+// Four oral arms. The near pair are ribbons, two edges wide, and give the
+// bundle its width; the pair behind are one frilled line each and fainter,
+// because four double outlines hanging together are a smudge at the size
+// this is seen, and one ribbon alone is a tail. The longest reaches the
+// bell's width and none pass it; one is short. Equal lengths side by side
+// are a bunch of bananas.
+const ARMS = [
+  { a: -0.32, w: 1, l: 2, near: true, ribbon: true },
+  { a: -0.08, w: 0, l: 1.1, near: false, ribbon: false },
+  { a: 0.12, w: 0, l: 1.35, near: false, ribbon: false },
+  { a: 0.34, w: 0.85, l: 1.6, near: true, ribbon: true },
+];
+
+const JELLY = ({ x, y, r, eye, dome, lean, sweep, seed }: Bell) => {
+  const ry = r * eye;
+  const line = (pts: string[]) => 'M' + pts.join('L');
+  // Disc (u, v) to screen, in radii. v runs toward the eye, so +v is near.
+  // A little perspective on u: the near pair of gonads comes out wider and
+  // the far pair narrower, which puts the four on a plane instead of a grid.
+  // The rim does not use this, and it does not need to: its ends sit at
+  // v = 0, where the two agree.
+  const P = (u: number, v: number) => `${n(x + u * r * (1 + 0.18 * v))} ${n(y + v * ry)}`;
+
+  // Eight shallow lappets round the margin, a rhopalium in each notch, five
+  // of the notches on the near half. The lappets bow out unevenly between
+  // them, which is what stops the rim reading as a ruled wave.
+  const lobe = (a: number) =>
+    0.13 * Math.pow(Math.abs(Math.sin(4 * a)), 0.6) * (0.6 + 0.8 * jit(seed + 20 + Math.floor((a * 4) / Math.PI)));
+  // Angle a runs 0..PI from the left end to the right along the near rim.
+  // A true ellipse, so the ends are round: pointed ends make a lens, and a
+  // lens with a mark in it is an eye. The deep point sits off centre, so
+  // the two halves do not mirror.
+  const rim = (a: number) => ({
+    x: x - r * Math.cos(a),
+    y: y + ry * Math.sin(a) * (1 + lobe(a)) * (1 + 0.12 * Math.cos(a) * lean),
+  });
+  const root = { x, y: y + r * 0.22 };
+  // Edge-on there is no disc to see, only the profile.
+  const edgeOn = eye < 0.2;
+
+  const arm = (k: number) => {
+    const { a, w, l, near, ribbon } = ARMS[k];
+    const a0 = a + sweep + 0.06 * (jit(seed + 80 + k) - 0.5);
+    const len = r * l * (0.94 + 0.12 * jit(seed + 90 + k));
+    const waves = 2 + 1.5 * jit(seed + 70 + k);
+    const phase = 6.28 * jit(seed + 60 + k);
+    // Heading down the arm: a slow lean into the drift, each arm's own.
+    const curl = 0.2 * lean + 0.3 * (jit(seed + 100 + k) - 0.5);
+    const heading = (t: number) => a0 + curl * t;
+    // Walk the centre line from the root, so a turn moves everything below it.
+    const N = 48;
+    const cl = [root];
+    for (let i = 1; i <= N; i++) {
+      const hd = heading((i - 0.5) / N);
+      cl.push({ x: cl[i - 1].x + (len / N) * Math.sin(hd), y: cl[i - 1].y + (len / N) * Math.cos(hd) });
+    }
+    const at = (t: number) => {
+      const f = Math.min(N - 1e-6, Math.max(0, t * N));
+      const i = Math.floor(f);
+      const q = f - i;
+      const hd = heading(t);
+      const nx = Math.cos(hd);
+      const ny = -Math.sin(hd);
+      // The wave is on the centre line and both edges follow it, so the eye
+      // groups them as one band. Waved separately the two edges of a ribbon
+      // are two strands, and four ribbons are eight tentacles. Held still at
+      // the root, or it wanders off the manubrium.
+      const s = r * 0.035 * Math.sin(6.283 * waves * t + phase) * Math.min(1, t / 0.2);
+      return {
+        cx: cl[i].x + (cl[i + 1].x - cl[i].x) * q + nx * s,
+        cy: cl[i].y + (cl[i + 1].y - cl[i].y) * q + ny * s,
+        nx,
+        ny,
+      };
+    };
+    // Broad almost from the root, tapering the whole way down to a soft
+    // point. The scallops carry on to the end, so the tip frays rather than
+    // sharpening into a blade.
+    const width = (t: number) => r * 0.36 * w * Math.min(1, t / 0.15) * Math.pow(1 - t, 0.55);
+    const wd = ribbon ? width : () => 0;
+    const ruffle = (t: number) => r * 0.04 * (0.5 + 0.5 * (1 - t));
+    // One quadratic per scallop, every scallop bellying outward: that is
+    // lace. Bellied alternately it is a sine, and a sine is seaweed. The
+    // period is set in bell radii so it scales with the animal, and the
+    // knots and depths are jittered so no two scallops match.
+    const halves = Math.round((len / r) * 7);
+    const edge = (side: number, amp: number, s: number) => {
+      const knots = Array.from({ length: halves + 1 }, (_, i) =>
+        i === 0 || i === halves ? i / halves : (i + 0.6 * (jit(s + i) - 0.5)) / halves,
+      );
+      let d = `M${n(root.x)} ${n(root.y)}`;
+      for (let i = 0; i < halves; i++) {
+        const t1 = knots[i + 1];
+        const tm = (knots[i] + t1) / 2;
+        const p1 = at(t1);
+        const m = at(tm);
+        const off = (side * wd(t1)) / 2;
+        const bulge = (side * wd(tm)) / 2 + side * 2 * amp * ruffle(tm) * (0.4 + jit(s + 40 + i));
+        d += `Q${n(m.cx + m.nx * bulge)} ${n(m.cy + m.ny * bulge)} ${n(p1.cx + p1.nx * off)} ${n(p1.cy + p1.ny * off)}`;
+      }
+      return d;
+    };
+    // The frill is on the free edge, away from the body's axis. On the
+    // ribbon the folded edge is frilled too, less, since one smooth edge
+    // makes a flag.
+    const outer = a < 0 ? -1 : 1;
+    const d = edge(outer, 1, seed + 200 + k * 7) + (ribbon ? edge(-outer, 0.5, seed + 300 + k * 7) : '');
+    return { d, near };
+  };
+
+  return {
+    // The dome is a low arc over the far rim. Higher than set here and the
+    // bell is a bowler hat, lower and it is a plate. It leans to one side,
+    // since a live bell was not turned on a lathe. Seen from above its ends
+    // are the round ends of the rim; in profile it is a flat arc that meets
+    // the underside at an angle, the way a saucer sits on a table. A
+    // profile with round ends is a leaf.
+    dome: line(
+      Array.from({ length: 41 }, (_, i) => {
+        const u = -1 + i / 20;
+        const h = Math.pow(Math.max(0, 1 - u * u), edgeOn ? 1 : 0.55);
+        return `${n(x + u * r)} ${n(y - (ry + r * dome) * h * (1 + 0.15 * u * lean))}`;
+      }),
+    ),
+    near: line(
+      Array.from({ length: 49 }, (_, i) => {
+        const p = rim((Math.PI * i) / 48);
+        return `${n(p.x)} ${n(p.y)}`;
+      }),
+    ),
+    // The bell's thickness, a second shorter arc inside the near edge that
+    // runs into the rim at both ends and is not centred on it. Without it
+    // the bell is a flat ring. Edge-on there is no underside to see.
+    under: edgeOn
+      ? ''
+      : line(
+          Array.from({ length: 25 }, (_, i) => {
+            const a = Math.PI * (0.2 + (0.56 * i) / 24) + 0.08 * lean;
+            const p = rim(a);
+            return `${n(p.x)} ${n(p.y - r * 0.07 * Math.sin(a))}`;
+          }),
+        ),
+    // Four horseshoes on the disc, one ahead, one astern, one each side,
+    // each open toward the mouth, so from a distance they fuse into one
+    // rosette. Put at the diagonals instead they stack in pairs, and two
+    // stacked C shapes print as a 3. Drawn on the disc and projected, so
+    // they foreshorten with the rim instead of sitting on the bell like
+    // badges, and edge-on they flatten to the dashes a sounder would
+    // register. The cross is turned a little off square and no two are one
+    // size.
+    gonads: [0, 1, 2, 3]
+      .map((k) => {
+        const a0 = 0.15 + (k * Math.PI) / 2;
+        const size = 0.85 + 0.3 * jit(seed + k);
+        const ra = 0.15 * size;
+        const ta = 0.19 * size;
+        const cu = Math.cos(a0) * 0.36;
+        const cv = Math.sin(a0) * 0.36;
+        const open = 0.7;
+        return line(
+          Array.from({ length: 15 }, (_, i) => {
+            const t = Math.PI + open + (i / 14) * (2 * Math.PI - 2 * open);
+            const lx = ra * Math.cos(t);
+            const ly = ta * Math.sin(t);
+            return P(cu + Math.cos(a0) * lx - Math.sin(a0) * ly, cv + Math.sin(a0) * lx + Math.cos(a0) * ly);
+          }),
+        );
+      })
+      .join(''),
+    // Radial canals, faint, from outside the gonads to the margin: the
+    // second thing a notebook records of this animal, and the one that
+    // says Aurelia rather than jellyfish. Four, between the gonads, each
+    // forking once on its way out. Eight straight spokes made the bell a
+    // dial. Only from above; edge-on they collapse into the rim.
+    canals: edgeOn
+      ? ''
+      : [0, 1, 2, 3]
+          .map((k) => {
+            const a = 0.15 + Math.PI / 4 + (k * Math.PI) / 2 + 0.1 * (jit(seed + 110 + k) - 0.5);
+            const fork = 0.7 + 0.06 * jit(seed + 115 + k);
+            const to = 0.86 + 0.08 * jit(seed + 120 + k);
+            const at = (rad: number, da: number) => P(Math.cos(a + da) * rad, Math.sin(a + da) * rad);
+            return `M${at(0.56, 0)}L${at(fork, 0)}L${at(to, 0.16)}M${at(fork, 0)}L${at(to, -0.13)}`;
+          })
+          .join(''),
+    // The manubrium, seen through the bell: a short throat from the centre
+    // of the disc down to the root where the four arms hang. Without it the
+    // arms are tied to the rim.
+    manubrium:
+      `M${P(-0.1, 0.04)}L${n(root.x - r * 0.04)} ${n(root.y)}` +
+      `M${P(0.11, 0.02)}L${n(root.x + r * 0.04)} ${n(root.y)}`,
+    // Marginal tentacles: hundreds, most no longer than a tenth of the
+    // radius, a few longer, none across a notch, thinning to nothing at the
+    // ends where the rim turns away. Ticks at one pitch and one length are
+    // a comb.
+    fringe: Array.from({ length: Math.round(r * 1.3) }, (_, i) => {
+      const a = (Math.PI * (i + 0.5 + 0.7 * (jit(seed + 130 + i) - 0.5))) / Math.round(r * 1.3);
+      const f = ((a * 4) / Math.PI) % 1;
+      if (f < 0.1 || f > 0.9) return '';
+      const p = rim(a);
+      const fade = Math.pow(Math.sin(a), 0.8);
+      const long = jit(seed + 140 + i) > 0.86 ? 1.9 : 1;
+      const dx = r * 0.06 * (jit(seed + 10 + i) - 0.5);
+      const dy = r * (0.04 + 0.1 * jit(seed + 50 + i)) * fade * long;
+      if (dy < r * 0.025) return '';
+      return `M${n(p.x)} ${n(p.y)}l${n(dx)} ${n(dy)}`;
+    }).join(''),
+    arms: [0, 1, 2, 3].map(arm),
+  };
+};
+
+// The far bell is printed lighter as well as smaller, so the distance is
+// drawn and not only scaled.
+const JELLIES = [
+  { x: 48, y: 38, r: 26, tilt: 0, fade: 1, j: JELLY({ x: 48, y: 38, r: 26, eye: 0.36, dome: 0.14, lean: 1, sweep: 0.05, seed: 3 }) },
+  { x: 26, y: 122, r: 14, tilt: -16, fade: 0.85, j: JELLY({ x: 26, y: 122, r: 14, eye: 0.1, dome: 0.26, lean: -1, sweep: -0.5, seed: 11 }) },
+];
+---
+
+<svg viewBox="0 0 80 158" fill="none" stroke="currentColor" stroke-width="0.8">
+  {JELLIES.map(({ x, y, tilt, fade, j }) => (
+    <g opacity={fade}>
+      {/* Far arms first, so the near pair hangs over them. */}
+      {j.arms.filter((a) => !a.near).map(({ d }) => <path d={d} stroke-width="0.45" opacity="0.4" />)}
+      <g transform={`rotate(${tilt} ${x} ${y})`}>
+        <path d={j.canals} stroke-width="0.3" opacity="0.35" />
+        {/* Under the rim's weight, so they sit under the bell and not on it. */}
+        <path d={j.gonads} stroke-width="0.5" opacity="0.9" />
+        <path d={j.manubrium} stroke-width="0.45" opacity="0.6" />
+        <path d={j.dome} />
+        <path d={j.near} />
+        <path d={j.under} stroke-width="0.45" opacity="0.5" />
+        <path d={j.fringe} stroke-width="0.35" opacity="0.5" />
+      </g>
+      {j.arms.filter((a) => a.near).map(({ d }) => <path d={d} stroke-width="0.45" opacity="0.75" />)}
+    </g>
+  ))}
+</svg>

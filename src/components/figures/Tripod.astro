@@ -1,0 +1,185 @@
+---
+import { spine, type Node } from '@/lib/curves';
+
+// --- Tripod fish ----------------------------------------------------------
+// Bathypterois grallator. It stands on the sediment on three stiffened fin
+// rays, nose into the current, and waits. Nearly blind; the two enormously
+// long pectoral rays reaching up and forward past the snout are how it finds
+// anything at all, and they are the tallest thing here for that reason.
+//
+// The profile is the first thing to protect. Drawn as deep as a bream it came
+// out a lamb on stilts; drawn as a tube of even girth it came out an airliner
+// on its gear, which is the failure this shape is tuned against. So the back
+// runs nearly flat while the belly bellies, the peduncle closes to a fifth of
+// the body's depth, the nape dips to part head from trunk, and the spine
+// arches rather than rules, because a straight axis is a fuselage. The snout
+// is short and blunt -- a body tapered at both ends loses its front -- but
+// bevelled over the last two nodes so it is a nose and not a chisel cut.
+const body = spine({
+  from: 54,
+  to: 178,
+  y: (t) => 66 - 12 * t - 2 * Math.sin(Math.PI * t),
+  steps: 40,
+  up: [
+    [0, 1.2],
+    [0.06, 2.6],
+    [0.2, 4.6],
+    [0.45, 5.4],
+    [0.62, 5.5],
+    [0.74, 5.3],
+    [0.84, 7.2],
+    [0.93, 6.4],
+    [0.975, 4.7],
+    [1, 1.8],
+  ],
+  down: [
+    [0, 1.2],
+    [0.06, 2.8],
+    [0.18, 5.4],
+    [0.42, 8.2],
+    [0.56, 8.4],
+    [0.72, 7.6],
+    [0.84, 6.9],
+    [0.92, 5.8],
+    [0.975, 4.0],
+    [1, 1.4],
+  ],
+});
+
+type Pt = [number, number];
+const f = (x: number, y: number) => `${x.toFixed(1)} ${y.toFixed(1)}`;
+const top = (p: Node) => f(p.x, p.y - p.u);
+const bot = (p: Node) => f(p.x, p.y + p.d);
+const lerp = (a: Pt, b: Pt, t: number): Pt => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+
+// shell() would close the tail end too. Left open, so the caudal fin owns the
+// join; the one segment from the last top node to the last bottom node is the
+// blunt snout.
+const hull = (n: Node[]) => 'M' + [...n.map(top), ...n.map(bot).reverse()].join('L');
+
+// A fin ray under load: near-straight, bowed off its chord by `bow` (positive
+// leans it further the way it already rakes), and split at the middle so the
+// lower half can be drawn finer. Rays taper; a stilt at one weight top to
+// bottom is a tent pole.
+function ray(a: Pt, b: Pt, bow: number): [string, string] {
+  const dx = b[0] - a[0];
+  const dy = b[1] - a[1];
+  const len = Math.hypot(dx, dy);
+  const c: Pt = [(a[0] + b[0]) / 2 + (2 * bow * dy) / len, (a[1] + b[1]) / 2 - (2 * bow * dx) / len];
+  const m1 = lerp(a, c, 0.5);
+  const m2 = lerp(c, b, 0.5);
+  const m = lerp(m1, m2, 0.5);
+  return [`M${f(...a)}Q${f(...m1)} ${f(...m)}`, `M${f(...m)}Q${f(...m2)} ${f(...b)}`];
+}
+
+// A point a fraction of the way down a bowed ray, off the same numbers the ray
+// is drawn from. The caudal lobe and the pelvic fin both close onto a leg, and
+// eyeballing where the leg had got to left them floating beside it.
+function onRay(a: Pt, b: Pt, bow: number, s: number): Pt {
+  const dx = b[0] - a[0];
+  const dy = b[1] - a[1];
+  const len = Math.hypot(dx, dy);
+  const k = bow * 4 * s * (1 - s);
+  return [a[0] + dx * s + (k * dy) / len, a[1] + dy * s - (k * dx) / len];
+}
+
+// Every fin leaves from a node of the one spine, so nothing floats off the
+// body when the profile is retuned. Steps is 40, so t must land on a fortieth.
+const node = (t: number) => body[Math.round(t * 40)];
+const ped = node(0);
+const pelvicFar = node(0.425);
+const pelvicNear = node(0.475);
+const pelvicBase = node(0.4);
+const dorsalAft = node(0.45);
+const dorsalFore = node(0.675);
+const pec = node(0.8);
+const pecBase = node(0.72);
+const gillNode = node(0.85);
+const eye = node(0.925);
+const snout = node(1);
+
+// The stance. Height off the bottom is two thirds of a body: at half it
+// crouched, at one and a half it was a spider. The footprint is what keeps it
+// off an easel -- the pelvic pair land sixteen apart and the tail lands a
+// hundred back, so no two gaps match and no two rays share a rake or a bow.
+// The far pelvic stands nearer upright and is drawn a shade finer and dimmer,
+// which is the only way a side view says the third point is out of the page.
+// Only a shade: taken down to half weight it disappeared at the opacity this
+// is actually seen at, and a tripod fish on two legs is nothing.
+const aftFoot: Pt = [22, 151.8];
+const nearFoot: Pt = [138, 151.6];
+const aftTop: Pt = [ped.x, ped.y + ped.d];
+const nearTop: Pt = [pelvicNear.x, pelvicNear.y + pelvicNear.d];
+const stiltAft = ray(aftTop, aftFoot, -2.2);
+const stiltFar = ray([pelvicFar.x, pelvicFar.y + pelvicFar.d - 0.3], [122, 151.5], 0.7);
+const stiltNear = ray(nearTop, nearFoot, 1.6);
+
+// The tail, and the one fact a viewer has to read: the aft leg is the fish's
+// own caudal ray and not a prop under it. One stroke does all of it -- out
+// along the upper lobe, back to a notch just aft of the peduncle, then down
+// the lower lobe until it closes on the leg. Left as a lone hair off the tail
+// top, three separate readers took the back end for no tail at all.
+const notch: Pt = [49, 66];
+const lobeFoot = onRay(aftTop, aftFoot, -2.2, 0.28);
+const caudal =
+  `M${top(ped)}C${f(46, 55)} ${f(36, 46)} ${f(26, 41)}` +
+  `C${f(36, 53)} ${f(45, 60)} ${f(...notch)}` +
+  `C${f(43, 72)} ${f(40, 80)} ${f(...lobeFoot)}`;
+
+// Dorsal: long-based and low, short leading edge raked aft, trailing edge
+// falling away concave over most of the trunk. Short and tall it was a shark
+// fin stuck on the back. Base left open; the hull draws the back it sits on.
+const dorsalFin =
+  `M${top(dorsalFore)}L${f(dorsalFore.x - 5, dorsalFore.y - dorsalFore.u - 4.2)}` +
+  `Q${f(dorsalFore.x - 14.7, dorsalFore.y - dorsalFore.u - 2.3)} ${top(dorsalAft)}`;
+
+// The fins the long rays belong to. Without them the legs are sticks propped
+// under a plank and the pectorals are antennae glued to the back: each is one
+// short stroke from the flank closing onto its own ray. No anal fin -- at this
+// size it was a pouch under the belly and read as a fourth leg.
+const pelvicFin = `M${bot(pelvicBase)}Q${f(110.5, 71.5)} ${f(...onRay(nearTop, nearFoot, 1.6, 0.12))}`;
+const pectoralFin = `M${bot(pecBase)}Q${f(146.5, 61)} ${f(pec.x - 6, pec.y + 2.6)}`;
+
+// The pectoral rays. They leave the flank just behind the gill, rise, then
+// reach forward past the snout and fall a little at the tip, the way a
+// filament that long does. Rising near-vertical they were eyestalks; drawn to
+// one length and one arc they were antlers. So one climbs high and reaches far
+// past the nose and the other nests inside it and stops short -- and the outer
+// one takes the AFT base, which is what keeps them from crossing. Run out from
+// the other order they overtake and the lens where they cross is a lasso.
+const rayLong =
+  `M${f(pec.x - 6, pec.y + 2.6)}C${f(153, 40)} ${f(168, 21)} ${f(192, 17.5)}` +
+  `C${f(203, 16.2)} ${f(210.5, 20)} ${f(211.5, 26.5)}`;
+const raySteep =
+  `M${f(pec.x + 1, pec.y - 0.2)}C${f(157.5, 42)} ${f(163, 33)} ${f(172, 30)}` +
+  `C${f(177.5, 28.4)} ${f(182.5, 29)} ${f(185.5, 32)}`;
+
+// Jaw: a firm line back from the snout, because the mouth is big for the head
+// and a faint curve there read as nothing at all. The opercle is a short tick
+// and the eye is small, low and dim -- a bright dot behind a full opercle arc
+// built a cartoon face, and this fish is nearly blind anyway.
+const gill = `M${f(gillNode.x, gillNode.y - gillNode.u + 1.6)}q-2.2 3.5 -0.3 6.5`;
+const jaw = `M${f(snout.x - 1, snout.y + 1.2)}L${f(eye.x - 7.2, eye.y + 4.9)}`;
+
+// The bottom. One silt line, not a ruled rule: it runs short of both frame
+// edges and dips where each ray is punched into it, by three different
+// amounts. Three heaped mounds, one per foot, were a repeated motif; a
+// full-bleed straight hairline out-drew the animal.
+const silt = 'M10 150.6H17Q22 152.6 27 150.6H117Q122 152 127 150.7H133Q138 152.4 143 150.5H210';
+---
+
+<svg viewBox="0 0 220 158" fill="none" stroke="currentColor" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round">
+  <path d={silt} stroke-width="0.7" opacity="0.32" />
+  <path d={stiltFar[0]} stroke-width="0.9" opacity="0.8" />
+  <path d={stiltFar[1]} stroke-width="0.68" opacity="0.8" />
+  <path d={stiltAft[0] + stiltNear[0]} stroke-width="1" />
+  <path d={stiltAft[1] + stiltNear[1]} stroke-width="0.78" />
+  <path d={hull(body)} />
+  <path d={caudal} stroke-width="0.85" />
+  <path d={dorsalFin} stroke-width="0.75" />
+  <path d={pelvicFin + pectoralFin} stroke-width="0.6" opacity="0.7" />
+  <path d={rayLong + raySteep} stroke-width="0.85" />
+  <path d={jaw} stroke-width="0.75" />
+  <path d={gill} stroke-width="0.55" opacity="0.45" />
+  <circle cx={eye.x - 0.5} cy={eye.y - 1.6} r="0.75" fill="currentColor" opacity="0.6" />
+</svg>

@@ -1,0 +1,17 @@
+title: Slack bot that relays and tracks tickets
+domain: web
+rank: 4
+description: >-
+  Forwards messages into private channels and turns them into support
+  tickets, with modals, reactions, a home tab and a slash command. Started
+  by others in 2019; every commit since late 2024 is mine, including the
+  third rewrite and the deploy it rides on.
+stack:
+  - Python
+  - Flask
+  - Slack API
+  - SQLite
+  - Docker Swarm
+  - GitLab CI
+from: 2024
+to: 2026
