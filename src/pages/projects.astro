@@ -1,37 +1,25 @@
 ---
 import Page from '@/layouts/Page.astro';
-import ProjectCard from '@/components/ProjectCard.astro';
+import Sheet from '@/components/Sheet.astro';
 import { getCollection } from 'astro:content';
+import { newestFirst } from '@/lib/projects';
 
-const allProjects = (await getCollection('projects'))
-  .sort((a, b) => b.data.sortOrder - a.data.sortOrder);
-
-const allTags = [...new Set(allProjects.flatMap((p) => p.data.tags))].sort();
+const projects = (await getCollection('projects')).sort(newestFirst);
 ---
 
-<Page title="Projects" description="Projects by Marcel Heidebrecht">
-  <h1 class="display-name mb-4">Projects</h1>
-  <p class="font-mono text-xs uppercase tracking-[0.16em] text-text-dim mb-10">things i've built &amp; contributed to</p>
+<Page title="Projects" description="Projects by Marcel Heidebrecht" surface>
+  <div slot="surface" class="pt-8 pb-6 sm:pt-12 sm:pb-10">
+    <h1 class="display-name mb-4">Projects</h1>
+    <p class="font-mono text-xs uppercase tracking-[0.16em] text-text-dim mb-8">catalogue of sheets</p>
+    <p class="text-[0.9375rem] text-text-muted max-w-prose">
+      What I've put to sea so far, and what it was built from.
+    </p>
+  </div>
 
-  {allTags.length > 0 && (
-    <div class="mb-8">
-      <div class="flex flex-wrap gap-2">
-        {allTags.map((tag) => (
-          <span class="tag">{tag}</span>
-        ))}
-      </div>
-    </div>
-  )}
-
-  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-    {allProjects.map((project) => (
-      <ProjectCard
-        title={project.data.title}
-        description={project.data.description}
-        tags={project.data.tags}
-        url={project.data.url}
-        repo={project.data.repo}
-      />
-    ))}
+  {/* One column, full width, newest first. No domain sections and no rules
+      between sheets: the frame is the separator, and a grid of plates would
+      be a grid of cards. */}
+  <div class="space-y-16 sm:space-y-24">
+    {projects.map((p, i) => <Sheet project={p.data} index={i + 1} total={projects.length} />)}
   </div>
 </Page>
