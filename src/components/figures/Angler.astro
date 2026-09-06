@@ -1,0 +1,265 @@
+---
+import { spine, type Node } from '@/lib/curves';
+
+// --- Anglerfish (humpback, Melanocetus) -------------------------------------
+// A ball that is mostly head, with a wedge of mouth cut into the front of it.
+// The ball is the whole gestalt and it is the thing that keeps going wrong: put
+// the greatest depth at the mouth and the fish reads as a ray's wing, taper the
+// tail to a point and it reads as a flatfish, run the back as two straightish
+// slopes to a peak and it reads as a tent. So the deepest part of the body sits
+// behind the eye, the tail comes off a short narrow peduncle, and both contours
+// are circular arcs rather than the S-curve a pair of distant knots would give.
+//
+// The gape is open at the FRONT, which is the only way it reads as a mouth: the
+// back stops at the snout, the belly runs on under the jaw and stops at the jaw
+// tip, and the two of them never join. Between those two ends the outline dives
+// inward -- roof of the mouth back and down to the corner, tooth edge back out
+// to the jaw tip -- so the corner sits well inside the silhouette with the full
+// depth of the mandible below it. Drawn the other way round, with the jaw hung
+// under a closed body, it reads as a canoe slung beneath a second animal.
+const STEPS = 60;
+/** Where the belly hands over to the hand-drawn underside of the jaw. */
+const CHIN = 36; // node index, x = 114.8
+/** t of the crest of the back, and of the deepest point of the belly. They are
+    deliberately not the same: mirrored contours read as manufactured. */
+const CREST = 0.45;
+const GUT = 0.52;
+
+/**
+ * One flank of an egg: 0 at the crest, 1 at the end. Shaped like a circular arc
+ * rather than the smoothstep `at()` draws between two distant knots, which is
+ * flat at both ends and straight through the middle -- the tent. This is the
+ * other way round: flat over the crest, steep at the end. `a` below 1 stops the
+ * end going vertical.
+ */
+const egg = (w: number, a: number) =>
+  (1 - Math.sqrt(1 - (a * w) ** 2)) / (1 - Math.sqrt(1 - a * a));
+
+/** Sample a profile densely. Close knots keep `at()`'s flattening invisible. */
+const sample = (f: (t: number) => number) =>
+  Array.from({ length: 41 }, (_, i) => [i / 40, f(i / 40)] as [number, number]);
+
+// The head rides above the tail. That tilt is what makes the gape read as
+// upturned without having to bend either jaw.
+const mid = (t: number) => 66 - 20 * t ** 1.5;
+const nape = (t: number) => 2.2 * Math.exp(-(((t - 0.63) / 0.09) ** 2));
+const top = (t: number) =>
+  nape(t) +
+  (t <= CREST
+    ? 12 + 44 * egg((CREST - t) / CREST, 0.93)
+    : 12 + 24 * egg((t - CREST) / (1 - CREST), 0.93));
+const bot = (t: number) =>
+  t <= GUT
+    ? 117 - 41 * egg((GUT - t) / GUT, 0.88)
+    : 117 - 63 * egg((t - GUT) / (1 - GUT), 0.88);
+
+const body = spine({
+  from: 50,
+  to: 158,
+  steps: STEPS,
+  y: mid,
+  up: sample((t) => mid(t) - top(t)),
+  down: sample((t) => bot(t) - mid(t)),
+});
+
+interface P {
+  x: number;
+  y: number;
+}
+const pt = (p: P) => `${p.x.toFixed(1)} ${p.y.toFixed(1)}`;
+const xy = (x: number, y: number) => `${x.toFixed(1)} ${y.toFixed(1)}`;
+
+const chinNode = body[CHIN];
+/** Corner of the mouth. Far back, and a full jaw's depth inside the outline. */
+const H: P = { x: 104, y: 92 };
+/** Tip of the upper jaw, which is also the snout. */
+const S: P = { x: 158, y: 47 };
+/** Tip of the lower jaw. It out-reaches the upper, as this genus does. */
+const T: P = { x: 166, y: 96 };
+/** Roof of the mouth, bowed away from the cavity so the gape is a scoop. */
+const ROOF: P = { x: 128, y: 66 };
+/** Tooth-bearing edge of the dentary, bowed the other way for the same reason. */
+const FLOOR: P = { x: 135, y: 98 };
+
+const outline =
+  // Open at the peduncle: the caudal emerges there, so no closing wall.
+  `M${body.map((p) => xy(p.x, p.y - p.u)).join('L')}` +
+  // The snout is a blunt knob. A body tapered at both ends has no front, and
+  // on this fish the front is the whole point.
+  `C${xy(163, top(1))} ${xy(163, S.y)} ${pt(S)}` +
+  `Q${pt(ROOF)} ${pt(H)}` +
+  `Q${pt(FLOOR)} ${pt(T)}` +
+  // Underside of the jaw, rising forward out of the belly. The lowest point on
+  // the fish is the gut, behind the mouth, not the chin: put it at the chin and
+  // the whole mass sits in front of the eye.
+  `C${xy(170, 99)} ${xy(151, 109)} ${xy(135, 113.5)}` +
+  `C${xy(128, 115.3)} ${xy(120, 115.9)} ${xy(chinNode.x, chinNode.y + chinNode.d)}` +
+  `L${body
+    .slice(0, CHIN + 1)
+    .map((p) => xy(p.x, p.y + p.d))
+    .reverse()
+    .join('L')}`;
+
+/** Point and unit tangent on a quadratic at s. */
+function quad(p0: P, c: P, p1: P, s: number) {
+  const u = 1 - s;
+  const tx = 2 * (u * (c.x - p0.x) + s * (p1.x - c.x));
+  const ty = 2 * (u * (c.y - p0.y) + s * (p1.y - c.y));
+  const L = Math.hypot(tx, ty);
+  return {
+    x: u * u * p0.x + 2 * u * s * c.x + s * s * p1.x,
+    y: u * u * p0.y + 2 * u * s * c.y + s * s * p1.y,
+    tx: tx / L,
+    ty: ty / L,
+  };
+}
+
+/**
+ * Fangs stood on a jaw drawn p0 -> c -> p1, sampled off that same quadratic so
+ * they sit on the edge instead of near it. Each is [s along the jaw, length,
+ * curl]. The control point sits high up the shaft, so the shaft stays straight
+ * and only the tip hooks: a needle bent along its whole length is an eyelash.
+ * Both jaws are drawn from the corner outward, so -tangent is always "back
+ * toward the throat" and curl bends the tip that way. `side` picks the face the
+ * mouth cavity is on.
+ */
+function fangs(
+  p0: P,
+  c: P,
+  p1: P,
+  side: 1 | -1,
+  list: [number, number, number][],
+) {
+  return list
+    .map(([s, len, curl]) => {
+      const q = quad(p0, c, p1, s);
+      const nx = side * q.ty;
+      const ny = -side * q.tx;
+      return (
+        `M${xy(q.x, q.y)}` +
+        `Q${xy(q.x + nx * len * 0.85, q.y + ny * len * 0.85)}` +
+        ` ${xy(
+          q.x + nx * len - q.tx * len * curl,
+          q.y + ny * len - q.ty * len * curl,
+        )}`
+      );
+    })
+    .join('');
+}
+
+// Better than one to two and a half between shortest and longest, with the
+// spacing and the lean uneven alongside: a graded row at even pitch is a comb,
+// and a row of one length is a fringe. The long ones are toward the front,
+// where the two rows come close enough to read as meshing.
+const lowerTeeth = fangs(H, FLOOR, T, 1, [
+  [0.24, 7, 0.3],
+  [0.34, 13, 0.2],
+  [0.44, 8, 0.36],
+  [0.55, 17, 0.16],
+  [0.66, 10, 0.28],
+  [0.75, 19, 0.14],
+  [0.84, 12, 0.26],
+  [0.93, 8, 0.34],
+]);
+const upperTeeth = fangs(H, ROOF, S, -1, [
+  [0.36, 6, 0.32],
+  [0.47, 11, 0.22],
+  [0.57, 7, 0.38],
+  [0.68, 14, 0.18],
+  [0.78, 9, 0.3],
+  [0.88, 15, 0.16],
+  [0.95, 6, 0.34],
+]);
+
+/**
+ * A soft fin stood on a run of the body edge: the margin lifts off the edge
+ * along its own normal, zero at both ends, with a ray every few nodes. Normals,
+ * not verticals, because both these fins sit on a steep part of the back and
+ * vertical rays on a slope read as a picket fence falling over. `peak` puts the
+ * tallest rays off centre, since a fin symmetric about its own middle looks
+ * stamped.
+ */
+function fin(n: Node[], side: 1 | -1, h: number, every: number, peak = 0.42) {
+  const edge = (p: Node) => (side > 0 ? [p.x, p.y - p.u] : [p.x, p.y + p.d]);
+  const t0 = n[0].t;
+  const t1 = n[n.length - 1].t;
+  const k = Math.log(0.5) / Math.log(peak);
+  const out: string[] = [];
+  const ray: string[] = [];
+  n.forEach((p, i) => {
+    const [x, y] = edge(p);
+    const [ax, ay] = edge(n[Math.max(i - 1, 0)]);
+    const [bx, by] = edge(n[Math.min(i + 1, n.length - 1)]);
+    const L = Math.hypot(bx - ax, by - ay);
+    const nx = (side * (by - ay)) / L;
+    const ny = (-side * (bx - ax)) / L;
+    const lift = h * Math.sin(Math.PI * ((p.t - t0) / (t1 - t0)) ** k);
+    out.push(xy(x + nx * lift, y + ny * lift));
+    if (i % every === 0 && lift > 2) {
+      ray.push(`M${xy(x, y)}L${xy(x + nx * lift, y + ny * lift)}`);
+    }
+  });
+  return { edge: 'M' + out.join('L'), rays: ray.join('') };
+}
+// Both soft fins sit on the back slope right ahead of the tail, the way they do
+// on a ceratioid, and both are low with two rays. Taller reads as a sail; more
+// rays read as a comb cut into the flank.
+const dorsal = fin(body.slice(7, 19), 1, 9, 3);
+const anal = fin(body.slice(6, 17), -1, 7, 3, 0.5);
+---
+
+<svg viewBox="27 11 170 108" fill="none" stroke="currentColor" stroke-width="0.8">
+  <path d={outline} />
+  {/* Translucent in life, so hairline and at reduced weight. The row has to
+      read as needles, not as an edge. */}
+  <path d={lowerTeeth + upperTeeth} stroke-width="0.45" opacity="0.72" />
+  {/* Palate, arching from roof to tooth edge well inside the gape. Without a
+      line behind the teeth the mouth is a triangular notch rather than a
+      cavity; floated clear of both jaws it is just a stray hook. */}
+  <path
+    d="M122.1 74.2Q114.5 84.5 122.6 94.9"
+    stroke-width="0.4"
+    opacity="0.45"></path>
+  {/* Eye: set high on the head and nearly vestigial down here. One small solid
+      dot, no ring -- a ring pairs off with the esca's halo and the two read as
+      a matched set of chart symbols. */}
+  <circle
+    cx="146"
+    cy="30"
+    r="1.1"
+    fill="currentColor"
+    stroke="none"
+    opacity="0.85"
+  />
+  {/* Illicium: the first dorsal ray, rooted near the snout and arched forward
+      so the esca hangs ahead of both jaws. Three lengths off one curve,
+      heaviest at the base: an arc of even weight is a wire. */}
+  <path d="M150 27.4C152.3 20.9 156.7 17.2 161.6 16.3" stroke-width="1.15" />
+  <path d="M161.6 16.3C166.6 15.4 172.2 17.3 177 22.2" stroke-width="0.8" />
+  <path d="M177 22.2C181.9 27.1 186 35 188 46" stroke-width="0.55" />
+  <g class="drift__lure">
+    <circle cx="188" cy="46" r="2.5" fill="currentColor" stroke="none" />
+    <circle cx="188" cy="46" r="7" stroke-width="0.38" opacity="0.32" />
+  </g>
+  {/* Pectoral: a small fan on a narrow base, low on the flank behind the jaw
+      corner. Drawn as a closed outline it comes out a leaf on the flank. */}
+  <path d="M92 86 81 92M92 90 82 99" stroke-width="0.38" opacity="0.5"></path>
+  <path
+    d="M81 92C78 94.5 78.5 97.5 82 99"
+    stroke-width="0.48"
+    opacity="0.65"></path>
+  <path d={dorsal.edge} stroke-width="0.52" />
+  <path d={dorsal.rays} stroke-width="0.32" opacity="0.5" />
+  <path d={anal.edge} stroke-width="0.52" />
+  <path d={anal.rays} stroke-width="0.32" opacity="0.5" />
+  {/* Caudal: short, blunt and rounded on a narrow peduncle. Emerges from the
+      open peduncle, so it is a margin plus rays and never closed. */}
+  <path
+    d="M50 56C41 52 32 55 29 62C26.5 69 30 78 38 80C44 81.5 48 79 50 76"
+    stroke-width="0.52"
+  />
+  <path
+    d="M50 61 31 57M50 67 28.5 68M50 73 33 78"
+    stroke-width="0.32"
+    opacity="0.5"></path>
+</svg>

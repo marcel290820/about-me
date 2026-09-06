@@ -684,6 +684,198 @@
     }
   }
 
+  /* --- Chart sheets ------------------------------------------------------
+     One plate per project. The frame, its corner ticks and the title block
+     come from the portrait inset and utilities; this is the plate's own
+     lettering, and the fix being taken when the sheet scrolls into view.
+     The geometry that keeps names apart is in src/lib/sheet.ts. */
+
+  .sheet__plate {
+    display: block;
+    width: 100%;
+    height: auto;
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+  }
+
+  /* One ink for every logo. Brands ship at four optical weights; knocked
+     back together they read as one constellation of marks. */
+  .sheet__logo {
+    color: var(--color-text-muted);
+    opacity: 0.75;
+    transition:
+      color 0.15s ease,
+      opacity 0.15s ease;
+  }
+
+  /* Degrees true, written along the bearing a third of the way in from the
+     mark, the way a navigator labels the line. */
+  .sheet__deg {
+    font-family: var(--font-mono);
+    font-size: 7.5px;
+    letter-spacing: 0.08em;
+    fill: var(--color-text-dim);
+    paint-order: stroke;
+    stroke: var(--color-surface);
+    stroke-width: 2.5px;
+    stroke-linejoin: round;
+    transition: fill 0.15s ease;
+  }
+
+  .sheet__name {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    fill: var(--color-text-muted);
+    /* The passage's knockout: a name crossing a graticule line sits over it
+       instead of tangling with it. sheet.test.ts sizes names at 7.04 units
+       a character from this font size and tracking. */
+    paint-order: stroke;
+    stroke: var(--color-surface);
+    stroke-width: 3px;
+    stroke-linejoin: round;
+    transition: fill 0.15s ease;
+  }
+
+  /* Probing the fix: hover a mark and its bearing comes up in the accent
+     while the others fall back, so eight lines into one point can be read
+     one at a time. */
+  .sheet__bearing {
+    stroke-width: 0.7;
+    opacity: 0.85;
+    transition:
+      opacity 0.2s ease,
+      stroke 0.15s ease;
+  }
+
+  .sheet__mark {
+    transition: opacity 0.2s ease;
+  }
+
+  .sheet__plate:has(.sheet__mark:hover) .sheet__mark:not(:hover) {
+    opacity: 0.25;
+  }
+
+  .sheet__mark:hover .sheet__bearing {
+    stroke: var(--color-accent);
+    opacity: 1;
+  }
+
+  .sheet__mark:hover .sheet__logo {
+    color: var(--color-accent);
+    opacity: 1;
+  }
+
+  /* The survey of a live site sits knocked back, the way printed detail does
+     next to the plate it belongs to, and comes up to full colour under the
+     pointer or a keyboard focus. Nothing here moves: it is paper. */
+  .sheet__shot .portrait-inset__frame {
+    background: var(--color-surface-elevated);
+  }
+
+  /* The plan's caption belongs to the plan, so it wraps inside its width
+     rather than running past the neat line the way the sheet number, which
+     has the whole column, can afford to. */
+  .sheet__shot figcaption {
+    white-space: normal;
+    max-width: 100%;
+  }
+
+  .sheet__shot img {
+    /* Printed whole, at the proportions it was shot in. The frame of the
+       survey is chosen in scripts/shoot-previews.sh, where the viewport can
+       be picked per site; cropping it again here only cut the composition
+       that shot was framed for. */
+    display: block;
+    width: 100%;
+    height: auto;
+    /* At rest the shot is printed in the water's own ink: luminosity over the
+       frame's fill leaves the site's shapes and takes its colours, which is
+       what keeps a white page from outranking the plate and stops a second
+       orange competing with the one warm mark on the page. */
+    mix-blend-mode: luminosity;
+    transition:
+      filter 0.2s ease,
+      opacity 0.2s ease;
+  }
+
+  /* The value is aimed at the plate, not stepped down by a fixed amount: a
+     white page and a black one start nowhere near each other. */
+  .sheet__shot[data-tone='light'] img {
+    filter: brightness(0.56) contrast(1.08);
+  }
+
+  .sheet__shot[data-tone='dark'] img {
+    filter: brightness(1.25) contrast(1.02);
+  }
+
+  /* Under the pointer or a keyboard focus the survey gets its real colours. */
+  .sheet__shot:hover img,
+  .sheet__shot a:focus-visible img {
+    mix-blend-mode: normal;
+    filter: none;
+  }
+
+
+  .sheet__mark:hover .sheet__name,
+  .sheet__mark:hover .sheet__deg {
+    fill: var(--color-accent);
+  }
+
+  /* Taking the fix. Arming hides the bearings and the fix; seeing draws each
+     bearing in from its mark, staggered by --i, and the fix comes up once
+     the last bearing (--n) has landed. */
+  .sheet__bearing {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 0;
+  }
+
+  .sheet.is-armed .sheet__bearing {
+    stroke-dashoffset: 1;
+  }
+
+  .sheet.is-armed .sheet__fix {
+    opacity: 0;
+  }
+
+  .sheet.is-seen .sheet__bearing {
+    animation: sheet-draw 0.9s ease-in-out forwards;
+    animation-delay: calc(var(--i, 0) * 90ms);
+  }
+
+  .sheet.is-seen .sheet__fix {
+    animation: sheet-fix 0.5s ease-out forwards;
+    animation-delay: calc(0.9s + var(--n, 0) * 90ms);
+  }
+
+  @keyframes sheet-draw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @keyframes sheet-fix {
+    to {
+      opacity: 1;
+    }
+  }
+
+  /* Two plates print and one shows: the landscape sheet from 40rem up, the
+     portrait one below it, where the landscape plate would be a strip and
+     its marks specks. The portrait plate carries logos only; the line under
+     the description carries the names there. */
+  @media (width < 40rem) {
+    .sheet__plate--wide {
+      display: none;
+    }
+  }
+
+  @media (width >= 40rem) {
+    .sheet__plate--tall {
+      display: none;
+    }
+  }
+
   /* --- Waterline --------------------------------------------------------- */
 
   .waterline {
@@ -1636,8 +1828,10 @@
     color: #5e6e75;
     border: 1px solid var(--color-border-bright);
     border-radius: 2px;
-    /* No fill: it is the rail condensed, not a notification. The blur alone
-       keeps the text readable over the fade. */
+    /* Nearly the zone's own fill, the way the plate's title block is printed
+       on the plate: the blur alone held up over the fade, but not over a
+       survey inset, where dark type on a pale screenshot read as a fault. */
+    background: color-mix(in srgb, var(--color-paper) 88%, transparent);
     backdrop-filter: blur(8px);
     transition:
       color 0.4s ease,
@@ -1645,6 +1839,9 @@
   }
 
   :root[data-zone-low="deep"] .depth-badge {
+    /* The badge is fixed chrome outside both zones, so its fill is switched
+       here with its ink rather than inherited from a zone's tokens. */
+    background: color-mix(in srgb, var(--color-abyss) 88%, transparent);
     color: #93a3a6;
     border-color: rgba(234, 227, 211, 0.22);
   }

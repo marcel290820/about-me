@@ -1,0 +1,75 @@
+---
+// --- Satellite-derived position ---------------------------------------------
+// The modern answer to the question the rose was drawn for. A chart carries
+// this as a block of small print about datums; drawn, it is the diagram behind
+// that print: three satellites, the ranges they give, and the position that
+// falls out of them.
+//
+// Three satellites, and all three are on the mark. One range is not a fix and
+// two are not either, and two dashed lines arriving from off the sheet have no
+// origin. The two low ones are drawn small because they are near the horizon,
+// which is also what keeps them from competing with the one overhead.
+//
+// The arrays are the whole identification. Drawn as trapezoids meeting the
+// body edge-on they were a bow tie; drawn as a matched pair either side of a
+// square they were a domino. They are a long shallow rectangle held off the
+// bus on a boom and ruled the long way, and the two are different sizes with
+// different rib counts, because a satellite seen from anywhere but dead ahead
+// has one array foreshortened.
+
+const FIX = [52, 63];
+---
+
+<svg
+  viewBox="0 0 104 76"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="0.6"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  {/* The one overhead, drawn out. Bus and nadir deck are one stepped outline,
+      not a box on a box: three stacked rectangles is a briefcase however
+      correct each one is. The deck carries a shallow array of helices pointed
+      at the earth, three of them and not twelve, because at 118px twelve is a
+      grey smear. */}
+  <path d="M35 6h10v11h-1v3h-8v-3h-1Z" stroke-width="0.75" />
+  <path d="M37.5 20v2M40 20v2M42.5 20v2" stroke-width="0.45" opacity="0.85" />
+  <path d="M35 11.5h-5M45 11.5h5" stroke-width="0.55" />
+  <path d="M16 7h14v9h-14ZM50 7.8h12v7.4h-12Z" stroke-width="0.7" />
+  <path
+    d="M18.8 7v9M21.6 7v9M24.4 7v9M27.2 7v9M53 7.8v7.4M56 7.8v7.4M59 7.8v7.4"
+    stroke-width="0.35"
+    opacity="0.7"
+  />
+
+  {/* The two low ones, the same figure at the size the horizon leaves them --
+      booms included, because an array butted straight onto the bus is a
+      domino at any size. */}
+  <path
+    d="M8.5 28h3v4h-3ZM2 28.8h4.5v2.4h-4.5ZM13.5 28.8h4.5v2.4h-4.5Z"
+    stroke-width="0.6"
+  />
+  <path d="M8.5 30h-2M11.5 30h2" stroke-width="0.5" />
+  <path
+    d="M92.5 23h3v4h-3ZM86 23.8h4.5v2.4h-4.5ZM97.5 23.8h4.5v2.4h-4.5Z"
+    stroke-width="0.6"
+  />
+  <path d="M92.5 25h-2M95.5 25h2" stroke-width="0.5" />
+
+  {/* Ranges. The one overhead is heavier because it is the one drawn out. */}
+  <path d="M40 22 51.16 60.12" stroke-width="0.6" stroke-dasharray="2 2.4" opacity="0.9" />
+  <path
+    d="M10 32.5 49.33 61.06M94 27.5 54.22 61.13"
+    stroke-width="0.5"
+    stroke-dasharray="1.8 2.6"
+    opacity="0.7"
+  />
+
+  {/* The surface, curved enough to be a surface. */}
+  <path d="M5 71.58A133 133 0 0 1 99 71.58" stroke-width="0.55" opacity="0.7" />
+  {/* A dot in a circle is a fix, here and on the bearing plot. */}
+  <circle cx={FIX[0]} cy={FIX[1]} r="2.6" stroke-width="0.75" />
+  <circle cx={FIX[0]} cy={FIX[1]} r="0.7" fill="currentColor" stroke="none" />
+</svg>
+<span class="chart-mark__label">GNSS 12 sv</span>

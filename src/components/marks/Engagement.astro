@@ -1,0 +1,52 @@
+---
+import Ship from '@/components/marks/Ship.astro';
+
+// A running fight. Both ships carry the same wind, so both head the same way:
+// the chase is up ahead and to windward, the chaser near and low, and the size
+// difference is the distance between them. The pair used to face each other
+// bow to bow with a star between, which reads as a collision, not an action.
+//
+// Gun smoke has cost five goes and every one of them failed by being too big.
+// A closed lobed outline is a thought bubble at 3x and a shoal at true size. A
+// row of curls strung along the drift is a scallop border. Opening the contour
+// on one side does not help, a reader sees the closed part and calls it a
+// cloud. A fan of strokes all at one angle is a speed line, and hatching spread
+// across the whole gap is the same speed line with the angles jittered.
+//
+// The mistake underneath all five was letting the smoke span the water between
+// the ships. That gap belongs to the shot. So the smoke is now two tight
+// puffs, one at each muzzle, eight units across and made of nothing but short
+// strokes at scattered angles: too small to be an object and too local to be
+// anything but a gun going off.
+const HAZE =
+  'M42.2 59.8l4.2-1M43 57.8l3.4-2M42.4 55.4l3.6-1.1M45.4 59l3.6-1.7' +
+  'M44.6 54l2.8-1.9M47.2 57l3.2-0.9M46.4 52.4l2.4-1.4M49.4 55l2.6-1.1';
+const HAZE_CHASE =
+  'M76.8 41.4l-2.6-0.5M76.2 39.8l-2-0.9M75.2 41l-1.8-0.5M75.4 38.6l-1.4-0.6';
+
+// A swell alongside each ship, at her own waterline. Not one sea line through
+// both of them: the chase is further off, not further along the same wave.
+const SEA = 'M31 62.6C34 63.2 37 62.6 40 63M80 42.4C83 43 86 42.4 89 42.8';
+---
+
+<svg viewBox="0 0 116 66" fill="none" stroke="currentColor" stroke-width="0.7">
+  {/* One shot in flight, low and flat, ending in the feather where it fell
+      short of her. Two trajectories read as annotation leader lines. */}
+  <path d="M52 54Q64 47.6 75 43.8" stroke-width="0.45" stroke-dasharray="1.8 2.4" opacity="0.8" />
+  <path
+    d="M75.3 44.4C75.1 42 75 40.4 74.7 38.8M75.3 44.4C74.6 42.6 74 41.6 73.2 40.8M75.3 44.4C76.2 42.6 77 41.7 78 41"
+    stroke-width="0.45"
+    opacity="0.75"
+  />
+  <path d={HAZE} stroke-width="0.5" opacity="0.75" />
+  <path d={HAZE_CHASE} stroke-width="0.4" opacity="0.6" />
+  <path d={SEA} stroke-width="0.45" opacity="0.5" />
+  <Ship x={26} y={60} scale={0.5} tilt={-2.5} guns />
+  {/* The chase at under a third of her, lighter, further up the paper, and
+      with her spanker brailed up, which is what you do before the guns run
+      out. Same size and same rig and she is a duplicate, not a second ship. */}
+  <g opacity="0.8">
+    <Ship x={88} y={40} scale={0.32} tilt={2} ensign={false} spanker={false} guns />
+  </g>
+</svg>
+<span class="chart-mark__label">engagement 1712</span>

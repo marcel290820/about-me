@@ -1,0 +1,176 @@
+---
+import { type Node, type Prof, fair } from '@/lib/curves';
+
+// --- Sailfish -------------------------------------------------------------
+// The fastest fish there is, and it wears a sail. Body, bill and tail are the
+// silhouette; the sail is the identification.
+
+// The body is deepest at the shoulder, right where the sail begins, and runs
+// out to a peduncle no thicker than the bill. The forehead is one straight
+// steep slope from the nape to the bill, a touch concave: a body that tapers
+// evenly to both ends is a cigar with a spike in it, and a forehead that
+// rounds over is a dolphin's melon. Both swam here before.
+const FROM = 44;
+const TO = 232;
+const Y = 78;
+const up: Prof = [
+  [0, 2.6],
+  [0.15, 5],
+  [0.45, 10.5],
+  [0.75, 15],
+  [0.9, 16.8],
+  [0.95, 10.5],
+  [1, 2.4],
+];
+const down: Prof = [
+  [0, 2.6],
+  [0.12, 5.5],
+  [0.4, 13.5],
+  [0.7, 15.5],
+  [0.9, 12.5],
+  [1, 5.5],
+];
+const STEPS = 60;
+const body: Node[] = Array.from({ length: STEPS + 1 }, (_, i) => {
+  const t = i / STEPS;
+  return { t, x: FROM + (TO - FROM) * t, y: Y, u: fair(up, t), d: fair(down, t) };
+});
+
+const f = (n: number) => n.toFixed(1);
+const pt = (x: number, y: number) => `${f(x)} ${f(y)}`;
+const xAt = (t: number) => FROM + (TO - FROM) * t;
+const tAt = (x: number) => (x - FROM) / (TO - FROM);
+const backAt = (t: number) => Y - fair(up, t);
+
+// The outline is one open stroke, not shell(): the bill and the lower jaw
+// grow straight out of the head, so the head end must not be walled off,
+// and the belly stops either side of the pectoral because the fin is in
+// front of the body, not behind it. The tail end stays open for the caudal.
+// The bill sits on the body's axis. Tilted up it looked jaunty, and a
+// sailfish is not jaunty. The lower jaw is under a third of the bill and
+// closed against it: held open, the two tips read as a forked beak.
+const BILL = { x: 302, y: 75.5 };
+const JAW = { x: 252, y: 80.8 };
+const PEC_GAP: [number, number] = [170, 190];
+const back = body.map((p) => pt(p.x, p.y - p.u)).join('L');
+const bellyOf = (ps: Node[]) => ps.map((p) => pt(p.x, p.y + p.d)).join('L');
+const bellyHead = bellyOf(body.filter((p) => p.x >= PEC_GAP[1]).reverse());
+const bellyTail = bellyOf(body.filter((p) => p.x <= PEC_GAP[0]).reverse());
+const outline =
+  `M${back}` +
+  `L${pt(BILL.x, BILL.y)}L${pt(TO + 1, Y + 2.4)}` +
+  `L${pt(JAW.x, JAW.y)}L${pt(TO, Y + 5.5)}` +
+  `L${bellyHead}M${bellyTail}`;
+
+// The sail. First dorsal, from the nape behind the gill cover nearly to the
+// second dorsal, over three times the body's depth at its highest. The
+// first few rays are short, then it climbs steeply, peaks in its front
+// third, runs a long slightly falling top and drops to a short last ray.
+// Each ray leaves the back from its own base, leaning a little further aft
+// than the one before, rays set closer forward than aft, and each stops a
+// hair short of the margin: tips that touch it make vertices, and a margin
+// with vertices in it is a paper fan.
+const SAIL = { front: 0.88, rear: 0.18, rays: 17 };
+const LIFT: [number, number][] = [
+  [0, 12],
+  [0.06, 30],
+  [0.14, 46],
+  [0.3, 56],
+  [0.5, 53],
+  [0.72, 44],
+  [0.86, 30],
+  [0.95, 16],
+  [1, 7],
+];
+const sAt = (t: number) => (SAIL.front - t) / (SAIL.front - SAIL.rear);
+const tOf = (s: number) => SAIL.front - (SAIL.front - SAIL.rear) * s;
+const edgeAt = (t: number) => backAt(t) - fair(LIFT, sAt(t));
+
+/** Ray from the back at t, leaning aft, stopped `short` of the margin. */
+const ray = (t: number, short: number) => {
+  const s = sAt(t);
+  const lean = ((80 - 20 * s) * Math.PI) / 180;
+  const x0 = xAt(t);
+  const y0 = backAt(t);
+  let k = 0;
+  while (k < 90) {
+    const x = x0 - Math.cos(lean) * k;
+    const y = y0 - Math.sin(lean) * k;
+    if (tAt(x) < SAIL.rear || y <= edgeAt(tAt(x))) {
+      k = Math.max(0, k - short);
+      return { x0, y0, x: x0 - Math.cos(lean) * k, y: y0 - Math.sin(lean) * k };
+    }
+    k += 0.25;
+  }
+  return { x0, y0, x: x0 - Math.cos(lean) * k, y: y0 - Math.sin(lean) * k };
+};
+const raysAll = Array.from({ length: SAIL.rays + 1 }, (_, i) =>
+  ray(tOf((i / SAIL.rays) ** 1.2), i === 0 || i === SAIL.rays ? 0 : 0.6 + 0.9 * Math.abs(Math.sin(i * 1.7))),
+);
+const lead = raysAll[0];
+const trail = raysAll[SAIL.rays];
+const inner = raysAll.slice(1, -1);
+// Membrane edge: leading ray up, the margin aft sampled fine so it stays a
+// fair curve, last ray down to the back.
+const margin = Array.from({ length: 81 }, (_, i) => {
+  const t = tAt(lead.x) + (tAt(trail.x) - tAt(lead.x)) * (i / 80);
+  return pt(xAt(t), edgeAt(t));
+}).join('L');
+const sailEdge = `M${pt(lead.x0, lead.y0)}L${pt(lead.x, lead.y)}L${margin}L${pt(trail.x0, trail.y0)}`;
+const sailRays = inner.map((r) => `M${pt(r.x0, r.y0)}L${pt(r.x, r.y)}`).join('');
+
+// The sail carries rows of spots, and they are the one mark that says
+// sailfish rather than any fish with a sail. Two short rows in the bays
+// between rays, low on the sail; scattered at random they read as noise.
+const SPOTS: [number, number][] = [
+  [0.2, 9],
+  [0.315, 8],
+  [0.435, 9.5],
+  [0.56, 8],
+  [0.69, 9],
+  [0.375, 21],
+  [0.5, 20],
+  [0.625, 21.5],
+];
+const spots = SPOTS.map(([s, h]) => {
+  const t = tOf(s);
+  return { x: xAt(t) - 0.2 * h, y: backAt(t) - h };
+});
+
+// Head furniture. The eye is big and sits close behind the bill, on its
+// axis. The gill cover is one open arc that touches neither edge, and the
+// pectoral leaves from just behind it.
+const eye = { x: 223, y: 76 };
+---
+
+<svg viewBox="0 0 306 128" fill="none" stroke="currentColor" stroke-width="1">
+  <path d={outline} />
+  <path d={sailEdge} stroke-width="0.9" />
+  <path d={sailRays} stroke-width="0.5" opacity="0.5" />
+  {spots.map((p) => (
+    <circle cx={f(p.x)} cy={f(p.y)} r="0.7" fill="currentColor" stroke="none" opacity="0.55" />
+  ))}
+  {/* Caudal: lunate, deeply forked, lobes long and narrow and about twice
+      the body's depth tip to tip, leading edges convex. The upper lobe
+      reaches a touch further than the lower. Open at the peduncle. */}
+  <path d="M46 75C35 62 22 53 7 46 19 54 28 65 34 78 28 91 20 102 9 110 23 103 35 94 46 81" />
+  {/* Two keels on the peduncle, the billfish's own mark. */}
+  <path d="M37 76.8H52M40 79.2H54" stroke-width="0.5" opacity="0.6" />
+  {/* Second dorsal and second anal, small and opposite, raked aft. */}
+  <path d="M75 71 58 63 61 72.5M74 85 59 92.5 61.5 84" />
+  {/* First anal: a tall triangle under the rear third of the sail, rear
+      edge concave. Drawn as a sickle it was a twin of the pectoral and the
+      belly read as two pectorals stacked. */}
+  <path d="M128 92C116 99 104 106 92 111 95 103 97 96 100 90.5" />
+  {/* Pectoral: a sickle about a fifth of the body long, held out and back.
+      Its base is low on the flank and the blade runs out below the belly,
+      which is why the belly line breaks here. */}
+  <path d="M203 79C190 83 174 91 160 99 176 100 194 95 202 85" />
+  {/* Pelvics: two long filaments from one root under the pectoral base,
+      trailing back to just ahead of the anal fin. They part a little toward
+      the tips; a second thread from a second root read as a stray mark. */}
+  <path d="M190.5 93.2C175 100 152 104 130 104.5" stroke-width="0.6" />
+  <path d="M190.5 93.2C177 102 156 107 136 108" stroke-width="0.5" opacity="0.6" />
+  <circle cx={eye.x} cy={eye.y} r="2.2" stroke-width="0.7" />
+  <path d="M208.5 66.5C203 74 203 82 206.5 88.5" stroke-width="0.55" opacity="0.7" />
+</svg>

@@ -1,0 +1,249 @@
+---
+// A rosette is a ring of bottles you can see into, and a ring you can see
+// into has a far side. Everything here is projected from one camera, a
+// little above the top ring with a little perspective, and then hidden
+// behind whatever stands nearer the eye. Hand-placing the bottles is how
+// this came out a lantern: near and far rows the same width at the same
+// height, and a cylinder with no far side is a rectangle.
+
+const CX = 36;
+const CY = 243; // screen y of the frame's mid plane
+const D = 400; // eye distance in world units: how much the far side shrinks
+const EL = 0.22; // sine of the elevation: how open the rings are
+const VS = 0.975; // cosine of it: vertical foreshortening
+const R = 23.5; // bottle ring
+const RF = 30; // frame ring
+const RB = 4.6; // bottle radius: twelve of these nearly touch, and a ring with gaps in it was a birdcage
+const RIM = -9; // top ring just clear of the bottle mouths: one ellipse up there, not a stack of them
+const TOP = -3; // bottle top
+const BOT = 38; // bottle bottom, and the carrier ring that holds them there
+const BASE = 58; // bottom ring, with the bay for the sensor package between it and the carrier
+const YAW = 4; // the ring turned a few degrees off square, the way it hangs and turns on the wire
+
+type Pt = { x: number; y: number; z: number };
+type Box = { x0: number; x1: number; y0: number; y1: number; z: number; id: number };
+
+// World: X across, Y down from the frame's mid plane, Z toward the eye.
+function project(X: number, Y: number, Z: number): Pt {
+  const s = D / (D - Z);
+  return { x: CX + X * s, y: CY + (Y * VS + Z * EL) * s, z: Z };
+}
+const f1 = (v: number) => v.toFixed(1);
+const rad = (deg: number) => (deg * Math.PI) / 180;
+
+// Every solid registers a box; a point is hidden when a nearer box that is
+// not its own contains it. Screen-space rectangles are enough because every
+// solid here is upright and its outline is drawn only where it can be seen.
+const boxes: Box[] = [];
+function hidden(p: Pt, own: number): boolean {
+  return boxes.some(
+    (b) => b.id !== own && b.z > p.z + 0.5 && p.x >= b.x0 && p.x <= b.x1 && p.y >= b.y0 && p.y <= b.y1,
+  );
+}
+function run(pts: Pt[], own = -1): string {
+  let d = '';
+  let pen = false;
+  for (const p of pts) {
+    if (hidden(p, own)) {
+      pen = false;
+      continue;
+    }
+    d += `${pen ? 'L' : 'M'}${f1(p.x)} ${f1(p.y)}`;
+    pen = true;
+  }
+  return d;
+}
+const line = (x0: number, y0: number, x1: number, y1: number, z0: number, z1 = z0, n = 48): Pt[] =>
+  Array.from({ length: n + 1 }, (_, i) => {
+    const t = i / n;
+    return { x: x0 + (x1 - x0) * t, y: y0 + (y1 - y0) * t, z: z0 + (z1 - z0) * t };
+  });
+// Screen-space ellipse at one depth: a cylinder's cap, as flat as its card.
+// `tilt` leans it, for a lid that is hinged open.
+const oval = (cx: number, cy: number, rx: number, ry: number, z: number, a0 = 0, a1 = 2 * Math.PI, tilt = 0, n = 36): Pt[] => {
+  const c = Math.cos(tilt);
+  const s = Math.sin(tilt);
+  return Array.from({ length: n + 1 }, (_, i) => {
+    const a = a0 + (a1 - a0) * (i / n);
+    const u = rx * Math.cos(a);
+    const v = ry * Math.sin(a);
+    return { x: cx + u * c - v * s, y: cy + u * s + v * c, z };
+  });
+};
+// A horizontal circle in the world, each point at its own depth, so the far
+// arc goes behind the bottles and the near arc runs in front of them.
+const ring = (r: number, Y: number, n = 96): Pt[] =>
+  Array.from({ length: n + 1 }, (_, i) => {
+    const a = (2 * Math.PI * i) / n;
+    return project(r * Math.sin(a), Y, r * Math.cos(a));
+  });
+
+// One Niskin bottle at a bearing round the ring: end caps a hair wider than
+// the body, two sides, the near half of the foot; the far half of the foot
+// is behind its own body. A bottle going down is open, so the front ones
+// carry their top lid cocked up off the outboard rim, held there by a
+// lanyard to the pylon. The lid is what makes it a Niskin and not a pipe.
+const CAP = 1.12;
+function bottle(deg: number, id: number, lid = false) {
+  const a = rad(deg + YAW);
+  const X = R * Math.sin(a);
+  const Z = R * Math.cos(a);
+  const s = D / (D - Z);
+  const rx = RB * s;
+  const ry = RB * EL * s;
+  const c = project(X, TOP, Z);
+  const f = project(X, BOT, Z);
+  boxes.push({ x0: c.x - rx * CAP, x1: c.x + rx * CAP, y0: c.y - ry * CAP, y1: f.y + ry * CAP, z: Z, id });
+  const out = Math.sign(deg + YAW);
+  const lx = c.x + out * rx * 0.6;
+  const ly = c.y - rx * 0.75;
+  return {
+    id,
+    cap: oval(c.x, c.y, rx * CAP, ry * CAP, Z),
+    sides: [line(c.x - rx, c.y, c.x - rx, f.y, Z), line(c.x + rx, c.y, c.x + rx, f.y, Z)],
+    foot: oval(c.x, f.y, rx * CAP, ry * CAP, Z, 0, Math.PI),
+    lid: lid ? oval(lx, ly, rx * 0.85, ry * 2.4, Z, 0, 2 * Math.PI, -out * 1.15) : [],
+    lidTip: { x: lx - out * rx * 0.3, y: ly - rx * 0.55 },
+  };
+}
+
+// Twelve bottles, turned so the front stanchion has a gap to stand in and
+// the far row shows over the near one. Near six first so their boxes are
+// registered before anything behind them is drawn. Lids on the four in
+// front; the two on the flanks are mostly behind their neighbours anyway.
+const NEAR: [number, boolean][] = [[20, true], [-20, true], [50, true], [-50, true], [80, false], [-80, false]];
+const FAR = [160, -160, 130, -130, 100, -100];
+const near = NEAR.map(([deg, lid], i) => bottle(deg, i, lid));
+const far = FAR.map((deg, i) => bottle(deg, 10 + i));
+// A curtain just behind the near row: the far row shows its mouths and
+// shoulders over the near one and nothing else. Its sides did show through
+// the gaps, which is true, and beside the front stanchion they made a
+// narrow box. The base ring's far arc is below the curtain and still shows.
+boxes.push({
+  x0: 0,
+  x1: 72,
+  y0: Math.min(...near.map((b) => b.cap[0].y)),
+  y1: Math.max(...far.map((b) => b.foot[0].y)) + 2,
+  z: -1,
+  id: 40,
+});
+
+// The carousel pylon in the middle of the ring, its head a full cap above
+// the rim. It is what the bottles hang off and the one thing that says
+// this ring has a centre; below the bottle tops it is behind the front
+// bottles and does not show.
+const PYL = 6.5;
+const pylTop = project(0, -24, 0);
+const pylEnd = project(0, 10, 0).y;
+boxes.push({ x0: CX - PYL, x1: CX + PYL, y0: pylTop.y - PYL * EL, y1: pylEnd, z: 0, id: 20 });
+const pylon =
+  run(oval(CX, pylTop.y, PYL, PYL * EL, 0), 20) +
+  run(line(CX - PYL, pylTop.y, CX - PYL, pylEnd, 0), 20) +
+  run(line(CX + PYL, pylTop.y, CX + PYL, pylEnd, 0), 20);
+// Lanyards from the release hooks on the pylon head to each cocked lid.
+// Converging on the head is what makes the pylon a mechanism; one alone
+// read as a brace.
+const lanyards = near
+  .filter((b) => b.lid.length)
+  .map((b) => `M${f1(CX + Math.sign(b.lidTip.x - CX) * 3)} ${f1(pylTop.y + PYL * EL)}L${f1(b.lidTip.x)} ${f1(b.lidTip.y)}`)
+  .join('');
+
+// Sensor package on its cradle in the bay, seated against the front
+// stanchion: a horizontal pressure case set a little across the line of
+// sight, so its near end shows as a disc and the far end as a curve, with
+// the two sensor ducts out of the far end. Registered so the bottom ring's
+// far arc goes behind it.
+const HZ = 20;
+const hs = D / (D - HZ);
+const hy = (Y: number) => project(0, Y, HZ).y;
+const hx = (X: number) => project(X, 0, HZ).x;
+const hTop = hy(46);
+const hBot = hy(55);
+const hr = (hBot - hTop) / 2;
+const hEnd = 2 * hs;
+const hL = hx(2);
+const hR = hx(24);
+boxes.push({ x0: hL - hEnd, x1: hR + hEnd, y0: hTop, y1: hBot, z: HZ, id: 30 });
+const housing =
+  `M${f1(hL)} ${f1(hTop)}H${f1(hR)}a${f1(hEnd)} ${f1(hr)} 0 0 1 0 ${f1(2 * hr)}H${f1(hL)}` +
+  `a${f1(hEnd)} ${f1(hr)} 0 0 1 0 ${f1(-2 * hr)}a${f1(hEnd)} ${f1(hr)} 0 0 1 0 ${f1(2 * hr)}`;
+const ducts = `M${f1(hR + hEnd)} ${f1(hy(49))}H${f1(hx(29))}M${f1(hR + hEnd)} ${f1(hy(52))}H${f1(hx(29))}`;
+const cradle = `M${f1(hx(6))} ${f1(hBot)}V${f1(project(6, BASE, HZ).y)}M${f1(hx(20))} ${f1(hBot)}V${f1(project(20, BASE, HZ).y)}`;
+
+const draw = (b: ReturnType<typeof bottle>) =>
+  run(b.cap, b.id) + run(b.sides[0], b.id) + run(b.sides[1], b.id) + run(b.foot, b.id);
+const nearD = near.map(draw).join('');
+const lidsD = near.map((b) => run(b.lid, b.id)).join('');
+const farD = far.map(draw).join('');
+const ringsD = run(ring(RF, RIM)) + run(ring(RF, BASE));
+const carrierD = run(ring(RF, BOT));
+
+// Three stanchions on the frame ring at 120 degrees, the front one in the
+// gap the yaw opens beside the centre line. A post dead ahead was a spine
+// and the figure read as a lantern again. The two behind show as stubs
+// over the bottle tops and in the bay, which is what a cage looks like
+// from outside.
+const post = (deg: number) => {
+  const a = rad(deg);
+  const X = RF * Math.sin(a);
+  const Z = RF * Math.cos(a);
+  const t = project(X, RIM, Z);
+  const b = project(X, BASE, Z);
+  return run(line(t.x, t.y, b.x, b.y, Z));
+};
+const posts = post(0) + post(120) + post(240);
+
+// Three-leg bridle off the top ring to one eye on the wire: near right,
+// near left, and the far one, which goes up behind the pylon. Three legs
+// at 120 degrees seen from the side never land symmetric, and that
+// lopsidedness is what a bail drawn as an A never had.
+const apex = project(0, -34, 0);
+const leg = (deg: number) => {
+  const a = rad(deg);
+  const p = project(RF * Math.sin(a), RIM, RF * Math.cos(a));
+  return run(line(apex.x, apex.y, p.x, p.y, 0, p.z));
+};
+const bridle = leg(50) + leg(170) + leg(290);
+
+const baseNear = project(0, BASE, RF).y;
+const H = Math.ceil(baseNear + 4);
+const fitTop = apex.y - 14;
+---
+
+<svg viewBox={`0 0 72 ${H}`} fill="none" stroke="currentColor" stroke-width="1">
+  {/* The wire is the one vertical line in the whole layer, and a vertical
+      hairline through a paragraph reads as a rendering fault rather than as
+      rigging. Held well under the instrument's weight. */}
+  <path d={`M36 0V${f1(fitTop)}`} stroke-width="0.6" opacity="0.45" />
+  {/* Swaged termination above the swivel: the wire thickens into its
+      fitting, so the load path has an end and the wire does not just touch
+      the frame. Two lines, not a block; this drawing has no fills. */}
+  <path d={`M35 ${f1(fitTop)}v8.5M37 ${f1(fitTop)}v8.5`} stroke-width="0.6" />
+  <circle cx="36" cy={f1(apex.y)} r="1.6" stroke-width="0.7" />
+  {/* The frame hangs with a couple of degrees of list under a plumb wire.
+      A load on a wire is never quite square to it, and square is what
+      made the first one a lantern. */}
+  <g transform={`rotate(2.5 36 ${f1(apex.y)})`}>
+    <path d={bridle} stroke-width="0.6" opacity="0.8" />
+    {/* Far row first and lightest, so it sits behind. Only the mouths and
+        the shoulders show over the near row, and they are narrower: that
+        is the whole of the perspective. */}
+    <path d={farD} stroke-width="0.5" opacity="0.6" />
+    <path d={pylon} stroke-width="0.7" />
+    <path d={lanyards} stroke-width="0.4" opacity="0.7" />
+    <path d={nearD} stroke-width="0.7" />
+    <path d={lidsD} stroke-width="0.55" />
+    <path d={housing} stroke-width="0.8" />
+    <path d={ducts} stroke-width="0.6" />
+    <path d={cradle} stroke-width="0.6" />
+    {/* Frame rings and stanchions are the heaviest line: it is the frame
+        that has a silhouette, not the bottles. The carrier ring is lighter,
+        a member and not an edge. */}
+    <path d={carrierD} stroke-width="0.8" />
+    <path d={ringsD} stroke-width="1.15" />
+    <path d={posts} stroke-width="1.05" />
+    <circle cx={f1(hx(29))} cy={f1(hy(49))} r="1.5" fill="currentColor" class="drift__telemetry" />
+  </g>
+  <circle cx="36" cy={f1((apex.y + baseNear) / 2)} r="18" class="drift__ring" />
+</svg>
+<span class="drift__tag">CTD 03</span>

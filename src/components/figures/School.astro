@@ -1,0 +1,203 @@
+---
+import { type Node, type Prof, fair } from '@/lib/curves';
+
+// --- School ---------------------------------------------------------------
+// One herring, drawn eight times, each at its own point in the tail beat. A
+// fish here is about 45px long, so the list of what still reads is short: a
+// body deepest a third back from the nose and pinched at the tail, a real
+// fork, one dorsal, an eye that is a dot, and the gill cover that makes the
+// head a head. The pectoral is drawn lighter for the close view and goes to
+// nothing at the size it is seen.
+
+// Origin at the middle of the body, nose to the right. t runs from the
+// peduncle (0) to the nose (1).
+const NOSE = 13.5;
+const PED = -6.5;
+// Flat along the back, keeled below: a herring carries its depth under the
+// spine, and the two profiles differing is what keeps the silhouette off the
+// symmetrical spindle that reads as clipart. Deepest at t 0.64, a third back
+// from the nose, where the dorsal starts; held slim over the last tenth so
+// the peduncle shows as a pinch before the fork instead of the fork growing
+// straight out of the body.
+const UP: Prof = [
+  [0, 0.38],
+  [0.1, 0.5],
+  [0.25, 0.95],
+  [0.42, 1.4],
+  [0.64, 1.65],
+  [0.8, 1.5],
+  [0.9, 0.95],
+  [1, 0.05],
+];
+const DOWN: Prof = [
+  [0, 0.42],
+  [0.1, 0.58],
+  [0.25, 1.5],
+  [0.42, 2.6],
+  [0.64, 3.05],
+  [0.8, 2.4],
+  [0.9, 1.45],
+  [1, 0.35],
+];
+// The snout sits on the upper line, not on the axis: the back runs almost
+// straight into it and the throat climbs to meet it. With the nose on the
+// axis the head was a wedge with a dot in it, and the whole fish an arrowhead.
+const LIFT = 0.85;
+const STEPS = 30;
+const pt = (x: number, y: number) => `${x.toFixed(2)} ${y.toFixed(2)}`;
+
+// Caudal fin relative to the end of the peduncle: upper lobe, notch, lower
+// lobe, with the trailing edges hollowed. Lobes a touch unequal, as they are.
+const FORK: [number, number][] = [
+  [-7.3, -3.9],
+  [-4.9, -2],
+  [-3.5, 0.1],
+  [-4.8, 2.1],
+  [-7, 4.1],
+];
+
+// One body at one point in the tail beat. `flex` bends the rear of the spine
+// (nothing forward of the dorsal moves), and the fork swings further than the
+// peduncle it hangs off, since the fin lags the body. Eight copies of one
+// straight fish were a stencil however they were placed; every fish at its
+// own phase of the beat is what makes it a moving group.
+function build(flex: number) {
+  const sy = (t: number) => {
+    const h = Math.max(0, (t - 0.72) / 0.28);
+    return flex * 2 * (1 - t) * (1 - t) - LIFT * h * h * (3 - 2 * h);
+  };
+  const body: Node[] = Array.from({ length: STEPS + 1 }, (_, i) => {
+    const t = i / STEPS;
+    return { t, x: PED + (NOSE - PED) * t, y: sy(t), u: fair(UP, t), d: fair(DOWN, t) };
+  });
+  const tAt = (x: number) => (x - PED) / (NOSE - PED);
+  // Fins, eye and tag sit on these, so they cannot come off the body.
+  const mid = (x: number) => sy(tAt(x));
+  const top = (x: number) => mid(x) - fair(UP, tAt(x));
+  const bot = (x: number) => mid(x) + fair(DOWN, tAt(x));
+
+  // Spine slope at the peduncle, then some more for the lag.
+  const a = Math.atan2(-4 * flex, NOSE - PED) * 1.6;
+  const c = Math.cos(a);
+  const s = Math.sin(a);
+  const fork = FORK.map(([x, y]) => pt(PED + x * c - y * s, sy(0) + x * s + y * c));
+
+  // One contour: back, fork, belly. The caudal fin grows out of the peduncle,
+  // so it is part of the line and not a chevron stuck on the end. The belly
+  // runs on past the top line by a touch, which is the lower jaw a herring
+  // carries slightly proud, and the path stays open there: that gap is the
+  // mouth.
+  const back = body
+    .slice()
+    .reverse()
+    .map((p) => pt(p.x, p.y - p.u));
+  const belly = body.map((p) => pt(p.x, p.y + p.d));
+  const outline =
+    'M' + back.join('L') + `L${fork[0]}Q${fork[1]} ${fork[2]}Q${fork[3]} ${fork[4]}` +
+    'L' + belly.join('L') + 'L' + pt(NOSE + 0.4, mid(NOSE) + 0.05);
+
+  // Dorsal from 45% to 63% back: leading ray tallest, the margin sloping
+  // down and aft to a short last ray. Open along the base, the back is the
+  // base. A triangle here read as a paper hat.
+  const dorsal =
+    `M${pt(4.6, top(4.6))}L${pt(3.1, top(4.6) - 2.3)}` +
+    `L${pt(1.5, top(1.5) - 1.05)}L${pt(0.7, top(0.7))}`;
+  // Gill cover bulging aft, from behind the eye down to the throat. This is
+  // the line that turns a small wedge into a herring, so every fish that is
+  // not in the distance gets it.
+  const gill = `M${pt(8.9, top(8.9) + 0.35)}Q${pt(7.5, mid(7.5) + 0.3)} ${pt(8.7, bot(8.7) - 0.35)}`;
+  // Anal fin, low and short near the tail. Only the two nearest fish carry
+  // it: at true size it smeared the others, and a fish further off carries
+  // fewer lines.
+  const anal = `M${pt(-0.8, bot(-0.8))}L${pt(-2.5, bot(-0.8) + 0.95)}L${pt(-3.8, bot(-3.8))}`;
+  // A narrow pectoral behind the head, drawn light.
+  const pectoral = `M${pt(7.9, mid(7.9) + 1)}L${pt(5.1, mid(5.1) + 2.05)}L${pt(7.8, mid(7.8) + 1.55)}`;
+  const eye = { cx: 11.3, cy: mid(11.3) - 0.35 };
+  return { outline, dorsal, gill, anal, pectoral, eye, top };
+}
+
+// Staggered rows with the rows pulled off true, a leader out front, and a
+// straggler behind and below the pack turning to rejoin: a real school is
+// ragged at the trailing edge, and that is what separates it from a
+// formation. No two bodies cross, because two hairline fish drawn across
+// each other are a tangle at true size, and one tangle spoils the whole
+// school. Sizes stay close because a school sorts itself by size; the two
+// `far` fish print dimmest and smallest, the leader largest, so opacity and
+// scale tell the same story. Pitch varies by a few degrees. `sx` shortens
+// the straggler, which is turning across the line of sight.
+interface Fish {
+  x: number;
+  y: number;
+  s: number;
+  r: number;
+  flex: number;
+  far?: boolean;
+  near?: boolean;
+  sx?: number;
+}
+const SCHOOL: Fish[] = [
+  { x: 118, y: 12, s: 0.95, r: -3, flex: -0.8 },
+  { x: 68, y: 14, s: 0.85, r: 2, flex: 0.8 },
+  { x: 140, y: 21, s: 1.05, r: -1, flex: 0.3, near: true },
+  { x: 104, y: 21.5, s: 0.95, r: 1, flex: -0.6 },
+  { x: 72, y: 26, s: 0.72, r: -4, flex: 1, far: true },
+  { x: 126, y: 32, s: 0.74, r: 3, flex: -0.9, far: true },
+  { x: 52, y: 36, s: 0.88, r: 6, flex: 0.5, sx: 0.8 },
+];
+// The tagged one rides the top of the school at the group heading, fish
+// ahead, astern and below it, so the pings go into clear water and it still
+// reads as one of them. Pitched harder it read as leaving.
+const TAGGED: Fish = { x: 96, y: 2, s: 1, r: -3, flex: 0.4, near: true };
+
+// Acoustic tag: a capsule lying along the back with its aft end hard against
+// the dorsal's leading edge, proud of the line so it reads as a fitted
+// instrument and not a mark on the fish (half sunk into the outline it was a
+// smudge). The dot is its aft end and the pings radiate from the dot, no
+// aerial: sound leaves the tag itself. The arcs span a third of the fish,
+// because at the size this is seen a smaller ring was a speck and the one
+// fish that is the point of the drawing vanished into the other seven.
+const TAGGED_BODY = build(TAGGED.flex);
+const TAG_X = 4.65;
+const TAG_Y = TAGGED_BODY.top(6) - 0.6;
+const TAG = `M${pt(TAG_X, TAG_Y - 0.5)}h2.5a0.5 0.5 0 0 1 0 1h-2.5a0.5 0.5 0 0 1 0-1z`;
+const DOT_X = TAG_X + 0.5;
+const ping = (r: number) => {
+  const a0 = (-110 * Math.PI) / 180;
+  const a1 = (-10 * Math.PI) / 180;
+  return (
+    `M${pt(DOT_X + r * Math.cos(a0), TAG_Y + r * Math.sin(a0))}` +
+    `A${r} ${r} 0 0 1 ${pt(DOT_X + r * Math.cos(a1), TAG_Y + r * Math.sin(a1))}`
+  );
+};
+
+const place = ({ x, y, s, r, sx = 1 }: Fish) =>
+  `translate(${x} ${y}) rotate(${r}) scale(${(s * sx).toFixed(3)} ${s})`;
+const ink = (f: Fish, b: ReturnType<typeof build>) =>
+  b.outline + b.dorsal + (f.far ? '' : b.gill) + (f.near ? b.anal : '');
+---
+
+<svg viewBox="20 -8 156 49" fill="none" stroke="currentColor" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round">
+  {/* The seven print a shade under the tagged one, so it is the fish you see
+      first. */}
+  {SCHOOL.map((f) => {
+    const b = build(f.flex);
+    return (
+      <g transform={place(f)} opacity={f.far ? 0.5 : 0.82}>
+        <path d={ink(f, b)} />
+        {f.near && <path d={b.pectoral} stroke-width="0.36" opacity="0.65" />}
+        <circle cx={b.eye.cx} cy={b.eye.cy} r="0.58" fill="currentColor" stroke="none" />
+      </g>
+    );
+  })}
+  {/* The one that got caught, measured and let go again. An acoustic tag is
+      real field kit, and it is the only thing down here still reporting. */}
+  <g transform={place(TAGGED)}>
+    <path d={ink(TAGGED, TAGGED_BODY)} />
+    <path d={TAGGED_BODY.pectoral} stroke-width="0.36" opacity="0.65" />
+    <circle cx={TAGGED_BODY.eye.cx} cy={TAGGED_BODY.eye.cy} r="0.58" fill="currentColor" stroke="none" />
+    <path d={TAG} stroke-width="0.5" />
+    <path d={ping(3.2)} stroke-width="0.55" class="drift__ping" />
+    <path d={ping(5.2)} stroke-width="0.55" class="drift__ping drift__ping--late" />
+    <circle cx={DOT_X} cy={TAG_Y} r="0.6" fill="currentColor" stroke="none" class="drift__telemetry" />
+  </g>
+</svg>

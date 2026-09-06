@@ -1,0 +1,195 @@
+---
+import { spine, at, type Node, type Prof } from '@/lib/curves';
+
+// --- Sea turtle -----------------------------------------------------------
+// A green turtle in profile, seen a little from below so the near front
+// flipper is on the downstroke. The carapace is low and lopsided: it peaks
+// in the front third, runs out long and shallow to a blunt stern over the
+// tail and drops off steeply at the front. Peak it in the middle and taper
+// both ends and it reads as a surfboard.
+const back: Prof = [
+  [0, 1.6],
+  [0.1, 6],
+  [0.3, 11.5],
+  [0.5, 15],
+  [0.7, 17],
+  [0.85, 15.5],
+  [0.94, 11.5],
+  [1, 7],
+];
+// The rim is the bottom of the carapace: nearly flat, then it lifts over the
+// front flipper and stops short of the top edge, so the front is open and
+// the neck comes out of the gap instead of through a wall.
+const rim: Prof = [
+  [0, 1.2],
+  [0.12, 2.6],
+  [0.45, 4],
+  [0.76, 4],
+  [0.88, 2.8],
+  [0.95, 0],
+  [1, -3.5],
+];
+const SHELL = { from: 22, to: 110, y: 46 };
+const dome = spine({ ...SHELL, y: () => SHELL.y, up: back, down: rim, steps: 60 });
+
+const pt = (x: number, y: number) => `${x.toFixed(1)} ${y.toFixed(1)}`;
+const xAt = (t: number) => SHELL.from + (SHELL.to - SHELL.from) * t;
+const rimAt = (t: number) => ({ x: xAt(t), y: SHELL.y + at(rim, t) });
+
+// The stern is a short rounded wall joining rim to top edge, not a point,
+// and the top edge ends in a curl forward and down: the nuchal edge
+// overhangs the neck, which is what makes the neck come out from under the
+// shell rather than butt against it.
+const STERN = 0.03;
+const carapace =
+  'M' +
+  pt(rimAt(STERN).x, rimAt(STERN).y) +
+  'C21.6 46.6 21.6 44.4 23.9 43.8L' +
+  dome
+    .filter((p) => p.t >= 0.06)
+    .map((p) => pt(p.x, p.y - p.u))
+    .join('L') +
+  'c1.4 0.5 2.2 1.4 2.2 2.8';
+
+// The marginals give the rim its sawn edge. Each scute's rear corner stands
+// proud, so going forward the line drops short and steep and climbs long and
+// shallow. The scutes are shorter and bite deeper at the rear, where the
+// serration is, and no two neighbours match, because a row of identical
+// teeth is lace. The last stretch, where the rim lifts, is left plain.
+const marginals = (() => {
+  const n = 11;
+  const t1 = 0.9;
+  const bound = (i: number) => STERN + (t1 - STERN) * (1 - (1 - i / n) ** 0.85);
+  const o = rimAt(STERN);
+  let d = 'M' + pt(o.x, o.y);
+  for (let i = 1; i <= n; i++) {
+    const a = bound(i - 1);
+    const len = bound(i) - a;
+    const tip = rimAt(a + len * 0.2);
+    const m = rimAt(a + len * 0.62);
+    const p = rimAt(a + len);
+    const bite = (0.1 + 1.2 * (1 - a)) * (0.8 + 0.2 * ((i * 7) % 3));
+    d += `L${pt(tip.x, tip.y + bite)}Q${pt(m.x, m.y + bite * 0.35)} ${pt(p.x, p.y)}`;
+  }
+  return d + 'L' + dome.filter((p) => p.t > t1).map((p) => pt(p.x, p.y + p.d)).join('L');
+})();
+
+// One edge of a spine, open at both ends. `from` starts it further out, for
+// a root that sits under something on one side.
+const edge = (n: Node[], side: (p: Node) => number, from = 0) =>
+  'M' +
+  n
+    .filter((p) => p.t >= from)
+    .map((p) => pt(p.x, p.y + side(p)))
+    .join('L');
+
+// A limb: both edges of a spine, joined at the tip and open at the root, so
+// nothing is drawn across where it meets the body.
+const limb = (n: Node[]) =>
+  edge(n, (p) => -p.u) +
+  'L' +
+  [...n]
+    .reverse()
+    .map((p) => pt(p.x, p.y + p.d))
+    .join('L');
+
+// Three costal seams, and nothing else on the flank: with a line under the
+// top edge closing them they were bus windows. They lean back like ribs
+// (the top end forward of the bottom) and bow a little with the flank, the
+// rear costal is the narrowest, and each stops a different way short of the
+// top edge.
+const costals = [
+  [0.22, 0.7],
+  [0.47, 0.84],
+  [0.7, 0.78],
+]
+  .map(([t, h]) => {
+    const b = rimAt(t);
+    const top = SHELL.y - at(back, t) * h;
+    const tx = xAt(t) + 2.4 + (t - 0.5) * 3;
+    return `M${pt(b.x, b.y - 0.6)}Q${pt((b.x + tx) / 2 - 1.2, (b.y + top) / 2)} ${pt(tx, top)}`;
+  })
+  .join('');
+
+// The front flipper, on the downstroke. A long narrow blade: its length is
+// what makes this a sea turtle and not a tortoise doing something odd.
+// Built along x and rotated onto the shoulder; the tip trails a little.
+// The leading edge is drawn heavier than the trailing one, because that is
+// where the bone runs, and it is what keeps the paddle from being a wing.
+const fore = spine({
+  from: 0,
+  to: 52,
+  y: (t) => 4 * t * t,
+  steps: 30,
+  up: [
+    [0, 5.5],
+    [0.25, 6.5],
+    [0.55, 6],
+    [0.8, 4.2],
+    [0.93, 2.2],
+    [1, 0.3],
+  ],
+  down: [
+    [0, 6],
+    [0.3, 7],
+    [0.6, 6.2],
+    [0.82, 4],
+    [0.94, 2],
+    [1, 0.3],
+  ],
+});
+
+// The rear flipper: short and broad, trailing as a rudder.
+const hind = spine({
+  from: 0,
+  to: 19,
+  y: (t) => 1.5 * t * t,
+  steps: 16,
+  up: [
+    [0, 3],
+    [0.35, 4.2],
+    [0.7, 3.2],
+    [0.9, 1.8],
+    [1, 0.3],
+  ],
+  down: [
+    [0, 3.2],
+    [0.4, 4.4],
+    [0.72, 3.4],
+    [0.9, 1.8],
+    [1, 0.3],
+  ],
+});
+---
+
+<svg viewBox="17 25 120 60" fill="none" stroke="currentColor" stroke-width="0.85">
+  <path d={carapace} />
+  <path d={marginals} stroke-width="0.75" />
+  <path d={costals} stroke-width="0.45" opacity="0.45" />
+  {/* A stub of tail under the stern. Any longer and it is a fin. */}
+  <path d="M26 48.5C24 48.8 22.4 49.8 21.6 51.6c1.8 0 3.4-0.6 4.8-1.6" stroke-width="0.7" />
+  {/* The belly, seen because we are a little below it. It starts behind the
+      near flipper and ends where the rear one comes out; with the rim above
+      it the shell reads as a body with a side to it, not a plate. */}
+  <path d="M82 56.5C70 59.8 56 59.4 42 54.6" />
+  {/* Head and neck in one stroke. The neck top comes out under the nuchal
+      curl, runs a short way and steps up into a squarish skull that is
+      deeper than the neck; the snout drops square to a beak whose tip hooks
+      back under itself, the chin hangs behind that, and the throat curves
+      back into the neck and on down the chest into the flipper's leading
+      edge. Head and neck as one tube of one depth is a duck or a snake. */}
+  <path d="M110.2 43.6C112 42.6 114 41.6 116 40.9C118 40.2 119 38.6 121.5 38C125 37.6 130 37.8 132.6 39.2C134.6 40.4 135.4 42.6 134.8 44.8c-0.6 0.7-1.6 0.7-2.4 0.4C132 46.8 130 48.2 127.4 48.4C123 48.6 118.4 49.4 114.4 50.4C110.5 51.6 106.6 53.4 103 55.2" />
+  {/* The mouth, cut back from the beak to under the eye. */}
+  <path d="M134.6 44.4C132.8 45.4 131 45.6 129.2 45" stroke-width="0.5" />
+  <circle cx="130.2" cy="41.3" r="1.4" stroke-width="0.6" />
+  {/* Rooted at the shoulder, under the rim and behind the chest, so the
+      flipper leaves the body and not the neck. No claw: at any size it is
+      seen at, the claw is a stray mark beside the blade. */}
+  <g transform="translate(99.5 51) rotate(140)">
+    <path d={edge(fore, (p) => -p.u)} stroke-width="0.95" />
+    <path d={edge(fore, (p) => p.d, 0.12)} stroke-width="0.7" />
+  </g>
+  <g transform="translate(38 54) rotate(125)">
+    <path d={limb(hind)} stroke-width="0.7" />
+  </g>
+</svg>

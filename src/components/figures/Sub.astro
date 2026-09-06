@@ -1,0 +1,134 @@
+---
+import { spine, shell } from '@/lib/curves';
+
+/* The fairing is short and deep: 140 long on 60 deep, the 2.3:1 an Alvin or
+   a Nautile actually is. Drawn at 5:1 it was a torpedo and drawn as an ovoid
+   it was an airship. The deck is flat aft under the syntactic-foam block and
+   crowns forward over the sphere; the belly deepens all the way to a walled
+   bow. The aft taper is spent in the first fifth and lands on a 30-unit
+   transom: run out long and smooth it is a second nose and the vehicle reads
+   as facing the wrong way, but taken all the way to a full-depth transom the
+   hull is a van. shell() closes both walls for us. */
+const fairing = shell(
+  spine({
+    from: 32,
+    to: 172,
+    y: () => 62,
+    steps: 56,
+    up: [
+      [0, 19],
+      [0.1, 25],
+      [0.5, 26.5],
+      [0.72, 29.5],
+      [0.88, 30],
+      [0.96, 28],
+      [1, 24],
+    ],
+    down: [
+      [0, 11],
+      [0.18, 22],
+      [0.45, 27],
+      [0.75, 30],
+      [0.9, 30.5],
+      [0.97, 28],
+      [1, 23],
+    ],
+  }),
+);
+---
+
+<svg viewBox="4 11 230 100" fill="none" stroke="currentColor" stroke-width="1" stroke-linejoin="round" stroke-linecap="round">
+  <path d={fairing} />
+
+  {/* The personnel sphere: the one part at one atmosphere and so the one
+      round part, and 47 of the 60 the hull is deep where it crowns. Drawn a
+      weight and a third under the fairing: at the hull's own weight the
+      circle stops being what is inside the vehicle and becomes a wheel the
+      vehicle is built on, and much under this it leaves at settled opacity. */}
+  <circle cx="142" cy="62" r="23.5" stroke-width="0.75" opacity="0.75" />
+  {/* Its cradle, splayed onto the belly: a bare circle inside an outline
+      floats, two struts under it is a sphere sitting in a frame. */}
+  <path d="M131 82.8 128.5 91.8M153 82.8 155.5 92.4" stroke-width="0.6" opacity="0.6" />
+  {/* Three viewports, clustered tight on the forward face and each a short
+      housing standing out of the sphere along its own radius, open at the
+      base because the join is on the sphere. They break the circle's outline
+      where the eye arrives, which is what stops it reading as a wheel; spread
+      apart they were stray tabs. The centreline one carries through the bow
+      wall and is the only thing that resolves the nose. */}
+  <path d="M163.7 53 184 58.5V65.5L163.7 71" stroke-width="0.75" />
+  <path d="M163.1 51.4 166.9 49 164.6 45.2 160.7 47.6" stroke-width="0.6" />
+  <path d="M161.3 75.7 165.2 78 167.4 74.2 163.5 71.9" stroke-width="0.6" />
+
+  {/* Limber slots. A fairing over a pressure hull is free-flooding, and this
+      is the one cue separating it from a solid torpedo body. Two uneven
+      groups of unequal length: an even run of them was a zipper. */}
+  <path d="M82 39V43.5M88 39V44M94 39V43.5" stroke-width="0.5" opacity="0.45" />
+  <path d="M108 38V42.5M114 38V41.5" stroke-width="0.5" opacity="0.45" />
+
+  {/* Sail: a low fairing, 12 on a 60 hull, raked harder at the leading edge.
+      Its feet run below the deck line so it grows out of the crown instead
+      of sitting on it. Domed hatch over the sphere, and the strobe seated
+      straight on the sail: on a stub it read as a balloon, and centred on
+      the hatch it read as a cherry. A second trapezoid aft as a stabiliser
+      fin only read as an awning. */}
+  <path d="M158 34 149 22H129L122 35" stroke-width="0.9" />
+  <path d="M136 22a6 4 0 0 1 12 0" stroke-width="0.6" />
+  <circle cx="133" cy="20.3" r="1.7" fill="currentColor" class="drift__telemetry" />
+
+  {/* Brow: a light bar bolted across the bow shoulder, two lenses under it.
+      Held off on a stalk it floated, barrels hung under a cross-bar were a
+      tuning fork, and the dashed throw they used to cast read as broom
+      bristles -- so the lamps stay, plain, and the beams went. */}
+  <path d="M169 33H186V38H169" stroke-width="0.7" />
+  <path d="M174 38v1.8M181 38v1.8" stroke-width="0.55" />
+
+  {/* Stern: a ducted main thruster on a stub, with two stays converging aft
+      onto the rim. Drawn as flat wall sections in profile the shroud read as
+      a pair of tailplanes, and on stays that flared aft it read as a
+      megaphone; a ring on converging stays can be neither. It hangs on the
+      hull's own axis, below the transom's centre, where a propeller goes. */}
+  <ellipse cx="14" cy="62" rx="4" ry="12" stroke-width="0.8" />
+  <path d="M32 52 17.6 56.5M32 70 17.6 67.5" stroke-width="0.65" />
+  <path d="M32 62H16" stroke-width="0.75" />
+  <circle cx="15.5" cy="62" r="1.4" stroke-width="0.55" />
+  <path d="M15.5 60.6 14 53M15.5 63.4 17 71" stroke-width="0.5" opacity="0.75" />
+
+  {/* Landing frame: one runner on two legs splayed opposite ways, with knee
+      gussets. The legs sit well inboard so the runner overhangs further at
+      both ends than the bay between them is wide -- legs out at the ends
+      turned the whole underside into a closed apron. The ends are not alike
+      either: a turned-up toe forward where it has to ride onto the bottom, a
+      short kick aft. */}
+  <path d="M40 101 46 104H160L168 99H208V92" stroke-width="0.75" />
+  <path d="M90 88.8 84 104M90 95 100 89.1" stroke-width="0.6" />
+  <path d="M128 91.6 134 104M128 97 118 90.7" stroke-width="0.6" />
+
+  {/* Sample basket: the forward continuation of the runner, which is where
+      it sits on the real thing. A shallow tray at 5.7:1, its rim over the
+      forward three quarters and the aft end open where the arm loads it. */}
+  <path d="M168 99V93" stroke-width="0.6" />
+  <path d="M178 92H208" stroke-width="0.55" />
+  <path d="M182 99V93M194 99V93" stroke-width="0.4" opacity="0.45" />
+
+  {/* Manipulators. Drawn as members with two edges, not hairlines: as single
+      strokes with pin joints the pair read as chopsticks. Shoulder housing
+      off the bow wall, boom down-forward, elbow, forearm out level, and an
+      open two-finger jaw with hooked tips -- a claw is what makes an arm an
+      arm, and run on as long parallel bars the fingers were strays. */}
+  <path d="M172 62 179 62 179 73 172 73" stroke-width="0.7" />
+  <path d="M177.7 69.1 196.7 84.6M180.3 65.9 199.3 81.4" stroke-width="0.7" />
+  <circle cx="198" cy="83" r="2.3" stroke-width="0.65" />
+  <path d="M198.5 84.8 216.5 79.8M197.5 81.2 215.5 76.2" stroke-width="0.7" />
+  <path d="M215.5 76.2 216.5 79.8" stroke-width="0.55" />
+  <path d="M215.8 76.4 225 74 225.5 75.5" stroke-width="0.6" />
+  <path d="M216.2 79.6 225 81 224.5 79.6" stroke-width="0.6" />
+  {/* The offside arm, shorter and lower and one step back, not a wire: at
+      half opacity it read as a smudge under the near one. Posed alike the
+      two made a tent, and folded back on itself the far one was a crease. */}
+  <path d="M171 79 186 88 202 84" stroke-width="0.6" opacity="0.6" />
+  <path d="M202 84 209 82 209.4 83.2M202 84 208.6 86.4 208.1 85.2" stroke-width="0.5" opacity="0.6" />
+  <circle cx="171" cy="79" r="1.7" stroke-width="0.5" opacity="0.6" />
+
+  <circle cx="118" cy="60" r="42" class="drift__ring" />
+</svg>
+<span class="drift__tag">DSV &middot; 4000 m</span>

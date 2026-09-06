@@ -1,0 +1,246 @@
+---
+// --- Ships ------------------------------------------------------------------
+// One rig, drawn once about its own waterline (y = 0, bow to the right) and
+// placed wherever a mark needs a ship. Stroke widths are divided by the
+// placement scale so the ship prints at the chart's own line weight whether it
+// is the 30px one in the fleet action or the 43px one on the passage: a
+// hairline that scales with the figure is a smudge on the small one.
+//
+// A three-master the way the engravers drew them in the empty water: a shallow
+// hull under a tall pyramid of sail, the rig a little over the length of the
+// hull. Get that ratio wrong and no amount of detail saves it -- a deep hull
+// under short masts is a tub with poles in it.
+//
+// Four things carry the identification, in this order:
+//
+// 1. Two different ends. The stern is a flat ruled transom over a tucked
+//    counter; the bow is a beakhead whose line the bowsprit carries straight
+//    on, and that bowsprit is the longest single stroke on the ship. Taper
+//    both ends alike and she is a gondola: three separate readers have looked
+//    at earlier versions of her and said she was sailing backwards.
+// 2. The spars. Yards reach well past the cloth they carry, and so do the gaff
+//    and the boom. A spar drawn only as the edge of the sail it holds is not a
+//    spar, it is a hem.
+// 3. The standing rigging, ruled over the canvas the way an engraver cut it.
+//    Four lines and no more: rigging in the gaps between the sails is what
+//    sinters the whole rig into one grey cloud at 118px.
+// 4. Yard, cloth, bellied foot, yard. The foot of each sail curves down to
+//    just clear the yard beneath it; without those two arcs per mast every
+//    mast is a stack of crates.
+//
+// The wind is forward of the beam, so every square sail bellies aft and both
+// flags stream aft with it. That one rule is what makes her read as moving
+// rather than moored.
+//
+// Hull and canvas carry a paper fill and are painted back to front, aft mast
+// first: a chart ship sits in front of whatever is printed behind her -- her
+// own track, the gun smoke, the next sail inboard -- and an unfilled hull lets
+// all of it through.
+
+const f = (n: number) => n.toFixed(1);
+
+const HULL =
+  'M-29.6 0C-31-1.6 -31.8-3.4 -32-5.2' + // counter, tucked under
+  'L-33.6-15.4' + // transom, ruled: it is a flat board and reads as one
+  'L-25.8-16.2' + // taffrail
+  'C-21.5-15.4 -15-10.4 -6-8.2' + // sheer down to its lowest, two fifths from aft
+  'C3-7.6 12-8.6 18-11.5' + // and up again to the forecastle
+  'L32-7.6' + // head rail out to the beak, spar-built, so ruled not curved
+  'C30-4.8 27.8-1.4 26.4 0' + // stem raking back to the water
+  'C12 0.7 -17 0.7 -29.6 0Z';
+
+// The main wale, ruled short of both ends. Carried the full length it runs
+// parallel to the sheer for its whole run and the hull becomes a shoe sole.
+const WALE = 'M-28-9.8C-20-9.2 -12-5.6 -3-4.2C5-3.9 12-4.7 20-7.2';
+
+// Two rails across the transom and nothing else back there. Stern windows at
+// this size are three grey specks.
+const GALLERY = 'M-33.3-12.6h6.2M-32.8-9.4h5.4';
+
+// A row of ports along the wale. It is the one detail that says warship rather
+// than merchantman at 30px, so it is a prop: the sail-training barque on the
+// passage mark does not carry guns.
+const PORTS = 'M-18-11v1.8M-11-8.7v1.8M-4-7v1.8M3-6.7v1.8M10-7v1.8M17-9v1.8';
+
+// Wash off the stern and a curl at the stem, three lengths so it is water and
+// not a ruled shadow. Without them she is a model on a shelf.
+const WAKE =
+  'M-31.4 1.2C-33.6 1.8 -35.4 1.2 -37.4 1.7' +
+  'M-34 3C-36.4 3.6 -38.4 3 -40.4 3.5' +
+  'M-24 2.8C-27 3.4 -29.6 2.8 -31.6 3.2';
+const BOWWAVE = 'M25.6 0.5C27.8 0.3 29.2 1.7 31.6 1.2M31 2.9C33.4 3.5 35.4 2.9 37 3.3';
+
+interface Mast {
+  x: number;
+  y: number;
+  tx: number;
+  ty: number;
+}
+// Stepped a quarter, a half and five-sixths of the way forward, which is where
+// they actually go. Six and a half degrees of rake, at the steep end of what a
+// ship of the period carried, because four degrees does not read at this size
+// and a rig that does not lean stands like a fence.
+const MIZZEN: Mast = { x: -15, y: -11.8, tx: -18.6, ty: -43 };
+const MAIN: Mast = { x: -1.5, y: -7.9, tx: -7.9, ty: -63.5 };
+const FORE: Mast = { x: 20, y: -11.6, tx: 15.4, ty: -51.5 };
+const mastX = (m: Mast, y: number) => m.x + ((m.tx - m.x) * (y - m.y)) / (m.ty - m.y);
+const mast = (m: Mast) => `M${f(m.x)} ${f(m.y)}L${f(m.tx)} ${f(m.ty)}`;
+
+// [y, half-width]. Topgallant, topsail and course yard, then the foot of the
+// course, which is not a yard and so carries no spar.
+type Tier = [y: number, halfWidth: number];
+
+// A whole suit of square sails on one mast as a single outline, the yards and
+// the sail feet ruled across it afterwards. Each ship prints 30-45px long:
+// drawn as separate sails at that size they stop being canvas and become a
+// stack of crates. The corners at the yard arms are what keep the outline a
+// stack of trapezoids rather than a cocoon, so the leech only bows a little
+// between them and the luff is all but straight, being held to the brace.
+const suit = (m: Mast, tiers: Tier[]) => {
+  const n = tiers.length;
+  const aft = tiers.map(([y, hw]) => [mastX(m, y) - hw, y] as const);
+  const fwd = tiers.map(([y, hw]) => [mastX(m, y) + hw, y] as const);
+  const leech = (
+    a: readonly [number, number],
+    b: readonly [number, number],
+    bow: number,
+  ) => `Q${f((a[0] + b[0]) / 2 + bow)} ${f((a[1] + b[1]) / 2)} ${f(b[0])} ${f(b[1])}`;
+
+  let d = `M${f(fwd[0][0])} ${f(fwd[0][1])}L${f(aft[0][0])} ${f(aft[0][1])}`;
+  for (let i = 1; i < n; i++) {
+    d += leech(aft[i - 1], aft[i], -0.18 * (tiers[i][0] - tiers[i - 1][0]));
+  }
+  // The foot of the course sags between its clews.
+  d += `Q${f((aft[n - 1][0] + fwd[n - 1][0]) / 2)} ${f(tiers[n - 1][0] + tiers[n - 1][1] * 0.24)} ${f(fwd[n - 1][0])} ${f(fwd[n - 1][1])}`;
+  for (let i = n - 2; i >= 0; i--) {
+    d += leech(fwd[i + 1], fwd[i], 0.04 * (tiers[i + 1][0] - tiers[i][0]));
+  }
+  return d + 'Z';
+};
+
+// Yard arms reach well past the canvas they carry, and the foot of the course
+// has no yard, so the last tier is skipped.
+const yards = (m: Mast, tiers: Tier[]) =>
+  tiers
+    .slice(0, -1)
+    .map(([y, hw]) => `M${f(mastX(m, y) - hw - 4)} ${f(y)}H${f(mastX(m, y) + hw + 4)}`)
+    .join('');
+
+// The foot of every sail above the lowest one, bellied down to just clear the
+// yard beneath it. Two units of belly: shallower and it reads as a second yard,
+// deeper and every sail turns into a bowl.
+const feet = (m: Mast, tiers: Tier[]) =>
+  tiers
+    .slice(1, -1)
+    .map(([y, hw]) => {
+      const x = mastX(m, y);
+      const w = hw * 0.84;
+      return `M${f(x - w)} ${f(y - 3.4)}Q${f(x - w * 0.12)} ${f(y + 0.5)} ${f(x + w)} ${f(y - 3.4)}`;
+    })
+    .join('');
+
+const MAIN_TIERS: Tier[] = [
+  [-56, 7.2],
+  [-44.5, 12],
+  [-30, 15.8],
+  [-14, 14.8],
+];
+const FORE_TIERS: Tier[] = [
+  [-45, 5.6],
+  [-35.5, 9.4],
+  [-24, 12.6],
+  [-11, 12],
+];
+const MAIN_SUIT = suit(MAIN, MAIN_TIERS);
+const FORE_SUIT = suit(FORE, FORE_TIERS);
+
+// The mizzen is fore-and-aft: a gaff sail with its own boom, four-cornered
+// where the others are trapezoids. It is right for 1712 and right for a barque,
+// and it is the one thing keeping the three masts from being three of the same
+// blob. Both spars run out past the cloth, or the sail is an oven mitt.
+// Each spar is ruled through the two sail corners it holds and a little past
+// them at both ends, so it is one straight line the sail hangs off rather than
+// a second edge beside the sail's own.
+const GAFF = 'M-16.2-35.9L-29.8-42.8';
+const BOOM = 'M-13.8-13.7L-31.6-16.7';
+const SPANKER = 'M-17.3-36.4L-28.8-42.3Q-31.4-29 -30.2-16.5L-15.2-14Z';
+
+// Bowsprit steeved over the beak, carrying the line of the stem straight on,
+// and drawn at the hull's own weight: it is the longest stroke on the ship and
+// it is the thing that says which end is the bow. The fore-topmast stay runs
+// from its end up to the masthead, and the jib sets on that stay: luff straight
+// along it, leech bowing aft, foot sagging to the clew.
+const BOWSPRIT = 'M22.5-10.2L44-21.8';
+const JIB = 'M33.4-33.1L44-21.8Q39.4-17.2 33-15.8Q30.4-24.2 33.4-33.1Z';
+
+// Standing rigging, ruled over the canvas. Four lines, and they buy more
+// legibility than anything else on the ship. The main stay that used to run
+// down through the gap between the two suits is gone: rigging across an open
+// gap is what fills the rig in until it prints as one grey cloud.
+const RIGGING =
+  'M44-21.8L16.1-50.5' + // fore topmast stay, and the jib's luff
+  'M14.7-48.5L26.5-6.6' + // fore stay to the stemhead
+  'M-7.1-60.5L-24-13.6' + // main backstay, out to the quarter
+  'M-18-40.5L-4.5-13.2'; // mizzen stay
+
+// Ensign at the gaff peak, which is where a ship under sail wears it and the
+// only place aft that is clear of the hull at this size. On a staff over the
+// taffrail it was three grey pixels and no critic could find it.
+const ENSIGN =
+  'M-29.4-42.4C-32.6-43.4 -35.8-40.8 -38.8-41.8' +
+  'L-37.2-37.6C-34.4-36.8 -31.8-38.8 -29-38.4Z';
+
+// Pennant at the main truck: one wave in it and a swallowtail, and no deeper
+// than a stroke and a half. Drawn long and even it was an aerial; drawn with
+// any depth to it, it is a banner nailed to the mast.
+const PENNANT =
+  'M-7.9-63.4C-12.4-64.5 -16.9-62.5 -21.8-63.1L-19-62L-21.6-60.9C-16.9-60.4 -12.4-61.9 -7.9-61.9Z';
+
+interface Props {
+  x: number;
+  y: number;
+  scale: number;
+  /** Degrees of bow-up trim. Level at every placement reads as printed furniture. */
+  tilt?: number;
+  ensign?: boolean;
+  /** Ports along the wale. Warships only. */
+  guns?: boolean;
+  /** Off for a ship cleared for action: the spanker is brailed up before the guns run out. */
+  spanker?: boolean;
+}
+
+const {
+  x,
+  y,
+  scale,
+  tilt = 0,
+  ensign = true,
+  guns = false,
+  spanker = true,
+} = Astro.props;
+const transform = `translate(${x} ${y}) rotate(${tilt}) scale(${scale})`;
+const w = (px: number) => f(px / scale);
+const paper = 'var(--color-paper)';
+---
+
+<g transform={transform}>
+  <path d={WAKE + BOWWAVE} stroke-width={w(0.5)} opacity="0.6" />
+  <path d={mast(MIZZEN) + mast(MAIN) + mast(FORE)} stroke-width={w(0.9)} />
+  {spanker && <path d={SPANKER} fill={paper} stroke-width={w(0.65)} />}
+  <path d={GAFF + BOOM} stroke-width={w(0.65)} />
+  <path d={MAIN_SUIT} fill={paper} stroke-width={w(0.65)} />
+  <path d={yards(MAIN, MAIN_TIERS)} stroke-width={w(0.8)} />
+  <path d={feet(MAIN, MAIN_TIERS)} stroke-width={w(0.5)} opacity="0.85" />
+  <path d={FORE_SUIT} fill={paper} stroke-width={w(0.65)} />
+  <path d={yards(FORE, FORE_TIERS)} stroke-width={w(0.8)} />
+  <path d={feet(FORE, FORE_TIERS)} stroke-width={w(0.5)} opacity="0.85" />
+  <path d={JIB} fill={paper} stroke-width={w(0.65)} />
+  <path d={RIGGING} stroke-width={w(0.35)} opacity="0.42" />
+  <path d={HULL} fill={paper} stroke-width={w(1)} />
+  <path d={WALE} stroke-width={w(0.5)} opacity="0.65" />
+  <path d={GALLERY} stroke-width={w(0.5)} opacity="0.7" />
+  {guns && <path d={PORTS} stroke-width={w(0.45)} opacity="0.55" />}
+  <path d={BOWSPRIT} stroke-width={w(1)} />
+  <path d={PENNANT} fill={paper} stroke-width={w(0.5)} />
+  {ensign && <path d={ENSIGN} fill={paper} stroke-width={w(0.6)} />}
+</g>
