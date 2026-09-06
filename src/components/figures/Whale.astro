@@ -1,51 +1,125 @@
 ---
-import { spine, shell } from '@/lib/curves';
+import { spine, type Node } from '@/lib/curves';
 
 // --- Sperm whale ----------------------------------------------------------
-// A quarter of it is the case: a tank of oil it uses to focus the loudest
-// sound any animal makes. Square on top, undercut below.
+// A third of it is the case: a tank of oil it uses to focus the loudest
+// sound any animal makes. Blunt at the front, crowned on top, and the
+// deepest part of the animal, so the body has to narrow behind it or the
+// whole thing is a cigar with one flat end.
+//
+// Everything that identifies it from a distance is in the profiles, not
+// drawn on top of them: the hump two thirds back, the knuckles running aft
+// from it, the lip of the blowhole at the front corner, the keel under the
+// stock. Marks laid over the outline turned to bumps and ticks at 0.2
+// opacity.
+//
+// The spine runs nose-down, ten degrees at the head and five at the tail,
+// so the flukes sit above the line of the back: it has just started a dive.
+// Level, it read as a model on a stand.
 const whale = spine({
-  from: 44,
-  to: 268,
-  y: (t) => 62 - t * 5,
+  from: 72,
+  to: 300,
+  y: (t) => 52 + 18 * t + 10 * t * t,
+  steps: 180,
   up: [
-    [0, 2],
-    [0.08, 6],
-    [0.34, 18],
-    [0.6, 22],
-    [0.72, 24],
-    [0.95, 24],
-    [1, 22],
+    [0, 4.5],
+    // Five knuckles behind the hump, the first the tallest, each one aft
+    // lower and further from the last until they die into the stock, with
+    // the ridge sagging between. Evenly spaced and matched they were a saw
+    // blade.
+    [0.04, 6.0],
+    [0.06, 7.4],
+    [0.085, 7.8],
+    [0.12, 10.0],
+    [0.148, 10.5],
+    [0.175, 12.4],
+    [0.2, 12.4],
+    [0.225, 14.8],
+    [0.248, 14.5],
+    [0.27, 17.1],
+    [0.295, 16.5],
+    // The hump: the only one with a real crest.
+    [0.325, 19.6],
+    [0.39, 17.5],
+    [0.48, 18.6],
+    [0.6, 20.2],
+    [0.72, 21.6],
+    // The case is crowned, not ruled flat.
+    [0.82, 22.8],
+    [0.9, 23.5],
+    // The blowhole is a raised lip at the front left corner of the case,
+    // which is why the spout goes forward and to one side. One feature: a
+    // lip with a notch behind it packed into a nub at true size.
+    [0.93, 23.2],
+    [0.955, 24.6],
+    [0.975, 23.0],
+    [0.99, 20.8],
+    [1, 17.6],
   ],
   down: [
-    [0, 2],
-    [0.08, 6],
-    [0.36, 17],
-    [0.62, 17],
-    [0.78, 15],
-    [0.92, 13],
-    [1, 11],
+    // The stock deepens into a keel just ahead of the flukes; a plain taper
+    // there is a fish.
+    [0, 5.0],
+    [0.035, 6.8],
+    [0.08, 7.2],
+    [0.15, 10.5],
+    [0.28, 15.0],
+    [0.42, 19.6],
+    [0.55, 23.0],
+    [0.66, 24.0],
+    // From the jaw hinge forward this edge is the underside of the case,
+    // sweeping up to a snout that overhangs the jaw slung beneath it.
+    [0.72, 23.6],
+    [0.85, 23.8],
+    [0.95, 22.4],
+    [0.965, 21.4],
+    [0.978, 19.4],
+    [0.99, 16.4],
+    [1, 12.5],
   ],
 });
+
+// shell() would wall the tail off and stand the front face up plumb. The
+// flukes grow out of the tail end, so the outline is left open there and
+// the fluke path carries on from its two ends; and the case overhangs the
+// chin, so the lower edge is drawn back over the last stretch until the
+// face leans. A plumb face made the head a rectangle.
+function hull(n: Node[], lean: number): string {
+  const top = n.map((p) => `${p.x.toFixed(1)} ${(p.y - p.u).toFixed(1)}`);
+  const bot = n
+    .map((p) => {
+      const k = Math.max(0, (p.t - 0.84) / 0.16);
+      return `${(p.x - lean * k * k).toFixed(1)} ${(p.y + p.d).toFixed(1)}`;
+    })
+    .reverse();
+  return `M${top.join('L')}L${bot.join('L')}`;
+}
 ---
 
-<svg viewBox="-10 24 310 82" fill="none" stroke="currentColor" stroke-width="1">
-  <path d={shell(whale)} />
-  {/* Blowhole, sitting on the outline at the front left corner of the head,
-      which is why a sperm whale's spout goes forward and to one side. */}
-  <path d="M250 34.6c2-2.4 5-2.4 7 0" stroke-width="0.7" />
-  {/* The lower jaw is a rod slung under all that head: narrow, set back, and
-      the only part of the animal with teeth in it. */}
-  <path d="M206 73C226 74 246 73 259 70v3c-13 3-33 5-51 4Z" stroke-width="0.8" />
-  <path d="M218 73.4v2.6M226 73.6v2.6M234 73.4v2.6M242 73v2.6M250 72.4v2.6" stroke-width="0.5" opacity="0.7" />
-  <circle cx="214" cy="58" r="1.9" fill="currentColor" opacity="0.85" />
-  {/* A hump two thirds back and knuckles running aft from it, in place of the
-      dorsal fin it does not have. */}
-  <path d="M140 41c4-5 9-6 14-2" stroke-width="0.8" />
-  <path d="M124 43c4-4 8-4 11-1M108 45c3-3 7-3 10 0M94 47c3-3 6-3 9 0" stroke-width="0.7" />
-  <path d="M196 72c-2 12-8 20-16 24 0-10 5-19 12-24Z" stroke-width="0.8" />
-  {/* Fluke, on the downstroke. */}
-  <path d="M46 60C30 44 8 34-6 36c12 10 18 18 18 24 0 7-6 16-20 28 16 2 36-10 52-26Z" />
-  <path d="M40 56C26 46 12 42 2 42" stroke-width="0.5" opacity="0.55" />
-  <path d="M60 52c-8 4-12 8-14 12" stroke-width="0.5" opacity="0.5" />
+<svg viewBox="44 26 262 80" fill="none" stroke="currentColor" stroke-width="0.66" stroke-linejoin="round" stroke-linecap="round">
+  <path d={hull(whale, 5)} />
+  {/* Flukes turned a little toward the viewer, the way a field guide shows
+      them in profile at all: the near lobe larger and lower, the far one
+      smaller over the stock. Leading edges bellied so each lobe has chord
+      at mid-span, trailing edges ruled straight to a deep notch: that
+      straight edge is what separates these from a humpback's, and a lobe
+      with no chord is a fish's. Each lobe leaves from a corner of the open
+      stock. */}
+  <path d="M72 57C74 63.5 66 77 46 81L67 52L52 33C62 32 73 40 72 47.5" />
+  {/* The lower jaw: a rod slung under all that head, a fraction of its
+      depth, deeper at the hinge than at the tip, and its rounded tip set
+      well back under the snout. The mouth line leaves the outline at the
+      hinge and runs a hair below the underside, so there is a sliver of
+      dark between jaw and case; laid flush it doubled the outline. */}
+  <path d="M236 93.8C250 97.4 270 100.2 284 101.4Q287.4 101.7 287.2 103.2Q287 104.8 283.6 104.6C268 104.2 250 101.6 232 93.3" stroke-width="0.42" />
+  {/* A pinprick of an eye, just above and behind the hinge. */}
+  <circle cx="229.5" cy="88.2" r="0.9" fill="currentColor" stroke="none" opacity="0.75" />
+  {/* A short spatulate flipper low on the flank behind the eye, laid back
+      along the body. Both edges stop on the outline so the underside stays
+      one line. */}
+  <path d="M224 92.4C219 95.6 212.6 99 206 100.6C202.4 101.5 199.6 100.3 200.2 98.2C201.2 95.4 204.4 92.4 208 89.7" stroke-width="0.42" />
+  {/* The skin behind the head is corrugated like a prune. Two broken
+      hairlines along the flank, faint enough to go at true size and show at
+      3x. */}
+  <path d="M170 59.6c7 1.2 13 0.8 19-0.6M192 58.8c4-0.4 7-0.2 10 0.4M178 71.4c7-0.6 13 0 19 1.2" stroke-width="0.3" opacity="0.32" />
 </svg>

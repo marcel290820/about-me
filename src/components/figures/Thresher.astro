@@ -1,45 +1,168 @@
 ---
-import { spine, shell } from '@/lib/curves';
+import { spine, at, type Prof } from '@/lib/curves';
 
 // --- Thresher shark -------------------------------------------------------
 // The upper tail lobe is as long as the rest of the animal. It uses it to
-// crack the water like a whip and stun what it is chasing.
-const thresher = spine({
-  from: 34,
-  to: 226,
-  y: (t) => 62 - Math.sin(t * 3.1) * 3,
+// crack the water like a whip and stun what it is chasing. The tail is the
+// identification, so it gets the care and the body gets the least ink that
+// still reads as a shark.
+
+// Precaudal body, peduncle at the left (t = 0), snout at the right. The back
+// arches to the first dorsal and the belly is flatter, or the body hangs. It
+// is deep-chested at the pectorals and pinched hard at the peduncle, so the
+// mass of the animal and the thinness of the tail read against each other. The
+// forehead is convex over the eye and the snout ends short and round:
+// tapered to a point at both ends this was a sailfish. The rear third turns
+// up so the back is already rising where the tail takes over; without the
+// lift the tail left the body at a pit and read as bolted on.
+const body = spine({
+  from: 60,
+  to: 250,
+  steps: 60,
+  y: (t) => 62 - Math.sin(t * 3.1) * 3 - (1 - t) ** 4 * 9,
   up: [
-    [0, 1.4],
-    [0.08, 5],
-    [0.34, 14.5],
-    [0.5, 15.5],
-    [0.74, 12],
-    [0.92, 5.5],
-    [1, 0.8],
+    [0, 2.2],
+    [0.12, 3.6],
+    [0.35, 13],
+    [0.58, 16],
+    [0.78, 14],
+    [0.9, 10],
+    [0.96, 5.5],
+    [1, 1],
   ],
   down: [
-    [0, 1.4],
-    [0.08, 5],
-    [0.36, 15.5],
-    [0.54, 16],
-    [0.78, 10],
-    [0.94, 4.5],
-    [1, 0.8],
+    [0, 2.2],
+    [0.12, 4.4],
+    [0.3, 13],
+    [0.5, 17],
+    [0.72, 15.5],
+    [0.84, 12],
+    [0.92, 7.5],
+    [0.97, 5],
+    [1, 1],
   ],
 });
+
+// A blade: a curve thickened along its own normal. spine() stacks its
+// half-heights vertically, which is right for a body running along the page
+// and wrong for a lobe leaving it at forty degrees, where the same numbers
+// thin as it climbs and fatten as it flattens. `root` is where the leading
+// edge must start; the whole curve is shifted so it does, which is how the
+// lobe grows out of the top of the peduncle rather than near it.
+type Pt = [number, number];
+function bezier(p: Pt[], t: number): { at: Pt; dir: Pt } {
+  const s = 1 - t;
+  const w = [s * s * s, 3 * s * s * t, 3 * s * t * t, t * t * t];
+  const d = [-3 * s * s, 3 * s * s - 6 * s * t, 6 * s * t - 3 * t * t, 3 * t * t];
+  const sum = (k: number[], i: 0 | 1) => k.reduce((a, c, j) => a + c * p[j][i], 0);
+  return { at: [sum(w, 0), sum(w, 1)], dir: [sum(d, 0), sum(d, 1)] };
+}
+function normal([dx, dy]: Pt): Pt {
+  const k = Math.hypot(dx, dy) || 1;
+  return [-dy / k, dx / k];
+}
+function blade(ctrl: Pt[], lead: Prof, trail: Prof, root: Pt, steps = 60) {
+  const n0 = normal(bezier(ctrl, 0).dir);
+  const w0 = at(lead, 0);
+  const shift: Pt = [root[0] - ctrl[0][0] - n0[0] * w0, root[1] - ctrl[0][1] - n0[1] * w0];
+  const l: Pt[] = [];
+  const r: Pt[] = [];
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    const { at: [x, y], dir } = bezier(ctrl, t);
+    const [nx, ny] = normal(dir);
+    const cx = x + shift[0];
+    const cy = y + shift[1];
+    l.push([cx + nx * at(lead, t), cy + ny * at(lead, t)]);
+    r.push([cx - nx * at(trail, t), cy - ny * at(trail, t)]);
+  }
+  return { lead: l, trail: r };
+}
+const pt = (p: Pt) => `${p[0].toFixed(1)} ${p[1].toFixed(1)}`;
+
+const peduncle = body[0];
+const top: Pt = [peduncle.x, peduncle.y - peduncle.u];
+const bottom: Pt = [peduncle.x, peduncle.y + peduncle.d];
+
+// The scythe. It leaves at 40 degrees and lays back to 12 at the tip, one
+// long convex arc: a straight blade is a spar, a hooked one is a pennant. Deep at the root and tapering
+// the whole way, because two parallel lines are a strap. The trailing profile
+// is deeper than the leading one because the fork sits behind and below the
+// peduncle, not square across it, and it dips and rises again just short of
+// the tip: the subterminal notch every shark tail has, small here.
+const lobe = blade(
+  [
+    [58, 58],
+    [12, 20],
+    [-60, -42],
+    [-108, -52],
+  ],
+  [
+    [0, 4],
+    [0.1, 7],
+    [0.3, 6.5],
+    [0.6, 4.5],
+    [0.85, 2],
+    [1, 0],
+  ],
+  [
+    [0, 12],
+    [0.15, 8],
+    [0.3, 6.5],
+    [0.6, 4.5],
+    [0.85, 1.9],
+    [0.89, 0.7],
+    [0.92, 1.7],
+    [0.96, 1.1],
+    [1, 0],
+  ],
+  top,
+);
+
+// One path for body and tail, so the peduncle is a stroke join and not two
+// caps meeting. Out along the leading edge, back along the trailing edge to
+// the fork, then the lower lobe: short, pointed, and a different shape from
+// the upper one so the tail does not read as a symmetric V. Its leading
+// edge bows outward; bowed in, the lobe was a spike. Then the belly to the
+// snout and the back home to where the blade left it.
+const outline =
+  'M' +
+  lobe.lead.map(pt).join('L') +
+  'L' +
+  lobe.trail.slice(0, -1).reverse().map(pt).join('L') +
+  `C47 66 41 74 37 83C44 78 53 68 ${pt(bottom)}` +
+  'L' +
+  body.map((p) => `${p.x.toFixed(1)} ${(p.y + p.d).toFixed(1)}`).join('L') +
+  'L' +
+  body
+    .slice()
+    .reverse()
+    .map((p) => `${p.x.toFixed(1)} ${(p.y - p.u).toFixed(1)}`)
+    .join('L') +
+  'Z';
 ---
 
-<svg viewBox="-46 -34 288 148" fill="none" stroke="currentColor" stroke-width="1">
-  <path d={shell(thresher)} />
-  {/* The scythe. As long again as the animal it is attached to. */}
-  <path d="M36 58C10 40-14 12-40-30-24 6-8 34 20 60c-26 12-40 22-48 34 18-12 38-20 62-24Z" />
-  <path d="M14 40C0 22-14 0-28-18" stroke-width="0.5" opacity="0.6" />
-  {/* First dorsal, pectorals, keel. */}
-  <path d="M126 47c6-16 14-24 24-25-4 9-6 17-6 25Z" />
-  <path d="M164 72c14 8 24 20 28 32-16-6-28-16-36-28Z" stroke-width="0.8" />
-  <path d="M120 76c8 6 12 12 14 20" stroke-width="0.6" opacity="0.7" />
-  <path d="M78 66c8-2 14-1 18 2" stroke-width="0.5" opacity="0.6" />
-  <circle cx="208" cy="58" r="3" stroke-width="0.8" />
-  <path d="M216 66c-6 2-12 2-16 0" stroke-width="0.6" />
-  <path d="M196 50c-2 6-2 12 0 17M188 48c-2 7-2 14 0 20" stroke-width="0.5" opacity="0.55" />
+<svg viewBox="-118 -68 380 180" fill="none" stroke="currentColor" stroke-width="1.2">
+  <path d={outline} />
+  {/* Every fin is one stroke: out of the body on a convex leading edge, round
+      the apex, back on a concave trailing edge to a rear tip that trails behind
+      where it left. Isosceles triangles were carets. First dorsal tall, set
+      back, apex leaning aft; pelvic a short broad triangle under its rear end. */}
+  <path d="M169 43.5C164 30 154 15 147 13C143.5 12.3 139 30 134 45.5" />
+  <path d="M142.5 73C136 79 128 85 120 88.5C123 84 125.5 78 128 71.2" stroke-width="1" />
+  {/* Pectoral: long and sickle-shaped, from just behind the last gill slit. */}
+  <path d="M209 71C200 84 184 95 164 100C176 94 184 86 192 73.2" />
+  {/* Second dorsal and anal, both minute, swept back on the peduncle. */}
+  <path d="M90 52C87 48.5 83.5 46.8 80.5 47C81.5 49 82 50.5 82.5 52M80.5 59.2C77.5 62.2 74 64 71 63.9C72 62.2 72.5 60.7 73 57.9" stroke-width="0.8" />
+  {/* Eye, a solid dot (a ring was a target at 3x and a blob at true size),
+      the mouth underslung behind the snout, and five gill slits that shorten
+      and close up rearward, the last over the pectoral origin. Even arcs at
+      even spacing were a comb. */}
+  <circle cx="238" cy="59.5" r="1.9" fill="currentColor" stroke="none" />
+  <path d="M242.5 63.2C240 65.8 236 66.7 231.5 65.8" stroke-width="0.7" opacity="0.7" />
+  <path
+    d="M226 54.5c-1 3.4-1 8 0 11.5M221.5 55c-1 3.2-1 7.3 0 10.5M217.5 55.6c-.9 3-.9 6.5 0 9.5M214 56.2c-.8 2.6-.8 5.8 0 8.5M211 56.8c-.7 2.3-.7 5 0 7.5"
+    stroke-width="0.6"
+    opacity="0.6"
+  />
 </svg>

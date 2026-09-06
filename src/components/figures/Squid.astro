@@ -1,57 +1,182 @@
 ---
-import { spine, shell } from '@/lib/curves';
+import { spine, type Node, type Prof } from '@/lib/curves';
+
+const f = (v: number) => v.toFixed(1);
+const pt = (p: number[]) => `${f(p[0])} ${f(p[1])}`;
+const nodeAt = (n: Node[], t: number): Node =>
+  n.reduce((a, b) => (Math.abs(b.t - t) < Math.abs(a.t - t) ? b : a));
+// A girth profile sampled densely off a function. at() eases between control
+// points with a flat spot at each one, so a taper given as five points came
+// out as five ruled facets; sixteen steps along a curve hide the joins.
+const prof = (g: (t: number) => number): Prof =>
+  Array.from({ length: 17 }, (_, i) => [i / 16, g(i / 16)]);
 
 // --- Squid ----------------------------------------------------------------
 // Jets apex first, arms streaming behind, which is the shape it makes when it
-// is going somewhere rather than hunting.
-const squid = spine({
-  from: 70,
-  to: 180,
-  y: () => 48,
-  up: [
-    [0, 11],
-    [0.18, 13.5],
-    [0.5, 11.5],
-    [0.8, 6],
-    [1, 0.8],
-  ],
+// is going somewhere rather than hunting. The mantle runs near parallel for
+// its front third, widest about a third back, and then draws in on one
+// convex sweep to the point, with a little more belly below than above.
+// Ruled straight from collar to tip it was a machined cone. The axis lifts
+// a hair toward the apex while the arms sag the other way, so the animal is
+// not a ruler.
+const R = 12.2;
+const taper = (t: number) => Math.max(0.3, R * (1 - t ** 2.2) ** 0.75);
+const mantle = spine({
+  from: 68,
+  to: 182,
+  y: (t) => 48 - 2.5 * t,
+  up: prof((t) => taper(t) + 0.6 * Math.exp(-(((t - 0.32) / 0.22) ** 2))),
+  down: prof((t) => taper(t) + 1.1 * Math.exp(-(((t - 0.4) / 0.25) ** 2))),
 });
 
-// Eight arms held in a bundle, which is the shape they make when the animal is
-// travelling rather than hunting. Spread them out and it turns into a mop.
-const ARMS = [
-  'M52 45C42 42 30 41 18 40',
-  'M52 47C40 45 26 44 12 44',
-  'M52 49C38 48 22 48 8 49',
-  'M52 51C40 51 26 53 14 55',
-  'M52 53C42 55 32 58 22 62',
-];
+// Closed outline with the collar cut on the bias: the dorsal margin runs
+// ahead of the ventral one and ends in a small point over the neck, which is
+// how a squid mantle opens, and the cut bows a little toward the head, since
+// it is the rim of a tube seen from off axis. shell() closes it square, and
+// square is a can; ruled straight it was a wall.
+function hull(n: Node[], lead: number): string {
+  const top = n.map((p) => pt([p.x, p.y - p.u]));
+  const bot = n
+    .slice(1)
+    .map((p) => pt([p.x, p.y + p.d]))
+    .reverse();
+  const o = n[0];
+  const v = n[1];
+  const nib = [o.x - lead, o.y - o.u + 0.9];
+  const rim = [(v.x + nib[0]) / 2 - 1.6, (v.y + v.d + nib[1]) / 2];
+  return `M${top.join('L')}L${bot.join('L')}Q${pt(rim)} ${pt(nib)}Z`;
+}
 
-// The two long tentacles do the catching, and the paddle on the end of each is
-// the only part with suckers on it.
-const TENTACLES = ['M54 43C34 34 14 28-6 26', 'M54 51C32 54 12 62-4 72'];
-const CLUBS =
-  'M-6 26c-6-1-11 0-13 3 5 2 10 1 13-3ZM-4 72c-6 1-10 4-11 8 5-1 9-4 11-8Z';
+// One fin, read off the mantle's own nodes so its root cannot leave the body.
+// The leading edge bows out, the corner rounds off on a tangent parallel to
+// the axis, and the trailing edge comes back nearly straight to land on the
+// mantle edge at a clear angle short of the apex, so only the mantle runs
+// through to the tip. Sagged in, the trailing edge ran alongside the mantle
+// edge and the two read as a folded paper dart; four lines meeting at the
+// point hatched the arrowhead solid at true size.
+function fin(n: Node[], side: 'up' | 'down', t0: number, tMax: number, out: number): string {
+  const edge = (p: Node) => (side === 'up' ? p.y - p.u : p.y + p.d);
+  const s = side === 'up' ? -1 : 1;
+  const a = nodeAt(n, t0);
+  const m = nodeAt(n, tMax);
+  const e = nodeAt(n, 0.94);
+  const A = [a.x, edge(a)];
+  const T = [m.x, edge(m) + s * out];
+  const E = [e.x, edge(e)];
+  const c1 = [A[0] + (T[0] - A[0]) * 0.4, A[1] + (T[1] - A[1]) * 0.55];
+  const c2 = [T[0] - (T[0] - A[0]) * 0.3, T[1]];
+  const c3 = [T[0] + (E[0] - T[0]) * 0.2, T[1]];
+  const c4 = [T[0] + (E[0] - T[0]) * 0.5, T[1] + (E[1] - T[1]) * 0.54];
+  return `M${pt(A)}C${pt(c1)} ${pt(c2)} ${pt(T)}C${pt(c3)} ${pt(c4)} ${pt(E)}`;
+}
+// The two fins do not match: the near one sits further aft and stands wider,
+// as the pair does when the animal is not held dead level. A mirrored pair
+// is a paper dart.
+const FINS = fin(mantle, 'up', 0.47, 0.75, 21) + fin(mantle, 'down', 0.55, 0.81, 23.5);
+
+// Eight arms held in a cone behind the head. They are strands of one
+// tapering spine, so the bundle closes to a point by construction: fanned
+// out by hand it turned into a mop, and sagged hard it turned into a broom,
+// widest at the tips. A small sag is what drag does to the arms when the
+// mantle is doing the work.
+const bundle = spine({
+  from: 50,
+  to: 3,
+  y: (t) => 48 + 3.5 * t * t,
+  up: [
+    [0, 7],
+    [0.4, 5],
+    [0.75, 2.6],
+    [1, 0.3],
+  ],
+});
+// A strand at a fixed fraction of the cone's half-height, between two ts,
+// with an optional bend: a wave of amplitude w over the run, dying out at
+// both ends so the root and the tip stay in the bundle.
+const strand = (n: Node[], k: number, t0: number, t1: number, w = 0) =>
+  'M' +
+  n
+    .filter((p) => p.t >= t0 && p.t <= t1)
+    .map((p) => pt([p.x, p.y + k * p.u + w * Math.sin(2 * Math.PI * p.t) * (1 - p.t)]))
+    .join('L');
+// The inner arms root further forward than the outer pair, so the crown is
+// convex rather than a wall at the front of the head; the outer pair runs
+// the whole cone straight, two of the inner ones bend, and the inner ones
+// stop short at different lengths, or the tip is a pencil point. Nothing
+// curls off at the tip: a curl there read as a stray leaving the bundle.
+// Each arm is drawn in two weights, heavy at the root and light past the
+// middle, which is as close to a tapering stroke as a hairline gets and lets
+// the cone read without more lines.
+const ARM = [
+  [-1, 0, 1, 0],
+  [-0.5, 0.04, 0.84, 0.7],
+  [0.05, 0.07, 0.92, 0],
+  [0.5, 0.04, 0.78, -0.6],
+  [1, 0, 1, 0],
+];
+const ARMS_ROOT = ARM.map(([k, t0, , w]) => strand(bundle, k, t0, 0.5, w)).join('');
+const ARMS_TIP = ARM.map(([k, , t1, w]) => strand(bundle, k, 0.5, t1, w)).join('');
+
+// The two tentacles are what make it a squid and not an octopus: longer than
+// the arms and each ending in a paddle. They run hidden in the cone and only
+// leave it at the tip (started further back, the upper one climbed out over
+// the top edge), then sag under the clubs, the lower one more, so the two
+// paddles sit apart instead of stacking. One paddle is seen flat and the
+// other edge-on, which is how a pair trailing in a jet actually sits; two
+// matching ovals were a pair of rackets.
+// A club is spatulate, widest near the far end and rounded off, drawn as one
+// open stroke continuing the tentacle: closed, at true size it was a dot,
+// and pointed at both ends it was a leaf. deg follows the tentacle's own
+// heading; y runs down in SVG, so a negative angle trails the paddle down
+// and a positive one turned the lower club up through the upper.
+function club(x: number, y: number, deg: number, L: number, W: number): string {
+  const r = (deg * Math.PI) / 180;
+  const at = ([px, py]: number[]) =>
+    pt([x + px * Math.cos(r) - py * Math.sin(r), y + px * Math.sin(r) + py * Math.cos(r)]);
+  const P = [
+    [-L * 0.3, -W * 0.15],
+    [-L * 0.75, -W * 0.55],
+    [-L, -W * 0.3],
+    [-L * 1.1, -W * 0.1],
+    [-L * 1.08, W * 0.35],
+    [-L * 0.94, W * 0.5],
+    [-L * 0.7, W * 0.62],
+    [-L * 0.35, W * 0.3],
+    [-L * 0.08, W * 0.1],
+  ];
+  return (
+    `C${at(P[0])} ${at(P[1])} ${at(P[2])}` +
+    `C${at(P[3])} ${at(P[4])} ${at(P[5])}C${at(P[6])} ${at(P[7])} ${at(P[8])}`
+  );
+}
+const TENTACLES =
+  'M12 50.2C6 50.2-2 50.2-12 50.4' +
+  club(-12, 50.4, -2, 16, 4.6) +
+  'M12 51.2C5 52.2-1 54.4-8 56.8' +
+  club(-8, 56.8, -22, 16, 1.5);
 ---
 
-<svg viewBox="-22 14 216 76" fill="none" stroke="currentColor" stroke-width="1">
+<svg viewBox="-30 15 220 66" fill="none" stroke="currentColor" stroke-width="1">
   {/* Ink first in the paint order, so it puffs behind everything else. */}
-  <circle cx="58" cy="52" r="13" class="drift__ink" />
-  <path d={shell(squid)} />
-  {/* One pair of fins at the apex, flaring off the mantle. The outer corner
-      is rounded and the trailing edge runs into the tip: drawn as two
-      pointed triangles they read as fletching on a paper dart. */}
-  <path d="M122 39C140 30 156 24 166 24c6 0 10 6 11 13l3 11Z" stroke-width="0.8" />
-  <path d="M122 57C140 66 156 72 166 72c6 0 10-6 11-13l3-11Z" stroke-width="0.8" />
-  {/* Head at the mantle opening, and an eye out of all proportion to it. */}
-  <path d="M70 37C60 38 52 42 52 48s8 10 18 11" stroke-width="0.9" />
-  <path d="M70 37c-6 3-9 7-9 11s3 8 9 11" stroke-width="0.5" opacity="0.6" />
-  <circle cx="62" cy="46" r="4.2" stroke-width="0.8" />
-  <circle cx="62" cy="46" r="1.5" fill="currentColor" stroke="none" />
-  {/* Funnel. Everything the animal does for speed comes out of this. */}
-  <path d="M66 56c-5 2-9 5-11 9 4-1 8-3 11-6Z" stroke-width="0.7" />
-  <path d={ARMS.join('')} stroke-width="0.7" opacity="0.85" />
-  <path d={TENTACLES.join('')} stroke-width="0.6" opacity="0.7" />
-  <path d={CLUBS} stroke-width="0.6" opacity="0.7" />
-  <path d="M104 40h30M100 56h34" stroke-width="0.5" opacity="0.4" />
+  <circle cx="60" cy="52" r="13" class="drift__ink" />
+  <path d={hull(mantle, 3.5)} />
+  <path d={FINS} stroke-width="0.9" />
+  {/* Head: a short dome over the eye and a fuller curve under it, each
+      leaving the collar and running straight into an outer arm, so there
+      is no wall at either end. Squared off against the collar the head was
+      a coupling on a pipe. */}
+  <path d="M65.5 39.8C61 38 55 38.4 50 41M69.5 57.2C65 59.2 57.5 58.6 50 55" stroke-width="0.9" />
+  {/* The eye is most of the head, and the pupil sits forward and up, off
+      centre, the way an eye on the move does: dead centre it was a bullseye.
+      The ring stands clear of the collar, or its rim and the collar read as
+      two walls of a coupling. That proportion is the animal. */}
+  <circle cx="57.4" cy="47.6" r="5.6" stroke-width="0.8" />
+  <circle cx="56.5" cy="46.9" r="1.9" fill="currentColor" stroke="none" />
+  {/* Funnel: a short tube out from under the collar, mouth pointing the way
+      the arms go. The jet comes out here and the animal goes the other way.
+      One stroke, open at the collar end, so it emerges rather than floats. */}
+  <path d="M69 59.4C64.5 60.6 60.5 61.8 57.5 63c.2 .9 .6 1.4 1.2 1.7C61.5 63.9 65 62.9 68.5 62.2" stroke-width="0.7" />
+  <path d={ARMS_ROOT} stroke-width="0.75" opacity="0.9" />
+  <path d={ARMS_TIP} stroke-width="0.5" opacity="0.7" />
+  <path d={TENTACLES} stroke-width="0.5" opacity="0.7" />
 </svg>
