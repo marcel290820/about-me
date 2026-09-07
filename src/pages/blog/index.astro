@@ -3,12 +3,21 @@ import Page from '@/layouts/Page.astro';
 import Log from '@/components/Log.astro';
 import Wayfinding from '@/components/Wayfinding.astro';
 import { getCollection } from 'astro:content';
-import { newestFirst } from '@/lib/log';
+import { newestFirst, SHOW_BLOG } from '@/lib/log';
 
-const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(newestFirst);
+const posts = SHOW_BLOG
+  ? (await getCollection('blog', ({ data }) => !data.draft)).sort(newestFirst)
+  : [];
 ---
 
-<Page title="Blog" description="Engineering articles by Marcel Heidebrecht" surface>
+{/* The route still builds with the log off, so keep the orphan page out of
+    the search index rather than let it answer a query. */}
+<Page
+  title="Blog"
+  description="Engineering articles by Marcel Heidebrecht"
+  surface
+  noindex={!SHOW_BLOG}
+>
   <div slot="surface" class="pt-8 pb-16 sm:pt-12 sm:pb-24">
     <h1 class="display-name mb-4">Remarks</h1>
     <p class="font-mono text-xs uppercase tracking-[0.16em] text-text-dim mb-12">
@@ -21,5 +30,5 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(newe
     )}
   </div>
 
-  <Wayfinding posts={posts} />
+  {SHOW_BLOG && <Wayfinding posts={posts} />}
 </Page>

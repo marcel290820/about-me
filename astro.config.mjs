@@ -18,7 +18,9 @@ export default defineConfig({
         wrap: true,
       },
     }),
-    sitemap(),
+    // `/blog` still builds with the log off (see SHOW_BLOG in src/lib/log.ts);
+    // keep the orphan out of the sitemap until it carries entries again.
+    sitemap({ filter: (page) => !page.includes('/blog') }),
     pagefind(),
     writer(),
   ],

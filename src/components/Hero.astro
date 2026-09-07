@@ -1,6 +1,7 @@
 ---
 import { Image } from 'astro:assets';
 import portrait from '@/assets/images/marcel-heidebrecht-portrait.jpeg';
+import { SHOW_BLOG } from '@/lib/log';
 ---
 
 <section class="relative pt-10 pb-16 sm:pt-16 sm:pb-28">
@@ -19,7 +20,7 @@ import portrait from '@/assets/images/marcel-heidebrecht-portrait.jpeg';
 
       <div class="flex items-center gap-3">
         <a href="/about" class="btn-primary">about</a>
-        <a href="/blog" class="btn-ghost">blog</a>
+        {SHOW_BLOG && <a href="/blog" class="btn-ghost">blog</a>}
       </div>
     </div>
 

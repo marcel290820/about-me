@@ -1,9 +1,11 @@
 ---
 import BlogPost from '@/layouts/BlogPost.astro';
 import { getCollection, render } from 'astro:content';
-import { newestFirst, readingMinutes } from '@/lib/log';
+import { newestFirst, readingMinutes, SHOW_BLOG } from '@/lib/log';
 
 export async function getStaticPaths() {
+  if (!SHOW_BLOG) return [];
+
   const all = (await getCollection('blog')).sort(newestFirst);
   const published = all.filter((post) => !post.data.draft);
   // Drafts build in dev so the writer can preview them, never in production.
