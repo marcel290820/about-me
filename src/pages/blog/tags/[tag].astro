@@ -3,9 +3,11 @@ import Page from '@/layouts/Page.astro';
 import Log from '@/components/Log.astro';
 import Wayfinding from '@/components/Wayfinding.astro';
 import { getCollection, type CollectionEntry } from 'astro:content';
-import { newestFirst } from '@/lib/log';
+import { newestFirst, SHOW_BLOG } from '@/lib/log';
 
 export async function getStaticPaths() {
+  if (!SHOW_BLOG) return [];
+
   const all = (await getCollection('blog', ({ data }) => !data.draft)).sort(newestFirst);
   const tags = [...new Set(all.flatMap((post) => post.data.tags))];
 

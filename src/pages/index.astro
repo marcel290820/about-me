@@ -5,12 +5,12 @@ import Passage from '@/components/Passage.astro';
 import LogEntry from '@/components/LogEntry.astro';
 import Sheet from '@/components/Sheet.astro';
 import { getCollection } from 'astro:content';
-import { newestFirst, readingMinutes } from '@/lib/log';
+import { newestFirst, readingMinutes, SHOW_BLOG } from '@/lib/log';
 import { byRank } from '@/lib/projects';
 
-const allPosts = (await getCollection('blog', ({ data }) => !data.draft))
-  .sort(newestFirst)
-  .slice(0, 3);
+const allPosts = SHOW_BLOG
+  ? (await getCollection('blog', ({ data }) => !data.draft)).sort(newestFirst).slice(0, 3)
+  : [];
 
 // One sheet on home, the newest. Three would be the projects page again.
 const projects = (await getCollection('projects')).sort(byRank);

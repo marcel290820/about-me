@@ -20,6 +20,7 @@ Astro 7 static site, no JS framework islands (no React/Vue/Svelte). Pages are `.
 - Three collections: `blog` (md/mdx, has `draft` field), `projects` (yaml, one file per project, no body), `interests`. Blog posts with `draft: true` are filtered out of listings.
 - `src/content/` files are read via Astro's content collections API (`getCollection`), not raw filesystem reads.
 - Routes live in `src/pages/`; layouts (`Base`, `Page`, `BlogPost`) in `src/layouts/`; reusable UI in `src/components/`. The deep-water figures are one component each under `src/components/figures/`, the chart marginalia one each under `src/components/marks/`; `Drift.astro` and `ChartMarks.astro` mount them and carry the behaviour. The blog reads on paper: the log at `/blog` and every entry sit in the surface slot, and only earlier/later, topics, search and the feed sit under the waterline.
+- **The log is off.** `SHOW_BLOG` in `src/lib/log.ts` is `import.meta.env.DEV`, so the blog prints under `astro dev` (the chart table still previews a draft against the real page) and stays off the built site: no nav link, no button on home, no recent-remarks section, no entry or tag pages, an empty feed and no `<link rel="alternate">` to it. `/blog` itself is a file-based route and still emits, so it is built `noindex` (out of Pagefind) and filtered out of the sitemap in `astro.config.mjs`. Set `SHOW_BLOG` to `true` and drop that sitemap filter to publish the log again.
 
 ## Styling
 
