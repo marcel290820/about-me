@@ -49,3 +49,24 @@ const ticks = [0, 12, 24, 36, 48];
   <span class="depth-badge__rule"></span>
   <span>Hs <b data-sea-hs>&ndash;&ndash;</b></span>
 </div>
+
+<script>
+  // The badge is fixed chrome and a phone has no gutter to keep it in, so it
+  // yields: while any inset (a plate, a survey, the index) is in the band
+  // along the bottom of the frame where the badge sits, the badge goes off
+  // the edge. The band is the bottom tenth of the viewport, a little more
+  // than the badge itself.
+  const badge = document.querySelector('.depth-badge');
+  const insets = document.querySelectorAll('.portrait-inset__frame');
+  if (badge && insets.length) {
+    const over = new Set<Element>();
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) e.isIntersecting ? over.add(e.target) : over.delete(e.target);
+        badge.classList.toggle('is-clear', over.size > 0);
+      },
+      { rootMargin: '-90% 0px 0px 0px' },
+    );
+    insets.forEach((el) => io.observe(el));
+  }
+</script>

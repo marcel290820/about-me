@@ -1,6 +1,7 @@
 title: Finding the duplicates in a software estate
 domain: data
 rank: 22
+org: tub
 description: >-
   Matching an organisation's software inventory against a catalogue of
   thousands of tools to show where it is paying twice for one capability.
@@ -14,5 +15,10 @@ stack:
   - NumPy
   - scikit-learn
   - Jupyter
+core:
+  - Python
+  - Jupyter
+touched:
+  - NumPy
 from: 2024
 to: 2025

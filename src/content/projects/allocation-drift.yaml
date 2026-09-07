@@ -1,6 +1,7 @@
 title: A depot that says when it has drifted
 domain: data
 rank: 15
+org: own
 description: >-
   Reads a brokerage depot, compares it against a target allocation, and names
   only the positions that have wandered far enough to be worth acting on. It
@@ -14,5 +15,11 @@ stack:
   - Linux
   - Pytest
   - Ruff
+core:
+  - Python
+touched:
+  - Linux
+  - Ruff
 from: 2026
 to: 2026
+repo: https://github.com/marcel290820/investment-tools

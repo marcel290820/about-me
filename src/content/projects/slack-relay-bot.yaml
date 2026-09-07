@@ -1,6 +1,7 @@
 title: Slack bot that relays and tracks tickets
 domain: web
 rank: 6
+org: cct
 description: >-
   Forwards messages into private channels and turns them into support
   tickets, with modals, reactions, a home tab and a slash command. Started
@@ -13,5 +14,11 @@ stack:
   - SQLite
   - Docker Swarm
   - GitLab CI
+core:
+  - Python
+  - Flask
+  - Slack API
+touched:
+  - Docker Swarm
 from: 2024
 to: 2026

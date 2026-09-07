@@ -1,0 +1,26 @@
+---
+// A publisher's crest in the page's ink: the mark from src/lib/orgs.ts when
+// there is one, CCT's raster through a mask because it is only published
+// as a PNG, and for a client series the words, since the companies are not
+// named anywhere on the site and a blank would read as a missing image.
+// Whatever frames it sets the size through --crest.
+import { ORGS, type Org } from '@/lib/orgs';
+import cct from '@/assets/images/cct-mark.png';
+
+interface Props {
+  org: Org;
+}
+
+const { org } = Astro.props;
+const pub = ORGS[org];
+---
+
+{
+  pub.mark ? (
+    <svg viewBox={pub.mark.viewBox} fill="currentColor" role="img" aria-label={pub.name} set:html={pub.mark.svg} />
+  ) : org === 'cct' ? (
+    <span class="crest__raster" role="img" aria-label={pub.name} style={`--mark: url(${cct.src})`} />
+  ) : (
+    <span class="crest__withheld">crest withheld</span>
+  )
+}

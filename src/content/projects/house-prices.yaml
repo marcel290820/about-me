@@ -1,6 +1,7 @@
 title: Forecasting German house prices
 domain: data
 rank: 18
+org: tub
 description: >-
   A bachelor thesis on predicting residential sale prices from a national
   real-estate dataset joined to socio-economic and demographic data.
@@ -14,5 +15,11 @@ stack:
   - scikit-learn
   - Jupyter
   - LaTeX
+core:
+  - Python
+  - Jupyter
+  - LaTeX
+touched:
+  - NumPy
 from: 2023
 to: 2023

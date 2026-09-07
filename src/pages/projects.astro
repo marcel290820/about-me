@@ -1,10 +1,16 @@
 ---
 import Page from '@/layouts/Page.astro';
+import Limits from '@/components/Limits.astro';
+import Series from '@/components/Series.astro';
 import Sheet from '@/components/Sheet.astro';
 import { getCollection } from 'astro:content';
-import { byRank } from '@/lib/projects';
+import { TIERS, series } from '@/lib/projects';
 
-const projects = (await getCollection('projects')).sort(byRank);
+const folios = series(await getCollection('projects'));
+const span = (sheets: { data: { from: number; to?: number } }[]) => ({
+  from: Math.min(...sheets.map((s) => s.data.from)),
+  to: Math.max(...sheets.map((s) => s.data.to ?? s.data.from)),
+});
 ---
 
 <Page title="Projects" description="Projects by Marcel Heidebrecht" surface>
@@ -12,14 +18,45 @@ const projects = (await getCollection('projects')).sort(byRank);
     <h1 class="display-name mb-4">Projects</h1>
     <p class="font-mono text-xs uppercase tracking-[0.16em] text-text-dim mb-8">catalogue of sheets</p>
     <p class="text-[0.9375rem] text-text-muted max-w-prose">
-      What I've put to sea so far, and what it was built from.
+      What I've put to sea so far, what it was built from, and who it was for.
     </p>
+    {/* The cover carries the index: every sheet on one list, a line each,
+        and a line opens the sheet. */}
+    <div class="mt-10">
+      <Limits folios={folios} />
+    </div>
   </div>
 
-  {/* One column, full width, newest first. No domain sections and no rules
-      between sheets: the frame is the separator, and a grid of plates would
-      be a grid of cards. */}
-  <div class="space-y-16 sm:space-y-24">
-    {projects.map((p, i) => <Sheet project={p.data} index={i + 1} total={projects.length} />)}
+  {/* The key to the bearing weights, printed once, the way a chart prints
+      its legend once, as a caption at the head of the sheets it applies
+      to. It was on the paper beside the index twice, above it and then
+      below it, and both times read as the index's legend; the index has
+      no weights. */}
+  <p class="sheet-key mb-16 sm:mb-24 flex flex-wrap items-center gap-x-5 gap-y-1.5 font-mono text-[0.625rem] uppercase tracking-[0.14em] text-text-dim">
+    <span>bearing weight, share of the work</span>
+    {TIERS.map(([t, label]) => (
+      <span class="inline-flex items-center gap-2" data-tier={t}>
+        <svg class="sheet__weight w-7 h-2 shrink-0" viewBox="0 0 28 8" aria-hidden="true">
+          <path d="M0 4h28" stroke="currentColor" />
+        </svg>
+        {label}
+      </span>
+    ))}
+  </p>
+
+  {/* One column, full width, in series by publisher and by rank within
+      each. No rules between sheets: the frame is the separator, and a grid
+      of plates would be a grid of cards. Each series runs down a log-book
+      rail, crest at its head and a tick at every sheet, so six sheets read
+      as one run and not as six that happen to follow a heading. */}
+  <div class="space-y-24 sm:space-y-32">
+    {folios.map(({ org, sheets }) => (
+      <section class="rail series-run">
+        <Series org={org} count={sheets.length} {...span(sheets)} />
+        <div class="space-y-16 sm:space-y-24">
+          {sheets.map((p, i) => <Sheet id={p.id} project={p.data} index={i + 1} total={sheets.length} />)}
+        </div>
+      </section>
+    ))}
   </div>
 </Page>

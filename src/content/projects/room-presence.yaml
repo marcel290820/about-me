@@ -1,6 +1,7 @@
 title: Who is in the room, read off the WiFi
 domain: web
 rank: 7
+org: cct
 description: >-
   Asks the router which devices are on the WiFi and answers the one
   question anyone walking over actually has: is somebody up there. I took
@@ -13,6 +14,11 @@ stack:
   - Pydantic
   - Docker
   - Caddy
+core:
+  - Python
+  - Jinja2
+touched:
+  - Pydantic
 from: 2025
 to: 2025
 url: https://tower.cct-ev.de

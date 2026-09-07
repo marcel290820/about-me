@@ -15,15 +15,19 @@ import type { CollectionEntry } from 'astro:content';
 import { Image } from 'astro:assets';
 import { ICON, TALL, TICK, WIDE, layout, type Layout, type Mark, type Plate } from '@/lib/sheet';
 import { logo } from '@/lib/logos';
+import { ORGS } from '@/lib/orgs';
+import { TIERS, type Tier } from '@/lib/projects';
 
 interface Props {
+  /** The entry's id, which is the anchor the index of sheets links to. */
+  id: string;
   project: CollectionEntry<'projects'>['data'];
   /** Where this sheet falls in the catalogue, one-based, and how many there are. */
   index: number;
   total: number;
 }
 
-const { project: p, index, total } = Astro.props;
+const { id, project: p, index, total } = Astro.props;
 const hasLogo = (name: string) => logo(name) !== undefined;
 const plates: { plate: Plate; cls: string; L: Layout }[] = [
   { plate: WIDE, cls: 'sheet__plate--wide', L: layout(p.title, p.stack, hasLogo, WIDE) },
@@ -45,6 +49,21 @@ const graticule = (L: Layout, { w, h }: Plate) =>
 const pad = (n: number) => String(n).padStart(2, '0');
 const deg = (n: number) => String(n).padStart(3, '0');
 const years = p.to && p.to !== p.from ? `${p.from} to ${p.to}` : `${p.from}`;
+// How much of the work ran through a mark, read off the commit history when
+// the sheet was drawn. The bearing is drawn heavier the higher the tier, the
+// way a chart draws the line to a conspicuous mark heavier than to one it
+// can barely make out. The projects page prints the key once, at its head.
+const tier = (name: string): Tier => (p.core.includes(name) ? 'core' : p.touched.includes(name) ? 'touched' : 'used');
+// The caption numbers the sheet within its series, the way charts are
+// numbered within the folio that holds them.
+const code = ORGS[p.org].code;
+// The source stamp under the frame: the GitHub mark and the repository path
+// when the source is public, a lock when it is not. Both print in the same
+// place, so a private sheet says so rather than leaving a gap.
+const repoPath = p.repo ? new URL(p.repo).pathname.replace(/^\//, '') : null;
+const GITHUB =
+  '<path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>';
+const LOCK = '<rect x="5" y="10.5" width="14" height="10" rx="1"/><path d="M8.5 10.5V7.5a3.5 3.5 0 0 1 7 0v3"/>';
 // The inset's caption names the site it surveyed and the day it was surveyed.
 const host = p.url ? new URL(p.url).hostname.replace(/^www\./, '') : null;
 const surveyed = p.preview?.surveyed.toISOString().slice(0, 10);
@@ -52,7 +71,7 @@ const link =
   'font-mono text-[0.625rem] uppercase tracking-[0.14em] text-text-muted hover:text-accent transition-colors';
 ---
 
-<article class="sheet" data-sheet style={`--n:${p.stack.length - 1}`}>
+<article class="sheet" id={id} data-sheet style={`--n:${p.stack.length - 1}`}>
   <figure class="portrait-inset w-full">
     <div class="portrait-inset__frame">
       {plates.map(({ plate, cls, L }) => (
@@ -72,7 +91,7 @@ const link =
               Each bearing carries its index so the draw-on can stagger
               them. */}
           {L.marks.map((m, i) => (
-            <g class="sheet__mark">
+            <g class="sheet__mark" data-tier={tier(m.name)}>
               <path d={bearing(m, L)} class="sheet__bearing" pathLength="1" style={`--i:${i}`} />
               {m.icon ? (
                 <svg
@@ -118,7 +137,20 @@ const link =
         </span>
       </div>
     </div>
-    <figcaption class="self-end">sheet {pad(index)} of {pad(total)}</figcaption>
+    <figcaption class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5">
+      {p.repo && repoPath ? (
+        <a class="sheet__source" href={p.repo} target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" set:html={GITHUB} />
+          <span>{repoPath}</span>
+        </a>
+      ) : (
+        <span class="sheet__source sheet__source--private" title="The source is private">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true" set:html={LOCK} />
+          <span>source private</span>
+        </span>
+      )}
+      <span class="ml-auto">{code} series, sheet {pad(index)} of {pad(total)}</span>
+    </figcaption>
   </figure>
 
   <div class="mt-4 flex flex-col gap-6 sm:flex-row sm:items-start sm:gap-8">
@@ -127,27 +159,33 @@ const link =
       {/* Under sm the plate carries logos only and this line carries the names,
           logos and all. Above sm it is for screen readers, since the plate is
           hidden from them. */}
-      <ul class="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 font-mono text-xs text-text-dim sm:sr-only">
-        {p.stack.map((s) => (
-          <li class="inline-flex items-center gap-1.5">
-            {logo(s) && (
-              <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" set:html={logo(s)} />
-            )}
-            {s}
-          </li>
-        ))}
-      </ul>
-      {((p.url && !p.preview) || p.repo) && (
-        <div class="flex items-center gap-5 mt-3">
-          {/* The survey inset is itself the link out, so a sheet that carries
-              one does not repeat it here. */}
-          {p.url && !p.preview && (
-            <a href={p.url} target="_blank" rel="noopener noreferrer" class={link}>live &rarr;</a>
-          )}
-          {p.repo && (
-            <a href={p.repo} target="_blank" rel="noopener noreferrer" class={link}>source &rarr;</a>
-          )}
-        </div>
+      <dl class="mt-3 flex flex-col gap-1.5 font-mono text-xs text-text-dim sm:sr-only">
+        {TIERS.map(([t, label]) => {
+          const names = p.stack.filter((s) => tier(s) === t);
+          return (
+            names.length > 0 && (
+              <div class="grid grid-cols-[5.25rem_1fr] gap-x-3">
+                <dt class="text-[0.625rem] uppercase tracking-[0.14em] text-text-faint pt-px">{label}</dt>
+                <dd class="flex flex-wrap gap-x-4 gap-y-1.5">
+                  {names.map((s) => (
+                    <span class="inline-flex items-center gap-1.5">
+                      {logo(s) && (
+                        <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" set:html={logo(s)} />
+                      )}
+                      {s}
+                    </span>
+                  ))}
+                </dd>
+              </div>
+            )
+          );
+        })}
+      </dl>
+      {/* The survey inset is itself the link out, so a sheet that carries
+          one does not repeat it here; the source is the stamp under the
+          frame. */}
+      {p.url && !p.preview && (
+        <a href={p.url} target="_blank" rel="noopener noreferrer" class:list={['inline-block mt-3', link]}>live &rarr;</a>
       )}
     </div>
     {/* A sheet's inset: the harbour plan a chart prints in the margin of the

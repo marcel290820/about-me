@@ -649,14 +649,54 @@
     border: 1px solid var(--color-border);
   }
 
+  /* How much of the work ran through a mark, in three weights. The bearing
+     to a core mark is drawn heavy, to one used in passing barely there, and
+     the logo and name take the same ink, so a sheet can be read for what
+     carried the project before a single name is. The middle tier is what a
+     sheet drew before it had tiers, so an entry that names none prints as it
+     did. The key at the head of the projects page samples the same lines. */
+  .sheet [data-tier='core'],
+  .sheet-key [data-tier='core'] {
+    --bearing: 1.4;
+    --bearing-ink: 1;
+    --mark-ink: var(--color-text);
+    --mark-opacity: 1;
+  }
+
+  .sheet [data-tier='used'],
+  .sheet-key [data-tier='used'] {
+    --bearing: 0.7;
+    --bearing-ink: 0.85;
+    --mark-ink: var(--color-text-muted);
+    --mark-opacity: 0.75;
+  }
+
+  .sheet [data-tier='touched'],
+  .sheet-key [data-tier='touched'] {
+    --bearing: 0.45;
+    --bearing-ink: 0.45;
+    --mark-ink: var(--color-text-dim);
+    --mark-opacity: 0.5;
+    --name-opacity: 0.7;
+  }
+
   /* One ink for every logo. Brands ship at four optical weights; knocked
      back together they read as one constellation of marks. */
   .sheet__logo {
-    color: var(--color-text-muted);
-    opacity: 0.75;
+    color: var(--mark-ink, var(--color-text-muted));
+    opacity: var(--mark-opacity, 0.75);
     transition:
       color 0.15s ease,
       opacity 0.15s ease;
+  }
+
+  .sheet__weight {
+    stroke-width: var(--bearing, 0.7);
+    opacity: var(--bearing-ink, 0.85);
+  }
+
+  .sheet-key [data-tier] {
+    color: var(--mark-ink);
   }
 
   /* Degrees true, written along the bearing a third of the way in from the
@@ -677,7 +717,8 @@
     font-family: var(--font-mono);
     font-size: 11px;
     letter-spacing: 0.04em;
-    fill: var(--color-text-muted);
+    fill: var(--mark-ink, var(--color-text-muted));
+    fill-opacity: var(--name-opacity, 1);
     /* The passage's knockout: a name crossing a graticule line sits over it
        instead of tangling with it. sheet.test.ts sizes names at 7.04 units
        a character from this font size and tracking. */
@@ -692,8 +733,8 @@
      while the others fall back, so eight lines into one point can be read
      one at a time. */
   .sheet__bearing {
-    stroke-width: 0.7;
-    opacity: 0.85;
+    stroke-width: var(--bearing, 0.7);
+    opacity: var(--bearing-ink, 0.85);
     transition:
       opacity 0.2s ease,
       stroke 0.15s ease;
@@ -771,6 +812,490 @@
   .sheet__mark:hover .sheet__name,
   .sheet__mark:hover .sheet__deg {
     fill: var(--color-accent);
+  }
+
+  /* The source stamp under the frame: the GitHub mark with the repository
+     path, boxed the way the title block is, and a lock in a dashed box in
+     the same place when the source is private. The stamp is where the eye
+     goes for the link out, so a private sheet keeps the slot and says so. */
+  .sheet__source {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-width: 0;
+    padding: 0.2rem 0.5rem;
+    border: 1px solid var(--color-border-bright);
+    border-radius: 2px;
+    color: var(--color-text-muted);
+    transition:
+      color 0.15s ease,
+      border-color 0.2s ease;
+  }
+
+  .sheet__source span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .sheet__source svg {
+    width: 0.875rem;
+    height: 0.875rem;
+    flex-shrink: 0;
+  }
+
+  /* The public stamp is the one link on the sheet, so it prints in the
+     page's ink with the mark in the accent, and the private one stays in
+     the caption's grey: the two are told apart at a glance. */
+  a.sheet__source {
+    color: var(--color-text);
+  }
+
+  a.sheet__source svg {
+    color: var(--color-accent);
+  }
+
+  a.sheet__source:hover,
+  a.sheet__source:focus-visible {
+    color: var(--color-accent);
+    border-color: var(--color-accent);
+  }
+
+  .sheet__source--private {
+    border-style: dashed;
+    color: var(--color-text-dim);
+  }
+
+  /* --- Series ------------------------------------------------------------
+     The head of a run of sheets from one publisher: a crest in a ruled
+     inset beside the name, the section rule running out from it. The run
+     itself is a log-book rail with a plain tick at each sheet's top edge;
+     the orange fix is the CV's and stays there. Paper, so nothing moves. */
+
+  .series-run .sheet {
+    position: relative;
+  }
+
+  .series-run .sheet::before {
+    content: "";
+    position: absolute;
+    left: -1.35rem;
+    top: 0;
+    width: 0.9rem;
+    height: 1px;
+    background: var(--color-border-bright);
+  }
+
+  /* A phone has no margin to run a rail in, and a sheet needs the width. */
+  @media (width < 40rem) {
+    .series-run {
+      padding-left: 0;
+    }
+
+    .series-run::before,
+    .series-run .sheet::before {
+      display: none;
+    }
+  }
+
+  .series {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.25rem;
+    margin-bottom: 2.5rem;
+  }
+
+  @media (width >= 40rem) {
+    .series {
+      gap: 1.75rem;
+      margin-bottom: 3.5rem;
+    }
+  }
+
+  .series__crest {
+    flex-shrink: 0;
+  }
+
+  /* One cap height for every mark in a frame: a monogram, an anchor and a
+     lettered mark share it, and a shared box alone left the anchor a speck
+     and the lettering edge to edge. The crest prints in the page's ink, and
+     the frame sets --crest. */
+  .crest {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-muted);
+  }
+
+  .crest svg {
+    display: block;
+    height: var(--crest);
+    width: auto;
+    max-width: 100%;
+  }
+
+  /* CCT's mark is wider than it is tall, so the cap height it gets is what
+     the frame's width allows; the mask keeps its proportion. */
+  .crest__raster {
+    display: block;
+    width: 100%;
+    height: var(--crest);
+    background: currentColor;
+    -webkit-mask: var(--mark) center / contain no-repeat;
+    mask: var(--mark) center / contain no-repeat;
+  }
+
+  /* No crest to print. A dashed frame with the words is the chart's own
+     way of showing a blank on purpose, where an empty box reads as a broken
+     image. */
+  .crest:has(.crest__withheld) {
+    border-style: dashed;
+  }
+
+  .crest__withheld {
+    font-family: var(--font-mono);
+    font-size: 0.5625rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-text-dim);
+    text-align: center;
+  }
+
+  /* The head's frame: one landscape inset for every series. */
+  .series__frame {
+    --crest: 2rem;
+    width: 6rem;
+    height: 3rem;
+  }
+
+  @media (width >= 40rem) {
+    .series__frame {
+      --crest: 2.5rem;
+      width: 8rem;
+      height: 3.75rem;
+    }
+  }
+
+  /* The running head. Zero height, so it takes no room in the run: in flow
+     it sits level with the first sheet's top tick, and from there it rides
+     until the series has passed. It hangs just above the depth scale in the
+     rail's column, so series, depth and sea state read as one instrument,
+     and it prints only where that gutter is. The scale's top is 18vh. */
+  .series__pin {
+    display: none;
+  }
+
+  @media (min-width: 1024px) {
+    .series__pin {
+      position: sticky;
+      top: calc(18vh - 4rem);
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      height: 0;
+      width: var(--gutter-width);
+      /* Out of the content column and over the rail's: the gutter offset,
+         main's padding and the log-book rail's own. */
+      margin-left: calc(-1 * (var(--gutter-offset) + 1.5rem + 1.35rem));
+      font-family: var(--font-mono);
+      font-size: 0.625rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      text-align: center;
+      color: var(--color-text-muted);
+    }
+  }
+
+  /* A step heavier than the scale's ticks under it, so it reads as a
+     different register and not as one more entry on the scale. */
+  .series__pin-crest {
+    --crest: 1.75rem;
+    height: 1.75rem;
+    color: var(--color-text-muted);
+  }
+
+  .series__pin-crest .crest__withheld {
+    display: none;
+  }
+
+  .series__pin-crest:has(.crest__withheld) {
+    width: 2.5rem;
+    margin: 0 auto;
+    border: 1px dashed var(--color-border-bright);
+  }
+
+  /* A long name wraps, and the rule with its dot drops under it as one full
+     line rather than the dot floating alone beside the wrap. */
+  .series__heading {
+    flex-wrap: wrap;
+    margin-bottom: 0;
+  }
+
+  .series__heading::after {
+    min-width: 3rem;
+  }
+
+  .series__heading h2 {
+    white-space: normal;
+  }
+
+  .series__heading a {
+    color: inherit;
+    transition: color 0.15s ease;
+  }
+
+  .series__heading a:hover {
+    color: var(--color-accent);
+  }
+
+  /* --- Index of sheets ---------------------------------------------------
+     The catalogue's numerical list: column heads and a year ruler printed
+     once under the extent, then a block per series under its crest, one
+     line per sheet with number, title, the marks it was built from, the
+     years, and a scale bar on a year graticule with the sheet's span
+     inked. Paper, so nothing moves. The paper is knocked out under it so
+     a printed sounding cannot strike through a line. */
+
+  .limits {
+    /* The scale's pitch, integer so the graticule lands on pixels, and the
+       fixed columns the rules are measured against. */
+    --year-px: 36px;
+    --scale: calc(var(--years, 7) * var(--year-px) + 1px);
+    --marks: 5rem;
+    --span: 3.25rem;
+    --gap: 0.75rem;
+    position: relative;
+    background: var(--color-surface);
+  }
+
+  .limits__heading {
+    margin-bottom: 0.6rem;
+  }
+
+  .limits__extent {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-text-dim);
+  }
+
+  /* The column heads and every line share one set of columns, so the
+     scale bars hang under the ruler however far down the list they are. */
+  .limits__cols,
+  .limits__line {
+    display: grid;
+    grid-template-columns: 2.25rem minmax(0, 1fr) var(--marks) var(--span) var(--scale);
+    align-items: center;
+    column-gap: var(--gap);
+  }
+
+  .limits__cols {
+    margin-top: 1.5rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--color-border-bright);
+    font-family: var(--font-mono);
+    font-size: 0.5625rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-text-faint);
+  }
+
+  /* The ruler: a tick a year with the figure beside every other one. */
+  .limits__ruler {
+    display: grid;
+    grid-template-columns: repeat(var(--years, 7), 1fr);
+    align-self: stretch;
+  }
+
+  .limits__ruler span {
+    padding: 0 0 0 3px;
+    border-left: 1px solid var(--color-border-bright);
+    letter-spacing: 0.04em;
+  }
+
+  .limits__series {
+    margin-top: 1.5rem;
+  }
+
+  .limits__head {
+    display: flex;
+    align-items: center;
+    gap: var(--gap);
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--color-border-bright);
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-text-dim);
+  }
+
+  .limits__crest {
+    --crest: 1rem;
+    width: 2.25rem;
+    height: 1rem;
+    flex-shrink: 0;
+    justify-content: flex-start;
+  }
+
+  .limits__crest .crest__withheld {
+    display: none;
+  }
+
+  .limits__crest:has(.crest__withheld) {
+    width: 1.5rem;
+    height: 0.75rem;
+    margin-right: var(--gap);
+    border: 1px dashed var(--color-border-bright);
+  }
+
+  .limits__name {
+    font-size: 0.8125rem;
+    color: var(--color-text);
+  }
+
+  .limits__count {
+    margin-left: auto;
+  }
+
+  /* The rules are drawn once behind the whole block, so they run through
+     every row: the year graticule, a hairline a year with no line past the
+     last year, and a column rule where the titles end, so the columns read
+     as a ruled table and not as three ragged stacks. A tick per row was
+     tried for the graticule and read as dirt speckling the table. */
+  .limits__list {
+    --rule: calc(var(--scale) + var(--span) + var(--marks) + var(--gap) * 3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    background:
+      repeating-linear-gradient(to right, var(--color-border-subtle) 0 1px, transparent 1px var(--year-px)) right 0 top 0 /
+        calc(var(--scale) - 1px) 100% no-repeat,
+      linear-gradient(var(--color-border-subtle), var(--color-border-subtle)) right var(--rule) top 0 / 1px 100% no-repeat;
+  }
+
+  .limits__line {
+    --bar-ink: var(--color-text);
+    padding: 0.45rem 0;
+    border-bottom: 1px solid var(--color-border-subtle);
+    color: inherit;
+    text-decoration: none;
+  }
+
+  /* The list closes on the rule it opened with. */
+  .limits__series:last-child li:last-child .limits__line {
+    border-bottom-color: var(--color-border-bright);
+  }
+
+  .limits__n,
+  .limits__span {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.12em;
+    color: var(--color-text-dim);
+    transition: color 0.15s ease;
+  }
+
+  .limits__span {
+    font-size: 0.5625rem;
+    text-align: right;
+  }
+
+  .limits__title {
+    font-size: 0.8125rem;
+    line-height: 1.25;
+    color: var(--color-text);
+  }
+
+  /* The marks a sheet was built from, in the plate's logos at a size where
+     a Python or a Docker still reads and the rest is a shape in the row. */
+  .limits__marks {
+    display: flex;
+    gap: 0.375rem;
+    color: var(--color-text-muted);
+    transition: color 0.15s ease;
+  }
+
+  .limits__marks svg {
+    width: 0.75rem;
+    height: 0.75rem;
+    flex-shrink: 0;
+  }
+
+  /* The scale: the span inked a full year long between a tick at each
+     end, so a single year is a dated span and not a dash. */
+  .limits__scale {
+    display: grid;
+    grid-template-columns: repeat(var(--years, 7), 1fr);
+    height: 10px;
+  }
+
+  .limits__scale span {
+    background: linear-gradient(var(--bar-ink), var(--bar-ink)) 0 1px / 0 3px no-repeat;
+  }
+
+  .limits__scale .is-on {
+    background-size: 100% 3px;
+  }
+
+  .limits__scale .is-on:first-child,
+  .limits__scale span:not(.is-on) + .is-on,
+  .limits__scale .is-on + span:not(.is-on) {
+    border-left: 1px solid var(--bar-ink);
+  }
+
+  .limits__scale .is-on:last-child {
+    border-right: 1px solid var(--bar-ink);
+  }
+
+  /* Lit, the marks take the accent and the title stays in ink: the accent
+     on paper is for marks and rules, not text. */
+  .limits__line:hover,
+  .limits__line:focus-visible {
+    --bar-ink: var(--color-accent);
+  }
+
+  .limits__line:hover .limits__n,
+  .limits__line:focus-visible .limits__n {
+    color: var(--color-accent);
+  }
+
+  .limits__line:hover .limits__marks,
+  .limits__line:focus-visible .limits__marks {
+    color: var(--color-text);
+  }
+
+  .limits__line:focus-visible {
+    outline: 1px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  /* A phone has the number, the title and the years: the scale at a
+     phone's pitch was a 15px mark taking a third of the row, and the
+     marks are on the sheet. */
+  @media (width < 40rem) {
+    .limits__cols {
+      display: none;
+    }
+
+    .limits__line {
+      grid-template-columns: 1.75rem minmax(0, 1fr) auto;
+      column-gap: 0.5rem;
+    }
+
+    .limits__list {
+      background: none;
+    }
+
+    .limits__marks,
+    .limits__scale {
+      display: none;
+    }
+  }
+
+  /* A sheet arrived at from the index lands with its top tick in frame. */
+  .sheet {
+    scroll-margin-top: 1.5rem;
   }
 
   /* Taking the fix. Arming hides the bearings and the fix; seeing draws each
@@ -1571,13 +2096,21 @@
 
   /* --- Depth rail -------------------------------------------------------- */
 
+  /* The instrument column: where the rail sits, left of the max-w-3xl
+     content column, and how wide. The series' running head prints in the
+     same column, so it reads the same two values. */
+  :root {
+    --gutter-offset: 92px;
+    --gutter-width: 76px;
+  }
+
   .depth-rail {
     position: fixed;
     top: 0;
     bottom: 0;
     /* Sits in the left gutter, clear of the max-w-3xl content column. */
-    left: max(0.75rem, calc(50% - 384px - 92px));
-    width: 76px;
+    left: max(0.75rem, calc(50% - 384px - var(--gutter-offset)));
+    width: var(--gutter-width);
     z-index: 20;
     pointer-events: none;
     display: none;
@@ -1786,7 +2319,24 @@
     backdrop-filter: blur(8px);
     transition:
       color 0.4s ease,
-      border-color 0.4s ease;
+      border-color 0.4s ease,
+      opacity 0.4s ease,
+      transform 0.4s ease;
+  }
+
+  /* Chrome does not print over a plate. While an inset is in the band the
+     badge sits in, it parks off the edge with a stub of its frame left at
+     the screen's edge to hold the slot, and comes back once the inset has
+     passed; DepthRail.astro's observer sets this. The slide is times
+     --motion; under reduced motion it fades out instead. */
+  .depth-badge.is-clear {
+    transform: translateX(calc((-100% - 0.75rem + 6px) * var(--motion)));
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .depth-badge.is-clear {
+      opacity: 0;
+    }
   }
 
   :root[data-zone-low="deep"] .depth-badge {

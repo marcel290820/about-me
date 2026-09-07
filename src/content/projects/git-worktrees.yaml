@@ -1,6 +1,7 @@
 title: Git worktrees, one command per feature
 domain: infra
 rank: 14
+org: own
 description: >-
   Branches, creates a worktree beside the repository rather than inside it,
   and opens each one in its own editor window. Names are sanitised on the way
@@ -10,5 +11,10 @@ stack:
   - Bash
   - Git
   - macOS
+core:
+  - Bash
+touched:
+  - macOS
 from: 2025
 to: 2026
+repo: https://github.com/marcel290820/git-toolkit

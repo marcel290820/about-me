@@ -1,6 +1,7 @@
 title: Teaching an agent to spend fewer tokens
 domain: data
 rank: 19
+org: tub
 description: >-
   A master thesis on reward shaping in GRPO: a cosine length reward and a
   penalty for never stopping, applied to a tool-calling policy trained against
@@ -17,4 +18,11 @@ stack:
   - Linux
   - Pytest
   - uv
+core:
+  - Python
+  - Hugging Face
+touched:
+  - NVIDIA
+  - uv
 from: 2026
+repo: https://github.com/marcel-tu-berlin/master-thesis-code

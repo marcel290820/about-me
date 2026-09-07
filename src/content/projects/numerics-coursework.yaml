@@ -1,6 +1,7 @@
 title: Numerics, from a draining reservoir to flow
 domain: data
 rank: 21
+org: tub
 description: >-
   Engineering computation in Python: a two-dimensional lattice-Boltzmann
   simulation of flow past an obstacle, a reservoir emptied one time step at a
@@ -13,5 +14,11 @@ stack:
   - SciPy
   - pandas
   - Jupyter
+core:
+  - Python
+  - Jupyter
+  - NumPy
+touched:
+  - SciPy
 from: 2025
 to: 2026

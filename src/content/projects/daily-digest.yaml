@@ -1,6 +1,7 @@
 title: Two morning digests and an hourly watch
 domain: data
 rank: 13
+org: own
 description: >-
   Reads Hacker News and two news feeds, folds in two fear-and-greed indices,
   and puts a digest in Telegram before breakfast. Three timers, one SQLite
@@ -13,5 +14,11 @@ stack:
   - Linux
   - Bash
   - Pytest
+core:
+  - Python
+touched:
+  - Linux
+  - Bash
 from: 2026
 to: 2026
+repo: https://github.com/marcel290820/daily-digest

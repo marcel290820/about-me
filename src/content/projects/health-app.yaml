@@ -1,6 +1,7 @@
 title: Sickness risk read off a phone's health data
 domain: mobile
 rank: 17
+org: client
 description: >-
   An iOS app that reads Apple Health and scores the day's sickness risk
   against a model in the cloud. My work was the score and the data under it:
@@ -18,5 +19,11 @@ stack:
   - BigQuery
   - Apple
   - Pytest
+core:
+  - Python
+  - Swift
+touched:
+  - Xcode
+  - Apple
 from: 2026
 to: 2026
