@@ -13,7 +13,7 @@ Node 22+ is required (`engines` in `package.json`). Deploy is automated — neve
 
 ## Architecture
 
-Astro 6 static site, no JS framework islands (no React/Vue/Svelte). Pages are `.astro` files; rich content is MDX.
+Astro 7 static site, no JS framework islands (no React/Vue/Svelte). Pages are `.astro` files; rich content is MDX.
 
 - **Path alias**: `@/*` → `src/*`
 - **Content collections** are defined in `src/content.config.ts` with a `glob` loader. The Zod schemas there are the source of truth for frontmatter — when adding a new field, update the schema first.
