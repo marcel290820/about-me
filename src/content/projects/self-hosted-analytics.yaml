@@ -1,6 +1,7 @@
 title: Self-hosted web analytics
 domain: infra
 rank: 8
+org: cct
 description: >-
   Traffic figures on our own hardware, so visitors are counted without
   being handed to a tracker. The app is upstream and untouched; mine is
@@ -14,5 +15,12 @@ stack:
   - Let's Encrypt
   - Bash
   - GitLab CI
+core:
+  - Docker Swarm
+  - Bash
+  - GitLab CI
+touched:
+  - Umami
+  - Let's Encrypt
 from: 2026
 to: 2026

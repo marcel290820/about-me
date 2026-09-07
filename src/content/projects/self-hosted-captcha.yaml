@@ -1,6 +1,7 @@
 title: Self-hosted CAPTCHA service
 domain: infra
 rank: 9
+org: cct
 description: >-
   An open-source CAPTCHA run on our own machine instead of handed to a
   third party, so the forms it guards leak nothing to anyone. All
@@ -12,5 +13,11 @@ stack:
   - Let's Encrypt
   - Bash
   - GitLab CI
+core:
+  - Docker Swarm
+  - Bash
+  - GitLab CI
+touched:
+  - Let's Encrypt
 from: 2026
 to: 2026

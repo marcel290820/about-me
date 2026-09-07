@@ -1,0 +1,44 @@
+---
+// The head of a series: the publisher's crest in a ruled inset, the name in
+// the chart's label lettering with the section rule running out from it,
+// and under that how many sheets follow and one line of what they are.
+// After the head, the running head: a small crest and the code that ride
+// in the gutter beside the depth rail while the series is in frame, so a
+// sheet halfway down a run still says whose it is once the head has gone.
+import Crest from '@/components/Crest.astro';
+import { ORGS, type Org } from '@/lib/orgs';
+
+interface Props {
+  org: Org;
+  count: number;
+  from: number;
+  to: number;
+}
+
+const { org, count, from, to } = Astro.props;
+const pub = ORGS[org];
+const pad = (n: number) => String(n).padStart(2, '0');
+const years = from === to ? `${from}` : `${from} to ${to}`;
+---
+
+<header class="series">
+  <figure class="portrait-inset series__crest">
+    <div class="portrait-inset__frame crest series__frame" data-org={org}>
+      <Crest org={org} />
+    </div>
+    <figcaption>{pub.code}</figcaption>
+  </figure>
+  <div class="min-w-0 flex-1">
+    <div class="section-heading series__heading">
+      <h2>{pub.url ? <a href={pub.url} target="_blank" rel="noopener noreferrer">{pub.name}</a> : pub.name}</h2>
+    </div>
+    <p class="font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-text-dim mt-2">
+      {pad(count)} {count === 1 ? 'sheet' : 'sheets'}, {years}
+    </p>
+    <p class="text-[0.9375rem] text-text-muted max-w-prose mt-3">{pub.note}</p>
+  </div>
+</header>
+<div class="series__pin" aria-hidden="true">
+  <div class="crest series__pin-crest"><Crest org={org} /></div>
+  <span>{pub.code}</span>
+</div>

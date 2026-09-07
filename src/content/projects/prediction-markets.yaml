@@ -1,6 +1,7 @@
 title: Prediction markets on Solana
 domain: web3
 rank: 2
+org: own
 description: >-
   Yes/no markets anyone can open from a link, stake SOL on and settle
   on-chain. Anchor program, Vue frontend, and the pipelines that build,
@@ -14,4 +15,13 @@ stack:
   - Playwright
   - GitHub Actions
   - Nginx
+core:
+  - Vue 3
+  - TypeScript
+  - Rust
+  - Anchor
+touched:
+  - Playwright
+  - Nginx
 from: 2025
+repo: https://github.com/delphimarketsio/delphimarketsio

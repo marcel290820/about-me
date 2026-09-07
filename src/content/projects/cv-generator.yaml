@@ -1,6 +1,7 @@
 title: A CV that compiles, one PDF per application
 domain: infra
 rank: 12
+org: own
 description: >-
   Content in YAML, layout in Typst, and a thin file per application that
   overrides only the fields a role needs. The build deep-merges a variant over
@@ -11,6 +12,11 @@ stack:
   - YAML
   - Bash
   - Python
+  - Git
+core:
+  - Typst
+  - YAML
+touched:
   - Git
 from: 2026
 to: 2026

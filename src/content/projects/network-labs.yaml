@@ -1,6 +1,7 @@
 title: Eleven network labs, from fat-tree to QUIC
 domain: infra
 rank: 20
+org: tub
 description: >-
   A term of protocol assignments built rather than answered: emulated
   data-centre topologies with a learning switch on a software-defined network,
@@ -13,5 +14,9 @@ stack:
   - C
   - Bash
   - LaTeX
+core:
+  - Python
+touched:
+  - Bash
 from: 2025
 to: 2026

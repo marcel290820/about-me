@@ -1,6 +1,7 @@
 title: Four routes out of a time-series bottleneck
 domain: data
 rank: 5
+org: client
 description: >-
   The log and measurement tables under a water-industry platform had outgrown
   the database holding them. I benchmarked native Postgres partitioning,
@@ -16,5 +17,11 @@ stack:
   - Docker
   - Hetzner
   - Bash
+core:
+  - PostgreSQL
+  - Timescale
+touched:
+  - DBeaver
+  - Hetzner
 from: 2025
 to: 2025

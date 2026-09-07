@@ -1,0 +1,87 @@
+---
+// The index of sheets, printed on the catalogue's cover: the numerical
+// list a chart catalogue prints, one line per sheet with its number, its
+// title, the marks it was built from and the years it covers, in series
+// under the publisher's crest. Every line ends in a scale bar on a year
+// graticule with the sheet's own span inked, so a scan down the column
+// shows when as well as what, and the marks column shows what from. The
+// column heads and the ruler print once, under the extent. A line is a
+// link to the sheet. The plate this replaced drew each sheet as a
+// numbered box on a year grid, and twenty-two boxes with no titles read
+// as a Gantt chart and could not be used.
+import Crest from '@/components/Crest.astro';
+import { logo } from '@/lib/logos';
+import { ORGS } from '@/lib/orgs';
+import type { Series } from '@/lib/projects';
+
+interface Props {
+  folios: Series[];
+}
+
+type Sheet = Series['sheets'][number];
+
+const { folios } = Astro.props;
+const all = folios.flatMap((f) => f.sheets);
+const end = (p: Sheet) => p.data.to ?? p.data.from;
+const first = Math.min(...all.map((p) => p.data.from));
+const last = Math.max(...all.map(end));
+const years = Array.from({ length: last - first + 1 }, (_, i) => first + i);
+const pad = (n: number) => String(n).padStart(2, '0');
+// Printed as a chart prints a date range, the second year cut to two figures.
+const span = (p: Sheet) => (end(p) === p.data.from ? `${p.data.from}` : `${p.data.from}-${String(end(p)).slice(2)}`);
+// The marks a line carries: the sheet's core names, where most of the
+// changed lines went, drawn as their logos. A name without a logo is a
+// plain tick on the sheet and prints nothing here.
+const marks = (p: Sheet) => p.data.core.filter((n) => logo(n) !== undefined);
+// What the catalogue covers, the way a chart catalogue states its extent.
+const extent = `${all.length} sheets in ${folios.length} series, ${first} to ${last}`;
+---
+
+<section class="limits" aria-labelledby="limits-title" style={`--years:${years.length}`}>
+  <div class="section-heading limits__heading">
+    <h2 id="limits-title">Index of sheets</h2>
+  </div>
+  <p class="limits__extent">{extent}</p>
+  <div class="limits__cols" aria-hidden="true">
+    <span>no.</span>
+    <span>sheet</span>
+    <span>built from</span>
+    <span>years</span>
+    <span class="limits__ruler">
+      {years.map((y) => <span>{y % 2 === 0 ? String(y).slice(2) : ''}</span>)}
+    </span>
+  </div>
+  {folios.map(({ org, sheets }) => (
+    <div class="limits__series">
+      <div class="limits__head">
+        <span class="crest limits__crest"><Crest org={org} /></span>
+        <span class="limits__name label">{ORGS[org].name}</span>
+        <span class="limits__count">{pad(sheets.length)} {sheets.length === 1 ? 'sheet' : 'sheets'}</span>
+      </div>
+      <ol class="limits__list">
+        {sheets.map((p, i) => (
+          <li>
+            <a class="limits__line" href={`#${p.id}`}>
+              <span class="limits__n">{pad(i + 1)}</span>
+              <span class="limits__title">{p.data.title}</span>
+              <span class="limits__marks" aria-hidden="true">
+                {/* The title is the browser's own tooltip: a 12px mark is a
+                    shape until it is named. */}
+                {marks(p).map((n) => (
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <title>{n}</title>
+                    <g set:html={logo(n)} />
+                  </svg>
+                ))}
+              </span>
+              <span class="limits__span">{span(p)}</span>
+              <span class="limits__scale" aria-hidden="true">
+                {years.map((y) => <span class:list={{ 'is-on': y >= p.data.from && y <= end(p) }} />)}
+              </span>
+            </a>
+          </li>
+        ))}
+      </ol>
+    </div>
+  ))}
+</section>

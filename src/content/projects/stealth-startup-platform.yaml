@@ -1,6 +1,7 @@
 title: Multi-app platform for a stealth startup
 domain: web3
 rank: 3
+org: client
 description: >-
   Four Next.js apps on one Fastify backend, with Postgres holding the records
   and ClickHouse the analytics read off them. Collectors on their own boxes
@@ -14,6 +15,13 @@ stack:
   - Drizzle
   - PostgreSQL
   - ClickHouse
+  - Redis
+  - Ansible
+core:
+  - Next.js
+  - React
+  - Fastify
+touched:
   - Redis
   - Ansible
 from: 2026

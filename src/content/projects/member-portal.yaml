@@ -1,6 +1,7 @@
 title: Member portal for a student consultancy
 domain: web
 rank: 1
+org: cct
 description: >-
   Members, projects, events, documents and finance requests in one internal
   app, running since 2020 and rebuilt on a newer frontend along the way. I
@@ -15,5 +16,12 @@ stack:
   - Celery
   - Docker
   - GitLab CI
+core:
+  - Vue 3
+  - Python
+  - FastAPI
+touched:
+  - Docker
+  - Celery
 from: 2020
 to: 2026

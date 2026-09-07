@@ -1,6 +1,7 @@
 title: 'This site: chart paper, then deep water'
 domain: web
 rank: 10
+org: own
 description: >-
   The page you are on. Ink on paper above the fold, open water below it, and
   a scroll that reads as a descent. Content is markdown in typed collections,
@@ -15,6 +16,14 @@ stack:
   - SVG
   - GitHub Actions
   - GitHub Pages
+core:
+  - Astro
+  - Tailwind CSS
+  - SVG
+touched:
+  - GitHub Actions
+  - GitHub Pages
 from: 2026
 to: 2026
+repo: https://github.com/marcel290820/about-me
 url: https://marcel-heidebrecht.de
