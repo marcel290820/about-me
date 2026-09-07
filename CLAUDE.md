@@ -9,7 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run preview` — preview the built site locally
 - `npm test` - the sheet geometry check (`src/lib/sheet.test.ts`) and the writer core's test (`src/writer/entry.test.ts`), both under `node --test`. No lint or typecheck scripts exist. Verify changes with `npm test` and `npm run build`; `.claude/check.sh` runs both for the stop and commit gates, and CI runs the same two before Pagefind.
 
-Node 22+ is required (`engines` in `package.json`). Deploy is automated — never run a manual deploy step.
+Node 24 LTS runs it: `.nvmrc` pins the line, `nvm use` picks it up, and CI reads the same file. `engines` in `package.json` is only the floor Astro itself needs. Deploy is automated — never run a manual deploy step.
 
 ## Architecture
 
