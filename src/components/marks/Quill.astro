@@ -12,6 +12,14 @@
 //
 // One source for both edges and every barb: the shaft. The vane's outline
 // and the barbs are all read off it, so they cannot disagree.
+//
+// It fell nib first into the wet ink and skidded: the nib is inked to
+// the shoulder, the ink runs a little way up the calamus, and a few
+// specks lie on the vane. The skid itself is drawn by the shader on the
+// paper under the nib, from where the nib lies back to the pool. The
+// nib is the mark's origin, so the plate places the quill by where the
+// skid ends.
+import { speck } from '@/lib/curves';
 const LEN = 190;
 const shaft = (t: number): [number, number] => [6 + LEN * t, 48 - 32 * t + 7 * Math.sin(Math.PI * t)];
 const tangent = (t: number): [number, number] => {
@@ -25,7 +33,9 @@ const normal = (t: number): [number, number] => {
   const [tx, ty] = tangent(t);
   return [ty, -tx];
 };
-const VANE = 0.3;
+// The vane starts well up the shaft: a writing quill is stripped bare
+// for the hand, and a vane the length of the feather read as a leaf.
+const VANE = 0.42;
 const OUTER = 15;
 const INNER = 7.5;
 const notch = (k: number, at: number, depth: number, width: number) => 1 - depth * Math.exp(-(((k - at) / width) ** 2));
@@ -64,10 +74,12 @@ const calamus = (() => {
   return 'M' + pts.map(([x, y]) => `${f(x)} ${f(y)}`).join('L') + `M${f(sx)} ${f(sy)}L${f(ex)} ${f(ey)}`;
 })();
 // The barbs lean toward the tip: off the normal by half a right angle.
+// A few, well spaced: hatched close they were the heaviest ink on the
+// plate after the pools.
 const LEAN = (48 * Math.PI) / 180;
 const barbs = (() => {
   const out: string[] = [];
-  for (let k = 0.03; k < 0.97; k += 0.03) {
+  for (let k = 0.05; k < 0.97; k += 0.07) {
     const t = VANE + (1 - VANE) * k;
     const [x, y] = shaft(t);
     const [nx, ny] = normal(t);
@@ -83,6 +95,35 @@ const barbs = (() => {
   }
   return out.join('');
 })();
+// The ink on the nib: the tube filled from the point to the shoulder of
+// the slit, a hair past the outline, so the point is a dark wedge.
+const inked = (() => {
+  const pts: [number, number][] = [];
+  for (let i = 0; i <= 6; i++) {
+    const t = (0.07 * i) / 6;
+    const [x, y] = shaft(t);
+    const [nx, ny] = normal(t);
+    pts.push([x + nx * 0.5, y + ny * 0.5]);
+  }
+  for (let i = 6; i >= 0; i--) {
+    const t = (0.07 * i) / 6;
+    const [x, y] = shaft(t);
+    const [nx, ny] = normal(t);
+    const w = 1.6 * Math.min(1, t / 0.06) + 0.5;
+    pts.push([x - nx * w, y - ny * w]);
+  }
+  return 'M' + pts.map(([x, y]) => `${f(x)} ${f(y)}`).join('L') + 'Z';
+})();
+// Specks where the spill reached the feather: on the bare shaft above the
+// nib and on the vane nearest it.
+const specks = (() => {
+  const at = (t: number, off: number, r: number, seed: number) => {
+    const [x, y] = shaft(t);
+    const [nx, ny] = normal(t);
+    return speck(x + nx * off, y + ny * off, r, seed);
+  };
+  return [at(0.16, -2.4, 1.1, 2.2), at(0.27, 2.2, 0.8, 4.4), at(0.5, -5, 1.3, 1.1), at(0.58, 7, 0.9, 3.7)].join('');
+})();
 ---
 
 <svg viewBox="0 0 200 60" fill="none" stroke="currentColor" stroke-width="0.7" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">
@@ -90,4 +131,6 @@ const barbs = (() => {
   <path d={barbs} stroke-width="0.4" opacity="0.55" />
   <path d={spine} />
   <path d={calamus} stroke-width="0.6" />
+  <path d={inked} fill="currentColor" stroke="none" />
+  <path d={specks} fill="currentColor" stroke="none" />
 </svg>

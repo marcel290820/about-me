@@ -14,7 +14,7 @@
 import Quill from '@/components/marks/Quill.astro';
 import Well from '@/components/marks/Well.astro';
 import { logo } from '@/lib/logos';
-import { QUILL, TALL, WELL, WIDE, hash, layout, opened, ring, wordSize, type Mark, type Weighed } from '@/lib/drops';
+import { LABELLED, QUILL, TALL, WELL, WIDE, hash, layout, opened, ring, wordSize, type Mark, type Weighed } from '@/lib/drops';
 
 interface Props {
   names: Weighed[];
@@ -22,8 +22,22 @@ interface Props {
 }
 
 const { names, domains } = Astro.props;
+// Heaviest first, so the first blot in the document is the pool, which
+// the script runs the ink to. A name with a sheet's work behind it gets
+// a logo and opens; anything lighter is a droplet, printed and shoved
+// like the rest but with nothing to say.
 const blots = layout(names, domains, WIDE);
+const labelled = blots.filter((b) => b.weight >= LABELLED);
+const droplets = blots.filter((b) => b.weight < LABELLED);
 const tall = new Map(layout(names, domains, TALL).map((b) => [b.name, b]));
+// Where a blot lies on either plate and how big it is, for the CSS; how
+// its outline is seeded and how much its landing lags the spill spreading
+// out from the pool, for the script.
+const at = (b: (typeof blots)[number]) => {
+  const p = tall.get(b.name)!;
+  return `--x:${u(b.x)};--y:${u(b.y)};--xp:${u(p.x)};--yp:${u(p.y)};--r:${u(b.r)}`;
+};
+const seeded = (b: (typeof blots)[number]) => ({ 'data-seed': (hash(b.name) % 1000) / 100, 'data-lag': (hash(b.name) % 12) / 100 });
 const u = (n: number) => Math.round(n * 10) / 10;
 // The weight as a screen reader says it: work in sheets, whole or to a half.
 const work = (w: number) => (Number.isInteger(w) ? String(w) : w.toFixed(w * 2 === Math.round(w * 2) ? 1 : 2));
@@ -33,33 +47,38 @@ const placed = (m: Mark) =>
   `--x:${m.wide.x - m.origin[0]};--y:${m.wide.y - m.origin[1]};--rot:${m.wide.rot}deg;--xp:${m.tall.x - m.origin[0]};--yp:${m.tall.y - m.origin[1]};--rotp:${m.tall.rot}deg;--mw:${m.w};--mh:${m.h};--ox:${m.origin[0]};--oy:${m.origin[1]}`;
 ---
 
-<figure class="ink" style={`--w:${WIDE.w};--h:${WIDE.h};--wp:${TALL.w};--hp:${TALL.h}`} data-mouth={`${WELL.wide.x} ${WELL.wide.y}`} data-mouth-tall={`${WELL.tall.x} ${WELL.tall.y}`}>
+<figure
+  class="ink"
+  style={`--w:${WIDE.w};--h:${WIDE.h};--wp:${TALL.w};--hp:${TALL.h}`}
+  data-mouth={`${WELL.wide.x} ${WELL.wide.y}`}
+  data-mouth-tall={`${WELL.tall.x} ${WELL.tall.y}`}
+  data-nib={`${QUILL.wide.x} ${QUILL.wide.y}`}
+  data-nib-tall={`${QUILL.tall.x} ${QUILL.tall.y}`}
+>
   <div class="ink__field">
     <canvas class="ink__canvas" aria-hidden="true"></canvas>
     {/* The story of the spill, in the chart's own hand: the well that went
         over in the swell, its mouth toward the heaviest blot (the script
-        runs the ink from the one to the other), and the quill beside it.
-        Over the canvas, so the well's lip prints over the ink leaving it;
-        under the blots. */}
+        runs the ink from the one to the other), and the quill that fell
+        nib first into the pool and skidded to where it lies (the script
+        draws the skid from the nib back to the pool). Over the canvas, so
+        the well's lip prints over the ink leaving it and the nib over the
+        skid; under the blots. */}
     <div class="ink__mark" style={placed(WELL)}><Well /></div>
     <div class="ink__mark" style={placed(QUILL)}><Quill /></div>
     <ul class="ink__blots" aria-label="stacks by weight of use, with the domains each was used in">
-      {blots.map((b) => {
-        const p = tall.get(b.name)!;
+      {labelled.map((b) => {
         const R = opened(b.r, b.domains.length);
         return (
           <li>
-            {/* Where it lies on either plate, how big it is and how large
-                its words letter, for the CSS; what it opens to, how its
-                outline is seeded and when it lands, for the script, which
-                moves it through --px, --py and --R. */}
+            {/* How large its words letter, for the CSS; what it opens to,
+                for the script, which moves it through --px, --py and --R. */}
             <button
               type="button"
               class="blot"
-              style={`--x:${u(b.x)};--y:${u(b.y)};--xp:${u(p.x)};--yp:${u(p.y)};--r:${u(b.r)};--ws:${u(wordSize(R))}`}
+              style={`${at(b)};--ws:${u(wordSize(R))}`}
               data-open={u(R)}
-              data-seed={(hash(b.name) % 1000) / 100}
-              data-t={(hash(b.name) % 60) / 100}
+              {...seeded(b)}
               aria-label={`${b.name}, ${work(b.weight)} ${b.weight === 1 ? 'sheet' : 'sheets'} of work in ${b.domains.join(', ')}`}
             >
               {logo(b.name) && (
@@ -68,11 +87,18 @@ const placed = (m: Mark) =>
                 </svg>
               )}
               {/* The domains, in a ring round the logo, the ring turned
-                  a hashed way off the cardinal points (four words at
-                  twelve, three, six and nine is a compass rose), each a
-                  little off its bearing and off the ring, so the ring is
-                  as irregular as the rim; a single one under the logo on
-                  a tighter ring. Shown once the blot has opened far
+                  a hashed way off the cardinal points, never less than
+                  twenty degrees when there are three or more (four words
+                  at twelve, three, six and nine is a compass rose, and
+                  the first ring's turn ran through twelve), each a
+                  little off its bearing and off the ring by a visible
+                  share, so the ring is as irregular as the rim. Two
+                  words sit above and below the logo within ten degrees
+                  of plumb, where the pool is widest for them: turned
+                  further they lettered out over the rim. A single one
+                  sits square under the logo on a tighter ring, with no
+                  jitter, since one word a few degrees off plumb is a
+                  word set crooked. Shown once the blot has opened far
                   enough to hold them. The CSS reads --k against the
                   button's width, which is the open diameter, so it is
                   half the ring. */}
@@ -80,7 +106,7 @@ const placed = (m: Mark) =>
                 {b.domains.map((d, k) => (
                   <span
                     class="blot__word"
-                    style={`--a:${u((b.domains.length === 1 ? 90 : -70 - (hash(b.name) % 21) + (360 * k) / b.domains.length) + (hash(b.name + d) % 11) - 5)}deg;--k:${u(ring(b.domains.length) / 2 - 0.01 + (hash(d + b.name) % 3) / 100)}`}
+                    style={`--a:${u(b.domains.length === 1 ? 90 : (b.domains.length === 2 ? -100 : -65) + (hash(b.name) % 21) + (360 * k) / b.domains.length + (hash(b.name + d) % 11) - 5)}deg;--k:${u(ring(b.domains.length) / 2 + (b.domains.length === 1 ? 0 : b.domains.length === 2 ? (hash(d + b.name) % 5) / 100 - 0.02 : (hash(d + b.name) % 11) / 100 - 0.05))}`}
                   >
                     {d}
                   </span>
@@ -91,6 +117,15 @@ const placed = (m: Mark) =>
         );
       })}
     </ul>
+    {/* The droplets: the names with less than a sheet's work behind them,
+        printed without a logo or a word, so the spill has a bottom to its
+        size scale. The script lands and shoves them like the rest; nothing
+        opens them, and a screen reader is not told about them. */}
+    <div class="ink__droplets" aria-hidden="true">
+      {droplets.map((b) => (
+        <i class="blot blot--droplet" style={at(b)} {...seeded(b)}></i>
+      ))}
+    </div>
   </div>
   {/* Without the script there is no ink under the logos: print the discs. */}
   <noscript>

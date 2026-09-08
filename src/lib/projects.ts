@@ -43,14 +43,10 @@ export const tierOf = (p: Project['data'], name: string): Tier =>
 // the middle half, one touched in passing a quarter.
 const WEIGHT: Record<Tier, number> = { core: 1, used: 0.5, touched: 0.25 };
 
-// The plate prints a stack from one sheet's weight up: a lighter blot has no
-// room for its logo, and a plate of what was touched in passing is not what
-// the top of the page is for.
-const PRINTED = 1;
-
-// Every stack name across the sheets with a sheet's weight of use or more,
-// with the domains it was used in, and the domains in order of how much ink
-// went into each, which is the order they anchor the plate.
+// Every stack name across the sheets with its weight of use and the domains
+// it was used in, and the domains in order of how much ink went into each,
+// which is the order they anchor the plate. The plate decides what gets a
+// logo and what is a droplet (`LABELLED` in drops.ts).
 export function ink(projects: Project[]): { names: Weighed[]; domains: string[] } {
   const names = new Map<string, Weighed>();
   const domains = new Map<string, number>();
@@ -66,5 +62,5 @@ export function ink(projects: Project[]): { names: Weighed[]; domains: string[] 
   }
   const order = [...domains].sort((a, b) => b[1] - a[1]).map(([d]) => d);
   for (const entry of names.values()) entry.domains.sort((a, b) => order.indexOf(a) - order.indexOf(b));
-  return { names: [...names.values()].filter((n) => n.weight >= PRINTED), domains: order };
+  return { names: [...names.values()], domains: order };
 }

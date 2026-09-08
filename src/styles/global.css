@@ -1158,6 +1158,12 @@
     transition: opacity 0.3s ease;
   }
 
+  /* A droplet is a blot with nothing in it and nothing to open: the
+     script lands and shoves it, the pointer goes through it. */
+  .blot--droplet {
+    pointer-events: none;
+  }
+
   /* The open blot prints over whatever it has not yet shoved clear. */
   .blot.is-hot {
     z-index: 2;

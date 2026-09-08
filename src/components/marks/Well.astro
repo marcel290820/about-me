@@ -15,6 +15,7 @@
 // it is long, the shoulders are broad, the neck is a stub and the lip is
 // a collar, or it reads as something rolled off a table in a galley,
 // which is what the first one did.
+import { speck } from '@/lib/curves';
 const BASE = 12;
 const SHOULDER = 36;
 const NECK = 46;
@@ -54,6 +55,32 @@ const knob = Array.from({ length: 6 }, (_, i) => {
   return `${i ? 'L' : 'M'}${(KNOB[0] + KR * Math.cos(a)).toFixed(1)} ${(KNOB[1] + KR * Math.sin(a)).toFixed(1)}`;
 }).join(' ') + ' Z';
 const plug = `M${KNOB[0] + KR - 0.6} ${KNOB[1] - 3.6} L${KNOB[0] + KR + 6.5} ${KNOB[1] - 2.6} L${KNOB[0] + KR + 6.5} ${KNOB[1] + 2.6} L${KNOB[0] + KR - 0.6} ${KNOB[1] + 3.6}`;
+// The ink that went over the glass as it fell: specks on the lip and the
+// shoulder nearest the mouth, a run down the body's lower side, one on
+// the stopper. Filled, since they are ink and not glass. Without them
+// the bottle is clean and the spill is beside it, not out of it.
+const specks = [
+  speck(LIP + 1.5, AXIS - LIP_HALF + 2, 1.6, 1.3),
+  speck(NECK + 1, AXIS + NECK_HALF + 3.5, 1.2, 4.1),
+  speck(SHOULDER + 2, top + 5, 2.1, 2.6),
+  speck(SHOULDER - 9, bottom - 4, 1.4, 5.9),
+  speck(SHOULDER - 3, AXIS + 6, 0.9, 0.7),
+  speck(KNOB[0] - 2, KNOB[1] - 3, 1.1, 3.3),
+  speck(61, 53, 1.3, 2.9),
+  speck(69, 55.5, 0.9, 6.1),
+].join('');
+// The ring the lip printed where the mouth came down, before the bottle
+// rolled onto its side: the lip's own circle, broken where it did not
+// touch, with a smear where it dragged as it went over. This is what says
+// the bottle went over rather than being laid down. Its place is a keep
+// in the mark's capsules, so no blot lands on it.
+const STAMP = [64, 64];
+const arc = (from: number, to: number, r: number) => {
+  const p = (a: number) => `${(STAMP[0] + r * Math.cos((a * Math.PI) / 180)).toFixed(1)} ${(STAMP[1] + r * Math.sin((a * Math.PI) / 180)).toFixed(1)}`;
+  return `M${p(from)} A${r} ${r} 0 ${to - from > 180 ? 1 : 0} 1 ${p(to)}`;
+};
+const stamp = `${arc(150, 380, LIP_HALF)}${arc(55, 105, LIP_HALF - 1.2)}`;
+const smear = speck(STAMP[0] - 8.5, STAMP[1] + 6, 2.2, 1.9);
 ---
 
 <svg viewBox="0 0 100 80" fill="none" stroke="currentColor" stroke-width="0.7" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">
@@ -68,4 +95,7 @@ const plug = `M${KNOB[0] + KR - 0.6} ${KNOB[1] - 3.6} L${KNOB[0] + KR + 6.5} ${K
   <path d={knob} />
   <line x1={KNOB[0] + KR / 2} y1={KNOB[1] - KR * 0.7} x2={KNOB[0] + KR / 2} y2={KNOB[1] + KR * 0.7} stroke-width="0.45" opacity="0.7" />
   <path d={plug} />
+  <path d={specks} fill="currentColor" stroke="none" />
+  <path d={stamp} stroke-width="2.4" opacity="0.95" />
+  <path d={smear} fill="currentColor" stroke="none" opacity="0.95" />
 </svg>
