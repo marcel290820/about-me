@@ -1,26 +1,34 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { H, R_MAX, TALL, W, WIDE, anchors, layout, opened, radius, ring, toBox, wordSize, type Plate } from './drops.ts';
+import { H, R_MAX, R_MIN, TALL, W, WIDE, anchors, layout, opened, radius, ring, toCapsule, wordSize, type Plate } from './drops.ts';
 
 const DOMAINS = ['data', 'infra', 'web', 'web3', 'mobile'];
-// More names than the sheets carry, with weights that run from one heavy
-// pool down to the lightest the plate prints: a heavier plate than the real
-// one, so the real one always fits.
-const WORST = Array.from({ length: 60 }, (_, i) => ({
+// A quarter again as many names with a logo as the sheets carry, with
+// weights that run from one heavy pool down to a sheet's work, and more
+// droplets again under that: a heavier plate than the real one, so the
+// real one always fits.
+const WORST = Array.from({ length: 96 }, (_, i) => ({
   name: String.fromCharCode(65 + (i % 26)).repeat(3 + ((i * 7) % 14)),
-  weight: i === 0 ? 14 : i < 4 ? 6 : i < 12 ? 2 + (i % 3) : 1 + (i % 4) * 0.25,
+  weight: i === 0 ? 14 : i === 1 ? 6 : i < 4 ? 4 : i < 12 ? 2 + (i % 3) : i < 46 ? 1 + (i % 4) * 0.25 : 0.25 + (i % 3) * 0.25,
   domains: i === 0 ? DOMAINS : [...new Set(DOMAINS.filter((_, k) => (i + k) % 3 === 0).concat(DOMAINS[i % DOMAINS.length]))],
 }));
 
 test('size follows weight within the limits', () => {
-  assert.equal(radius(1), 15);
+  // A sheet's work is the smallest blot with a logo; anything lighter is
+  // a droplet, between a spatter speck and the smallest logo blot.
+  assert.equal(radius(1), R_MIN);
+  assert.ok(radius(0.25) > 4 && radius(0.75) < R_MIN - 2);
+  assert.ok(radius(0.25) < radius(0.5) && radius(0.5) < radius(0.75));
   // Above a half, so three times the work reads as plainly more, and
   // under one, so it is not three times the width; clear of the floor.
   assert.ok(radius(6) > radius(2) * Math.sqrt(3));
   assert.ok(radius(6) < radius(2) * 3);
   assert.equal(radius(100), R_MAX);
-  // The floor is a logo's worth; the plate prints nothing under a sheet.
-  assert.ok(radius(1.25) < radius(1.5));
+  // Every step the sheets take is a step the eye can see: a sheet and a
+  // half is three units more than a sheet, two sheets three more again.
+  assert.ok(radius(1.5) - radius(1) >= 3);
+  assert.ok(radius(2) - radius(1.5) >= 3);
+  assert.ok(radius(3) - radius(2) >= 5);
 });
 
 test('an open blot holds its ring of domains and fits on the plate', () => {
@@ -60,7 +68,7 @@ for (const [name, plate] of [['wide', WIDE], ['tall', TALL]] as [string, Plate][
     assert.equal(blots.length, WORST.length);
     for (const a of blots) {
       assert.ok(a.x - a.r >= 0 && a.x + a.r <= plate.w && a.y - a.r >= 0 && a.y + a.r <= plate.h, `${a.name} off the plate`);
-      for (const k of plate.keep) assert.ok(toBox(a.x, a.y, k) > a.r, `${a.name} lies on a mark`);
+      for (const k of plate.keep) assert.ok(toCapsule(a.x, a.y, k) > a.r, `${a.name} lies on a mark`);
       for (const b of blots) {
         if (a === b) continue;
         assert.ok(Math.hypot(a.x - b.x, a.y - b.y) > a.r + b.r, `${a.name} and ${b.name} touch`);
@@ -68,6 +76,24 @@ for (const [name, plate] of [['wide', WIDE], ['tall', TALL]] as [string, Plate][
     }
   });
 }
+
+test('the light blots are flung farther than the heavy ones, with more paper between them', () => {
+  const blots = layout(WORST, DOMAINS);
+  const pool = blots[0];
+  const far = (b: (typeof blots)[number]) => Math.hypot(b.x - pool.x, b.y - pool.y);
+  const mean = (bs: typeof blots) => bs.reduce((s, b) => s + far(b), 0) / bs.length;
+  const heavy = blots.filter((b) => b.weight >= 4 && b !== pool);
+  const light = blots.filter((b) => b.weight >= 1 && b.weight <= 1.25);
+  assert.ok(mean(heavy) < mean(light), `heavy ${mean(heavy).toFixed(0)} lie past light ${mean(light).toFixed(0)}`);
+  // The nearest neighbour of a far blot is farther off than a near one's.
+  const nearest = (b: (typeof blots)[number]) => Math.min(...blots.filter((o) => o !== b).map((o) => Math.hypot(o.x - b.x, o.y - b.y) - o.r - b.r));
+  const inner = blots.filter((b) => far(b) < 120 && b !== pool);
+  const outer = blots.filter((b) => far(b) > 220);
+  assert.ok(inner.length > 3 && outer.length > 3, `inner ${inner.length} outer ${outer.length}`);
+  assert.ok(mean(inner) < mean(outer));
+  const paper = (bs: typeof blots) => bs.reduce((s, b) => s + nearest(b), 0) / bs.length;
+  assert.ok(paper(inner) < paper(outer), `inner keep ${paper(inner).toFixed(1)}, outer ${paper(outer).toFixed(1)}`);
+});
 
 test('the layout is the same every time', () => {
   assert.deepEqual(layout(WORST, DOMAINS), layout(WORST, DOMAINS));

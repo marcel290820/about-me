@@ -147,3 +147,11 @@ export const torpedo = (from: number, to: number, y: number, r: number) =>
       [1, r * 0.2],
     ],
   });
+
+/** A speck of ink on a mark the spill reached: a small closed outline, lopsided by its seed, to be filled. */
+export const speck = (x: number, y: number, r: number, seed: number) =>
+  Array.from({ length: 8 }, (_, i) => {
+    const a = (Math.PI * 2 * i) / 8;
+    const rr = r * (1 + 0.3 * Math.sin(2 * a + seed) + 0.2 * Math.cos(3 * a - seed * 1.7));
+    return `${i ? 'L' : 'M'}${(x + rr * Math.cos(a)).toFixed(1)} ${(y + rr * Math.sin(a)).toFixed(1)}`;
+  }).join('') + 'Z';
