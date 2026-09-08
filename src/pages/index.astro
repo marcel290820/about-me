@@ -2,14 +2,15 @@
 import Base from '@/layouts/Base.astro';
 import Hero from '@/components/Hero.astro';
 import Passage from '@/components/Passage.astro';
-import PostCard from '@/components/PostCard.astro';
+import LogEntry from '@/components/LogEntry.astro';
 import Sheet from '@/components/Sheet.astro';
 import { getCollection } from 'astro:content';
+import { newestFirst, readingMinutes, SHOW_BLOG } from '@/lib/log';
 import { series } from '@/lib/projects';
 
-const allPosts = (await getCollection('blog', ({ data }) => !data.draft))
-  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
-  .slice(0, 3);
+const allPosts = SHOW_BLOG
+  ? (await getCollection('blog', ({ data }) => !data.draft)).sort(newestFirst).slice(0, 3)
+  : [];
 
 // One sheet on home, rank 1, numbered within its own series as it is on the
 // projects page. Three would be the projects page again.
@@ -27,21 +28,23 @@ const interests = (await getCollection('interests')).sort((a, b) =>
   {allPosts.length > 0 && (
     <section class="mb-24 sm:mb-32">
       <div class="section-heading">
-        <h2>recent posts</h2>
+        <h2>recent remarks</h2>
       </div>
-      <div class="flex flex-col gap-3">
+      <div class="rail flex flex-col gap-9">
         {allPosts.map((post) => (
-          <PostCard
+          <LogEntry
+            slug={post.id}
             title={post.data.title}
             description={post.data.description}
             pubDate={post.data.pubDate}
+            place={post.data.place}
             tags={post.data.tags}
-            slug={post.id}
+            minutes={readingMinutes(post.body ?? '')}
           />
         ))}
       </div>
       <a href="/blog" class="inline-block mt-6 font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-text-dim hover:text-accent transition-colors">
-        all posts &rarr;
+        all remarks &rarr;
       </a>
     </section>
   )}

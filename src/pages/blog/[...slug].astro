@@ -1,26 +1,34 @@
 ---
 import BlogPost from '@/layouts/BlogPost.astro';
 import { getCollection, render } from 'astro:content';
+import { newestFirst, readingMinutes, SHOW_BLOG } from '@/lib/log';
 
 export async function getStaticPaths() {
-  const posts = await getCollection('blog');
-  return posts.map((post) => ({
-    params: { slug: post.id },
-    props: post,
-  }));
+  if (!SHOW_BLOG) return [];
+
+  const all = (await getCollection('blog')).sort(newestFirst);
+  const published = all.filter((post) => !post.data.draft);
+  // Drafts build in dev so the writer can preview them, never in production.
+  const built = import.meta.env.DEV ? all : published;
+
+  return built.map((post) => {
+    const i = published.indexOf(post);
+    return {
+      params: { slug: post.id },
+      props: {
+        post,
+        // A draft has no place in the sequence yet, so it gets no neighbours.
+        later: i > 0 ? published[i - 1] : null,
+        earlier: i >= 0 && i < published.length - 1 ? published[i + 1] : null,
+      },
+    };
+  });
 }
 
-const post = Astro.props;
+const { post, earlier, later } = Astro.props;
 const { Content } = await render(post);
 ---
 
-<BlogPost
-  title={post.data.title}
-  description={post.data.description}
-  pubDate={post.data.pubDate}
-  updatedDate={post.data.updatedDate}
-  heroImage={post.data.heroImage}
-  tags={post.data.tags}
->
+<BlogPost post={post} earlier={earlier} later={later} minutes={readingMinutes(post.body ?? '')}>
   <Content />
 </BlogPost>

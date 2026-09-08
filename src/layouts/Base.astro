@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import { SHOW_BLOG } from '@/lib/log';
 import Header from '@/components/Header.astro';
 import Footer from '@/components/Footer.astro';
 import DepthRail from '@/components/DepthRail.astro';
@@ -14,6 +15,8 @@ interface Props {
   ogImage?: string;
   /** Set on pages that fill the `surface` slot. See hasSurface below. */
   surface?: boolean;
+  /** Keep the page out of the Pagefind index. */
+  noindex?: boolean;
 }
 
 const {
@@ -21,6 +24,7 @@ const {
   description = 'Marcel Heidebrecht, Fullstack Engineer & DevOps Enthusiast',
   ogImage = '/og-default.png',
   surface = false,
+  noindex = false,
 } = Astro.props;
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
@@ -37,7 +41,7 @@ const jsonLd = {
   description,
 };
 
-// Pages without a surface block (blog, projects, search) cross the waterline
+// Pages without a surface block (projects, search) cross the waterline
 // right after the header, so the crossing band tightens up.
 //
 // This has to be a prop. Astro.slots.has('surface') reads the compiled slot
@@ -91,7 +95,9 @@ const soundings: [number, number, number][] = [
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="canonical" href={canonicalURL} />
-    <link rel="alternate" type="application/rss+xml" title="Marcel Heidebrecht" href="/rss.xml" />
+    {SHOW_BLOG && (
+      <link rel="alternate" type="application/rss+xml" title="Marcel Heidebrecht" href="/rss.xml" />
+    )}
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://marine-api.open-meteo.com" crossorigin />
@@ -113,7 +119,7 @@ const soundings: [number, number, number][] = [
     <meta name="twitter:image" content={ogImageURL} />
     <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
   </head>
-  <body class="min-h-screen flex flex-col">
+  <body class="min-h-screen flex flex-col" data-pagefind-ignore={noindex ? true : undefined}>
     <div class="edge-ticks" aria-hidden="true"></div>
     <DepthRail />
 
