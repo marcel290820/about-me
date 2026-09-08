@@ -63,19 +63,13 @@ const REST_PAIR = 6;
 const PASSES = 20;
 // How long a blot takes to land, the plate's share in frame that starts
 // it, how far behind the pool the farthest blot lands (in landings, as
-// the spill spreads out from its source), and the bloom: once the last
-// blot is down the heaviest opens by itself, holds once it is open, and
-// closes again, which is how a pointer learns what the plate does
-// without being told. The hold is counted from when the pool is open,
-// not from when it began to, so a slow device still shows it.
+// the spill spreads out from its source).
 const LAND = 0.6;
 const IN_FRAME = 0.25;
 const SPREAD = 0.9;
 // How long the ink takes to run from the mouth to where the pool lands,
 // before anything lands: the accident, not the aftermath.
 const POUR = 0.5;
-const BLOOM_AT = 1500;
-const BLOOM_FOR = 2200;
 // The springs, per second: how fast a blot swells, how hard it is pulled
 // to where it should be and how it is damped (near critical: thick ink
 // settles, it does not bounce), and how fast the waves fade in.
@@ -475,13 +469,11 @@ export function mount(plate: HTMLElement) {
   let ptr: [number, number] = [0, 0];
   let ptrIn = false;
   // The blot under the pointer, the one held by a tap, the one with
-  // keyboard focus, the one the bloom opens, and the one that is open:
-  // held first, else under the pointer, else focused, else the bloom.
+  // keyboard focus, and the one that is open: held first, else under
+  // the pointer, else focused.
   let over = -1;
   let held = -1;
   let focused = -1;
-  let bloom = -1;
-  let bloomOpenAt = -1;
   let hover = -1;
   let hoverT = 0;
   let landAt = -1;
@@ -538,7 +530,7 @@ export function mount(plate: HTMLElement) {
       swell[i] = b.swell;
     }
     // The waves run from the pointer, or from the middle of the open blot
-    // when no pointer is over the field: the bloom, a tap, the keyboard.
+    // when no pointer is over the field: a tap, the keyboard.
     const at = ptrIn || hover < 0 ? ptr : [blots[hover].px, blots[hover].py];
     // The run and the skid follow the pool, which is the first blot, as
     // it lands and as it is shoved: the run is poured before it lands,
@@ -667,21 +659,11 @@ export function mount(plate: HTMLElement) {
       b.el.classList.toggle('is-hot', i === hover);
       b.el.classList.toggle('is-open', i === hover && b.swell > (b.open - b.r) * 0.6);
     }
-    // The bloom holds for a while once the pool is open, then lets go.
-    if (bloom >= 0 && hover === bloom) {
-      const b = blots[bloom];
-      if (bloomOpenAt < 0 && b.swell >= b.open - b.r - 0.5) bloomOpenAt = now;
-      if (bloomOpenAt >= 0 && now - bloomOpenAt > BLOOM_FOR) {
-        bloom = -1;
-        set();
-      }
-      busy = true;
-    }
     if (busy) wake();
   }
 
   const set = () => {
-    const next = held >= 0 ? held : over >= 0 ? over : focused >= 0 ? focused : bloom;
+    const next = held >= 0 ? held : over >= 0 ? over : focused >= 0 ? focused : -1;
     if (next !== hover) {
       hover = next;
       wake();
@@ -756,13 +738,6 @@ export function mount(plate: HTMLElement) {
       landAt = performance.now();
       wake();
       io.disconnect();
-      // The bloom, unless the pointer got there first or motion is off.
-      if (still || n === 0) return;
-      setTimeout(() => {
-        if (over >= 0 || held >= 0) return;
-        bloom = 0;
-        set();
-      }, BLOOM_AT);
     },
     { threshold: IN_FRAME },
   );

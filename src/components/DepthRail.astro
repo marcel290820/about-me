@@ -52,12 +52,12 @@ const ticks = [0, 12, 24, 36, 48];
 
 <script>
   // The badge is fixed chrome and a phone has no gutter to keep it in, so it
-  // yields: while any inset (a plate, a survey, the index) is in the band
+  // yields: while any inset (a plate, a survey, the ink) is in the band
   // along the bottom of the frame where the badge sits, the badge goes off
   // the edge. The band is the bottom tenth of the viewport, a little more
   // than the badge itself.
   const badge = document.querySelector('.depth-badge');
-  const insets = document.querySelectorAll('.portrait-inset__frame');
+  const insets = document.querySelectorAll('.portrait-inset__frame, .ink__field');
   if (badge && insets.length) {
     const over = new Set<Element>();
     const io = new IntersectionObserver(

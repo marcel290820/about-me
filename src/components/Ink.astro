@@ -41,10 +41,12 @@ const seeded = (b: (typeof blots)[number]) => ({ 'data-seed': (hash(b.name) % 10
 const u = (n: number) => Math.round(n * 10) / 10;
 // The weight as a screen reader says it: work in sheets, whole or to a half.
 const work = (w: number) => (Number.isInteger(w) ? String(w) : w.toFixed(w * 2 === Math.round(w * 2) ? 1 : 2));
-// A mark's box on either plate: its top-left corner from where its origin
-// lies, and its turn about the origin.
-const placed = (m: Mark) =>
-  `--x:${m.wide.x - m.origin[0]};--y:${m.wide.y - m.origin[1]};--rot:${m.wide.rot}deg;--xp:${m.tall.x - m.origin[0]};--yp:${m.tall.y - m.origin[1]};--rotp:${m.tall.rot}deg;--mw:${m.w};--mh:${m.h};--ox:${m.origin[0]};--oy:${m.origin[1]}`;
+// A mark's box on either plate, in plate units: its top-left corner from
+// where its origin lies, and its turn about the origin.
+const placed = (m: Mark) => {
+  const [ox, oy] = [m.origin[0] * m.scale, m.origin[1] * m.scale];
+  return `--x:${m.wide.x - ox};--y:${m.wide.y - oy};--rot:${m.wide.rot}deg;--xp:${m.tall.x - ox};--yp:${m.tall.y - oy};--rotp:${m.tall.rot}deg;--mw:${m.w * m.scale};--mh:${m.h * m.scale};--ox:${ox};--oy:${oy}`;
+};
 ---
 
 <figure
