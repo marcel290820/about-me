@@ -1,12 +1,14 @@
 ---
 import Page from '@/layouts/Page.astro';
-import Limits from '@/components/Limits.astro';
+import Ink from '@/components/Ink.astro';
 import Series from '@/components/Series.astro';
 import Sheet from '@/components/Sheet.astro';
 import { getCollection } from 'astro:content';
-import { TIERS, series } from '@/lib/projects';
+import { TIERS, ink, series } from '@/lib/projects';
 
-const folios = series(await getCollection('projects'));
+const projects = await getCollection('projects');
+const folios = series(projects);
+const { names, domains } = ink(projects);
 const span = (sheets: { data: { from: number; to?: number } }[]) => ({
   from: Math.min(...sheets.map((s) => s.data.from)),
   to: Math.max(...sheets.map((s) => s.data.to ?? s.data.from)),
@@ -16,22 +18,21 @@ const span = (sheets: { data: { from: number; to?: number } }[]) => ({
 <Page title="Projects" description="Projects by Marcel Heidebrecht" surface>
   <div slot="surface" class="pt-8 pb-6 sm:pt-12 sm:pb-10">
     <h1 class="display-name mb-4">Projects</h1>
-    <p class="font-mono text-xs uppercase tracking-[0.16em] text-text-dim mb-8">catalogue of sheets</p>
     <p class="text-[0.9375rem] text-text-muted max-w-prose">
       What I've put to sea so far, what it was built from, and who it was for.
     </p>
-    {/* The cover carries the index: every sheet on one list, a line each,
-        and a line opens the sheet. */}
+    {/* The cover carries the ink: every stack with a sheet's work behind
+        it as a blot by weight of use, spilled on the paper, opening on
+        its domains. */}
     <div class="mt-10">
-      <Limits folios={folios} />
+      <Ink names={names} domains={domains} />
     </div>
   </div>
 
   {/* The key to the bearing weights, printed once, the way a chart prints
       its legend once, as a caption at the head of the sheets it applies
-      to. It was on the paper beside the index twice, above it and then
-      below it, and both times read as the index's legend; the index has
-      no weights. */}
+      to. It sat on the paper beside the plate that used to be an index,
+      and read as that plate's legend, which has no weights. */}
   <p class="sheet-key mb-16 sm:mb-24 flex flex-wrap items-center gap-x-5 gap-y-1.5 font-mono text-[0.625rem] uppercase tracking-[0.14em] text-text-dim">
     <span>bearing weight, share of the work</span>
     {TIERS.map(([t, label]) => (

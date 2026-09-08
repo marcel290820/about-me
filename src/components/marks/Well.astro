@@ -1,0 +1,71 @@
+---
+// --- The inkwell ----------------------------------------------------------
+// The glass that went over in the swell and spilled the ink: a squat
+// faceted bottle on its side, the mouth toward the spill, the stopper
+// rolled off on its own. Drawn the way the rest of the marginalia are,
+// hairline and unfilled, seen from above like everything on the chart, so
+// it is a profile: the base and the mouth are seen edge-on and drawn as
+// thin ellipses, which is also what says the thing is round. The bottle
+// lies along x with the mouth at (57, 40), which is the mark's origin: the
+// ink runs from there, so the plate turns the mark about it.
+//
+// A bottle drawn upright and tipped by a few degrees is a bottle someone
+// stood at an angle; one on its side with the stopper out is one that
+// went over. And a wine bottle is not an inkwell: the body is wider than
+// it is long, the shoulders are broad, the neck is a stub and the lip is
+// a collar, or it reads as something rolled off a table in a galley,
+// which is what the first one did.
+const BASE = 12;
+const SHOULDER = 36;
+const NECK = 46;
+const LIP = 53;
+const MOUTH = 57;
+const AXIS = 40;
+const HALF = 19;
+const NECK_HALF = 8;
+const LIP_HALF = 10.5;
+const top = AXIS - HALF;
+const bottom = AXIS + HALF;
+const outline =
+  `M${BASE} ${top} L${SHOULDER} ${top} Q${NECK - 2} ${top} ${NECK} ${AXIS - NECK_HALF} L${LIP} ${AXIS - NECK_HALF} L${LIP} ${AXIS - LIP_HALF} L${MOUTH} ${AXIS - LIP_HALF}` +
+  `M${BASE} ${bottom} L${SHOULDER} ${bottom} Q${NECK - 2} ${bottom} ${NECK} ${AXIS + NECK_HALF} L${LIP} ${AXIS + NECK_HALF} L${LIP} ${AXIS + LIP_HALF} L${MOUTH} ${AXIS + LIP_HALF}`;
+// The facets: an eight-sided bottle shows two edges along its length from
+// the side, and they run into the shoulder the way the outline does.
+const facets = `M${BASE} ${AXIS - 9} L${SHOULDER} ${AXIS - 9} Q${NECK - 3} ${AXIS - 9} ${NECK} ${AXIS - 4} M${BASE} ${AXIS + 9} L${SHOULDER} ${AXIS + 9} Q${NECK - 3} ${AXIS + 9} ${NECK} ${AXIS + 4}`;
+// What ink is left lies in the neck against the mouth, hatched.
+const hatch = [0, 1, 2].map((i) => `M${NECK + 1 + i * 2.6} ${AXIS - NECK_HALF + 2} L${NECK + 4 + i * 2.6} ${AXIS + NECK_HALF - 2}`).join('');
+// The glass: the lower face is hatched the way an engraver shades a
+// curved surface, so the body reads as glass and not as an outline of a
+// tumbler. Lines lean with the facets and stop short of the edges.
+const glass = Array.from({ length: 7 }, (_, i) => {
+  const x = BASE + 4 + i * 3.4;
+  return `M${x} ${AXIS + 11} L${x + 2.2} ${bottom - 1.6}`;
+}).join('');
+// The base is a thick foot: a second ring inside the first, so the end
+// seen edge-on has a bevel.
+const FOOT = 2.4;
+// The stopper, rolled off and lying on the paper a little way from the
+// neck: a faceted glass knob seen on end, and a plug as wide as the neck
+// that tapers to its tip. A ball on a thin stem was a magnifying glass.
+const KNOB = [34, 70];
+const KR = 6.2;
+const knob = Array.from({ length: 6 }, (_, i) => {
+  const a = (Math.PI / 3) * i + Math.PI / 6;
+  return `${i ? 'L' : 'M'}${(KNOB[0] + KR * Math.cos(a)).toFixed(1)} ${(KNOB[1] + KR * Math.sin(a)).toFixed(1)}`;
+}).join(' ') + ' Z';
+const plug = `M${KNOB[0] + KR - 0.6} ${KNOB[1] - 3.6} L${KNOB[0] + KR + 6.5} ${KNOB[1] - 2.6} L${KNOB[0] + KR + 6.5} ${KNOB[1] + 2.6} L${KNOB[0] + KR - 0.6} ${KNOB[1] + 3.6}`;
+---
+
+<svg viewBox="0 0 100 80" fill="none" stroke="currentColor" stroke-width="0.7" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">
+  <path d={outline} />
+  <ellipse cx={BASE} cy={AXIS} rx="3.2" ry={HALF} />
+  <ellipse cx={BASE + FOOT} cy={AXIS} rx="2.4" ry={HALF - FOOT} stroke-width="0.5" />
+  <line x1={LIP} y1={AXIS - LIP_HALF} x2={LIP} y2={AXIS + LIP_HALF} stroke-width="0.55" />
+  <ellipse cx={MOUTH} cy={AXIS} rx="2.6" ry={LIP_HALF} />
+  <path d={facets} stroke-width="0.45" opacity="0.7" />
+  <path d={glass} stroke-width="0.4" opacity="0.55" />
+  <path d={hatch} stroke-width="0.5" opacity="0.8" />
+  <path d={knob} />
+  <line x1={KNOB[0] + KR / 2} y1={KNOB[1] - KR * 0.7} x2={KNOB[0] + KR / 2} y2={KNOB[1] + KR * 0.7} stroke-width="0.45" opacity="0.7" />
+  <path d={plug} />
+</svg>
