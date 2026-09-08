@@ -30,16 +30,20 @@
 export type Capsule = { a: [number, number]; b: [number, number]; r: number };
 // The marks that tell the story of the spill: the inkwell that went over
 // in the swell, and the quill dropped with its nib in the ink. Each is
-// drawn in its own box, in plate units, and placed by an origin on the
-// plate with a turn about it: the well's origin is its mouth, which is
-// where the ink runs out toward the pool, and the quill's is its nib,
-// which is where its skid through the wet ink ends. The capsules are in
-// the mark's own units; `placed()` turns them onto a plate.
+// drawn in its own box, in its own units, printed at `scale` plate units
+// each, and placed by an origin on the plate with a turn about it: the
+// well's origin is its mouth, which is where the ink runs out toward the
+// pool, and the quill's is its nib, which is where its skid through the
+// wet ink ends. The capsules are in the mark's own units; `placed()`
+// turns them onto a plate.
 export type Put = { x: number; y: number; rot: number };
-export type Mark = { w: number; h: number; origin: [number, number]; keep: Capsule[]; wide: Put; tall: Put };
+export type Mark = { w: number; h: number; scale: number; origin: [number, number]; keep: Capsule[]; wide: Put; tall: Put };
 export const WELL: Mark = {
   w: 100,
   h: 80,
+  // A third up on its drawing: at one to one it was too small a bottle
+  // for the ink on the plate, and at a fifth up the critic still said so.
+  scale: 1.3,
   origin: [57, 40],
   // The body, the stopper, and the ring the lip printed where the mouth
   // came down before the bottle rolled onto its side.
@@ -57,6 +61,7 @@ export const WELL: Mark = {
 export const QUILL: Mark = {
   w: 200,
   h: 60,
+  scale: 1,
   origin: [6, 48],
   keep: [
     { a: [6, 48], b: [101, 39], r: 13 },
@@ -68,11 +73,11 @@ export const QUILL: Mark = {
 // A point in a mark's own units, on the plate the mark is put on.
 export const onPlate = (m: Mark, put: Put, [x, y]: [number, number]): [number, number] => {
   const a = (put.rot * Math.PI) / 180;
-  const dx = x - m.origin[0];
-  const dy = y - m.origin[1];
+  const dx = (x - m.origin[0]) * m.scale;
+  const dy = (y - m.origin[1]) * m.scale;
   return [put.x + dx * Math.cos(a) - dy * Math.sin(a), put.y + dx * Math.sin(a) + dy * Math.cos(a)];
 };
-const placed = (m: Mark, put: Put): Capsule[] => m.keep.map((c) => ({ a: onPlate(m, put, c.a), b: onPlate(m, put, c.b), r: c.r }));
+const placed = (m: Mark, put: Put): Capsule[] => m.keep.map((c) => ({ a: onPlate(m, put, c.a), b: onPlate(m, put, c.b), r: c.r * m.scale }));
 
 // A plate: its size, the paper on it the blots keep clear of, where the
 // inkwell and the quill lie, and the well's mouth, which the spill runs
@@ -93,7 +98,7 @@ const EDGE_SHARE = 0.4;
 // open blot shoves its neighbours aside in the browser, so the packing
 // keeps no room for it.
 const GAP = 6;
-const SLACK = 20;
+const SLACK = 14;
 const THIN = 1.5;
 const THIN_OVER = 360;
 const BEHIND = 0.7;
@@ -114,22 +119,22 @@ const DRIFT = 36;
 // wherever their mean fell, and on the tall plate that was half the
 // column below the bottle.
 const RUN = 64;
-// Size by weight: r = R_K * w^R_EXP, between the limits. Area in
-// proportion to weight is what the eye reads as less than proportion, so
-// the exponent sits well above a half, and every step the sheets take is
-// a step the eye can see: a sheet and a half is plainly more than a
-// sheet, two plainly more than a sheet and a half. The floor is the
-// smallest blot a logo reads out of with ink round it, and a name with a
-// sheet's work behind it gets a logo. Anything lighter is a droplet: no
+// Size by weight: r = R_K * w^R_EXP, between the limits. The floor is
+// what a logo needs to be recognised with ink round it (at twelve units
+// it was a smudge; at twenty the tall plate had no room for the test's
+// heavier spill), the main stacks plainly bigger than the rest is all
+// the scale has to say, and the exponent is low so the rest do not
+// crowd the plate keeping step with the heaviest. A name with a sheet's
+// work behind it gets a logo. Anything lighter is a droplet: no
 // logo, since there is no room for one, and no words, since a plate of
 // what was touched in passing is not what the top of the page is for,
 // but printed, because a spill has a bottom to its size scale and a
 // plate that stops at the smallest logo is a plate of pebbles.
 export const LABELLED = 1;
-export const R_MIN = 12;
+export const R_MIN = 18;
 export const R_MAX = 58;
-const R_K = 11.5;
-const R_EXP = 0.8;
+const R_K = 18;
+const R_EXP = 0.45;
 const R_DROP = 3;
 const R_DROP_K = 6;
 const DROP_SPREAD_LOW = 0.75;
