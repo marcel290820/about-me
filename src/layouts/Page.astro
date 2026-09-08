@@ -6,12 +6,14 @@ interface Props {
   description?: string;
   /** Pass on pages that fill the `surface` slot. */
   surface?: boolean;
+  /** Keep the page out of the Pagefind index. */
+  noindex?: boolean;
 }
 
-const { title, description, surface } = Astro.props;
+const { title, description, surface, noindex } = Astro.props;
 ---
 
-<Base title={title} description={description} surface={surface}>
+<Base title={title} description={description} surface={surface} noindex={noindex}>
   <slot name="surface" slot="surface" />
   <slot />
 </Base>

@@ -1,0 +1,61 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  /** Every published post; topics are counted from it. */
+  posts: CollectionEntry<'blog'>[];
+  activeTag?: string;
+}
+
+const { posts, activeTag } = Astro.props;
+
+const counts = new Map<string, number>();
+for (const post of posts) {
+  for (const tag of post.data.tags) counts.set(tag, (counts.get(tag) ?? 0) + 1);
+}
+const topics = [...counts.entries()].sort(([a], [b]) => a.localeCompare(b));
+
+const rowClass =
+  'grid grid-cols-[6.5rem_1fr] sm:grid-cols-[9rem_1fr] gap-4 py-3.5 border-b border-border-subtle';
+const termClass = 'font-mono text-xs uppercase tracking-[0.14em] pt-0.5';
+---
+
+{/* Topics and the two ways off the page read as one ruled table: the whole
+    block is a single instrument, not a list with links loose beneath it. */}
+<section>
+  <div class="section-heading">
+    <h2>wayfinding</h2>
+  </div>
+  <dl class="border-t border-border-subtle">
+    {topics.map(([tag, n]) => (
+      <div class={rowClass}>
+        <dt class={termClass}>
+          <a
+            href={`/blog/tags/${tag}`}
+            class:list={[
+              'transition-colors',
+              tag === activeTag ? 'text-text' : 'text-accent hover:text-text',
+            ]}
+          >
+            {tag}
+          </a>
+        </dt>
+        <dd class="text-[0.9375rem] text-text-muted text-right">
+          {n} {n === 1 ? 'entry' : 'entries'}
+        </dd>
+      </div>
+    ))}
+    <div class={rowClass}>
+      <dt class:list={[termClass, 'text-accent']}>search</dt>
+      <dd class="text-[0.9375rem] text-text">
+        <a href="/search" class="hover:text-accent transition-colors">search the site &rarr;</a>
+      </dd>
+    </div>
+    <div class={rowClass}>
+      <dt class:list={[termClass, 'text-accent']}>feed</dt>
+      <dd class="text-[0.9375rem] text-text">
+        <a href="/rss.xml" class="hover:text-accent transition-colors">rss &rarr;</a>
+      </dd>
+    </div>
+  </dl>
+</section>

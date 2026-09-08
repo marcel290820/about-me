@@ -8,7 +8,7 @@
 
 ## Architecture
 
-- **Astro 6** static site, no JS frameworks (no React/Vue/Svelte islands)
+- **Astro 7** static site, no JS frameworks (no React/Vue/Svelte islands)
 - **Tailwind CSS v4** via `@tailwindcss/vite` plugin (not PostCSS). Styles live in `src/styles/global.css` using `@theme` tokens + `@layer components` classes
 - Path alias: `@/*` → `src/*`
 - Content collections defined in `src/content.config.ts` using `glob` loader — schemas are the source of truth for frontmatter fields

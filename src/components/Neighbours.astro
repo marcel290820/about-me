@@ -1,0 +1,30 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { logDate } from '@/lib/log';
+
+interface Props {
+  earlier: CollectionEntry<'blog'> | null;
+  later: CollectionEntry<'blog'> | null;
+}
+
+const { earlier, later } = Astro.props;
+
+const rows: { label: string; post: CollectionEntry<'blog'> }[] = [];
+if (later) rows.push({ label: 'later', post: later });
+if (earlier) rows.push({ label: 'earlier', post: earlier });
+---
+
+{rows.length > 0 && (
+  <div class="rail flex flex-col gap-7">
+    {rows.map(({ label, post }) => (
+      <div>
+        <p class="rail__fix font-mono text-xs text-text-dim mb-1">
+          {label}, {logDate(post.data.pubDate)}
+        </p>
+        <a href={`/blog/${post.id}`} class="text-base font-semibold text-text hover:text-accent transition-colors">
+          {post.data.title}
+        </a>
+      </div>
+    ))}
+  </div>
+)}

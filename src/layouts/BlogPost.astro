@@ -1,17 +1,19 @@
 ---
+import type { CollectionEntry } from 'astro:content';
 import Base from './Base.astro';
 import TagList from '@/components/TagList.astro';
+import Neighbours from '@/components/Neighbours.astro';
+import { logDate } from '@/lib/log';
 
 interface Props {
-  title: string;
-  description: string;
-  pubDate: Date;
-  updatedDate?: Date;
-  heroImage?: string;
-  tags?: string[];
+  post: CollectionEntry<'blog'>;
+  earlier: CollectionEntry<'blog'> | null;
+  later: CollectionEntry<'blog'> | null;
+  minutes: number;
 }
 
-const { title, description, pubDate, updatedDate, heroImage, tags = [] } = Astro.props;
+const { post, earlier, later, minutes } = Astro.props;
+const { title, description, pubDate, updatedDate, place, tags, draft } = post.data;
 
 const jsonLd = {
   '@context': 'https://schema.org',
@@ -28,46 +30,48 @@ const jsonLd = {
   url: new URL(Astro.url.pathname, Astro.site).toString(),
 };
 
-function getReadingTime(content: string): number {
-  const words = content.replace(/\W+/g, ' ').split(/\s+/).length;
-  return Math.max(1, Math.ceil(words / 200));
-}
-
-const readingTime = getReadingTime(Astro.slots.has('default') ? await Astro.slots.render('default') : '');
+const linkClass =
+  'inline-block font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-text-dim hover:text-text transition-colors';
 ---
 
-<Base title={title} description={description}>
-  <article>
+<Base title={title} description={description} surface>
+  {/* The whole entry is read on paper. The rail runs down its margin the way
+      it does on the CV, with the fix pinned at the top. */}
+  <article slot="surface" class="entry-sheet rail pt-8 pb-16 sm:pt-12 sm:pb-24">
     <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
     <header class="mb-10">
-      <div class="flex items-center gap-3 text-[0.625rem] uppercase tracking-[0.14em] font-mono text-text-muted mb-4">
-        <time datetime={pubDate.toISOString()}>
-          {pubDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-        </time>
-        {updatedDate && (
-          <span class="text-text-dim">
-            (updated {updatedDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })})
-          </span>
-        )}
-        <span class="text-text-dim">&middot;</span>
-        <span>{readingTime} min read</span>
-      </div>
-      <h1 class="display-name mb-6">{title}</h1>
+      <p class="rail__fix font-mono text-xs text-text-dim mb-4">
+        <time datetime={pubDate.toISOString()}>{logDate(pubDate)}</time>{place && `, ${place}`}
+        <span class="log-entry__min">{minutes} min</span>
+        {updatedDate && <span class="log-entry__min">updated {logDate(updatedDate)}</span>}
+        {import.meta.env.DEV && draft && <span class="log-entry__min text-accent">draft</span>}
+      </p>
+      <h1 class="display-name display-name--entry mb-5">{title}</h1>
+      <p class="text-lg leading-relaxed text-text-muted mb-6 max-w-[62ch]">{description}</p>
       {tags.length > 0 && <TagList tags={tags} />}
-      {heroImage && (
-        <img src={heroImage} alt={title} class="w-full rounded-[2px] border border-border-subtle mt-8" />
-      )}
     </header>
-    <div class="prose max-w-none" data-pagefind-body>
+    <div class="prose" data-pagefind-body>
       <slot />
     </div>
-    <hr class="hr-glow mt-16 mb-8" />
-    <footer>
-      <a href="/blog" class="font-mono text-[0.625rem] uppercase tracking-[0.14em] text-text-muted hover:text-accent transition-colors">
-        &larr; Back to all posts
-      </a>
-    </footer>
+    {import.meta.env.DEV && (
+      <p class="mt-12">
+        <a href={`/write?entry=${post.id}`} class={linkClass}>edit this entry at the chart table &rarr;</a>
+      </p>
+    )}
   </article>
+
+  <nav aria-label="Neighbouring entries">
+    {(earlier || later) && (
+      <>
+        <div class="section-heading">
+          <h2>earlier and later</h2>
+        </div>
+        <Neighbours earlier={earlier} later={later} />
+      </>
+    )}
+    <a href="/blog" class:list={[linkClass, 'mt-8']}>&larr; back to the remarks</a>
+  </nav>
+
   <script>
     document.querySelectorAll('pre').forEach((pre) => {
       const button = document.createElement('button');
@@ -78,7 +82,9 @@ const readingTime = getReadingTime(Astro.slots.has('default') ? await Astro.slot
         if (code) {
           await navigator.clipboard.writeText(code.textContent ?? '');
           button.textContent = 'copied!';
-          setTimeout(() => { button.textContent = 'copy'; }, 2000);
+          setTimeout(() => {
+            button.textContent = 'copy';
+          }, 2000);
         }
       });
       pre.style.position = 'relative';
