@@ -1,0 +1,93 @@
+---
+// --- The quill -------------------------------------------------------------
+// The pen that was writing the chart when the well went over, lying where
+// it was dropped. Hairline like the rest: the shaft a bowed line, the vane
+// one outline each side sampled from a profile, wider on the outer side
+// than the inner as a wing feather is, and the barbs short lines off the
+// shaft leaning toward the tip, every few units, lighter than the outline.
+// The lower third of the shaft is bare, the calamus, and ends in the nib:
+// two lines closing to a point and the slit up the middle. Two notches in
+// the outer vane, one in the inner, where the barbs have parted, because
+// a vane with an unbroken edge is a leaf.
+//
+// One source for both edges and every barb: the shaft. The vane's outline
+// and the barbs are all read off it, so they cannot disagree.
+const LEN = 190;
+const shaft = (t: number): [number, number] => [6 + LEN * t, 48 - 32 * t + 7 * Math.sin(Math.PI * t)];
+const tangent = (t: number): [number, number] => {
+  const a = shaft(Math.max(t - 0.01, 0));
+  const b = shaft(Math.min(t + 0.01, 1));
+  const l = Math.hypot(b[0] - a[0], b[1] - a[1]);
+  return [(b[0] - a[0]) / l, (b[1] - a[1]) / l];
+};
+// Off the shaft toward the outer edge, which is up.
+const normal = (t: number): [number, number] => {
+  const [tx, ty] = tangent(t);
+  return [ty, -tx];
+};
+const VANE = 0.3;
+const OUTER = 15;
+const INNER = 7.5;
+const notch = (k: number, at: number, depth: number, width: number) => 1 - depth * Math.exp(-(((k - at) / width) ** 2));
+const width = (t: number, outer: boolean) => {
+  if (t < VANE) return 0;
+  const k = (t - VANE) / (1 - VANE);
+  // The far end is rounded, not a point: the profile stops short of zero.
+  let w = (outer ? OUTER : INNER) * Math.pow(Math.sin(Math.PI * (0.02 + 0.91 * k)), 0.6);
+  w *= outer ? notch(k, 0.42, 0.6, 0.025) * notch(k, 0.7, 0.45, 0.02) : notch(k, 0.58, 0.5, 0.025);
+  return w;
+};
+const N = 48;
+const edge = (outer: boolean): [number, number][] =>
+  Array.from({ length: N + 1 }, (_, i) => {
+    const t = VANE + ((1 - VANE) * i) / N;
+    const [x, y] = shaft(t);
+    const [nx, ny] = normal(t);
+    const w = width(t, outer) * (outer ? 1 : -1);
+    return [x + nx * w, y + ny * w];
+  });
+const f = (n: number) => n.toFixed(1);
+const vane = 'M' + edge(true).map(([x, y]) => `${f(x)} ${f(y)}`).join('L') + 'L' + edge(false).reverse().map(([x, y]) => `${f(x)} ${f(y)}`).join('L');
+const spine = 'M' + Array.from({ length: 41 }, (_, i) => shaft(i / 40)).map(([x, y]) => `${f(x)} ${f(y)}`).join('L');
+// The calamus is a tube: a second line a hair off the shaft, closing to
+// the point at the nib, and the slit back from the point.
+const calamus = (() => {
+  const pts = Array.from({ length: 13 }, (_, i) => {
+    const t = (VANE * i) / 12;
+    const [x, y] = shaft(t);
+    const [nx, ny] = normal(t);
+    const w = 1.6 * Math.min(1, t / 0.06);
+    return [x - nx * w, y - ny * w] as [number, number];
+  });
+  const [sx, sy] = shaft(0);
+  const [ex, ey] = shaft(0.06);
+  return 'M' + pts.map(([x, y]) => `${f(x)} ${f(y)}`).join('L') + `M${f(sx)} ${f(sy)}L${f(ex)} ${f(ey)}`;
+})();
+// The barbs lean toward the tip: off the normal by half a right angle.
+const LEAN = (48 * Math.PI) / 180;
+const barbs = (() => {
+  const out: string[] = [];
+  for (let k = 0.03; k < 0.97; k += 0.03) {
+    const t = VANE + (1 - VANE) * k;
+    const [x, y] = shaft(t);
+    const [nx, ny] = normal(t);
+    const [tx, ty] = tangent(t);
+    for (const outer of [true, false]) {
+      const s = outer ? 1 : -1;
+      const w = width(t, outer) * 0.82;
+      if (w < 1) continue;
+      const dx = s * nx * Math.cos(LEAN) + tx * Math.sin(LEAN);
+      const dy = s * ny * Math.cos(LEAN) + ty * Math.sin(LEAN);
+      out.push(`M${f(x)} ${f(y)}L${f(x + dx * w)} ${f(y + dy * w)}`);
+    }
+  }
+  return out.join('');
+})();
+---
+
+<svg viewBox="0 0 200 60" fill="none" stroke="currentColor" stroke-width="0.7" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">
+  <path d={vane} />
+  <path d={barbs} stroke-width="0.4" opacity="0.55" />
+  <path d={spine} />
+  <path d={calamus} stroke-width="0.6" />
+</svg>

@@ -1,0 +1,111 @@
+---
+// The ink at the head of the catalogue: one blot per stack name, its area
+// the weight of use across every sheet, spilled on the paper as if by
+// accident, and only the logo reversed out of the ink. Hover a blot and it
+// opens: it swells into a pool, shoves its neighbours aside, and the
+// domains it was used in appear knocked out of the ink round the logo.
+// Nothing frames it and nothing is lettered on the paper: no heading, no
+// key, no caption, or the spill is an exhibit. The ink is a fragment
+// shader on a canvas under the logos, in src/lib/ink-shader.ts; the
+// geometry is src/lib/drops.ts, laid out twice, on the wide plate for the
+// column and on the tall one for a phone. The index this replaced listed
+// every sheet with its title, marks and years, and the one thing it was
+// for, which stack went into which kind of work, was lost in the detail.
+import Quill from '@/components/marks/Quill.astro';
+import Well from '@/components/marks/Well.astro';
+import { logo } from '@/lib/logos';
+import { QUILL, TALL, WELL, WIDE, hash, layout, opened, ring, wordSize, type Mark, type Weighed } from '@/lib/drops';
+
+interface Props {
+  names: Weighed[];
+  domains: string[];
+}
+
+const { names, domains } = Astro.props;
+const blots = layout(names, domains, WIDE);
+const tall = new Map(layout(names, domains, TALL).map((b) => [b.name, b]));
+const u = (n: number) => Math.round(n * 10) / 10;
+// The weight as a screen reader says it: work in sheets, whole or to a half.
+const work = (w: number) => (Number.isInteger(w) ? String(w) : w.toFixed(w * 2 === Math.round(w * 2) ? 1 : 2));
+// A mark's box on either plate: its top-left corner from where its origin
+// lies, and its turn about the origin.
+const placed = (m: Mark) =>
+  `--x:${m.wide.x - m.origin[0]};--y:${m.wide.y - m.origin[1]};--rot:${m.wide.rot}deg;--xp:${m.tall.x - m.origin[0]};--yp:${m.tall.y - m.origin[1]};--rotp:${m.tall.rot}deg;--mw:${m.w};--mh:${m.h};--ox:${m.origin[0]};--oy:${m.origin[1]}`;
+---
+
+<figure class="ink" style={`--w:${WIDE.w};--h:${WIDE.h};--wp:${TALL.w};--hp:${TALL.h}`} data-mouth={`${WELL.wide.x} ${WELL.wide.y}`} data-mouth-tall={`${WELL.tall.x} ${WELL.tall.y}`}>
+  <div class="ink__field">
+    <canvas class="ink__canvas" aria-hidden="true"></canvas>
+    {/* The story of the spill, in the chart's own hand: the well that went
+        over in the swell, its mouth toward the heaviest blot (the script
+        runs the ink from the one to the other), and the quill beside it.
+        Over the canvas, so the well's lip prints over the ink leaving it;
+        under the blots. */}
+    <div class="ink__mark" style={placed(WELL)}><Well /></div>
+    <div class="ink__mark" style={placed(QUILL)}><Quill /></div>
+    <ul class="ink__blots" aria-label="stacks by weight of use, with the domains each was used in">
+      {blots.map((b) => {
+        const p = tall.get(b.name)!;
+        const R = opened(b.r, b.domains.length);
+        return (
+          <li>
+            {/* Where it lies on either plate, how big it is and how large
+                its words letter, for the CSS; what it opens to, how its
+                outline is seeded and when it lands, for the script, which
+                moves it through --px, --py and --R. */}
+            <button
+              type="button"
+              class="blot"
+              style={`--x:${u(b.x)};--y:${u(b.y)};--xp:${u(p.x)};--yp:${u(p.y)};--r:${u(b.r)};--ws:${u(wordSize(R))}`}
+              data-open={u(R)}
+              data-seed={(hash(b.name) % 1000) / 100}
+              data-t={(hash(b.name) % 60) / 100}
+              aria-label={`${b.name}, ${work(b.weight)} ${b.weight === 1 ? 'sheet' : 'sheets'} of work in ${b.domains.join(', ')}`}
+            >
+              {logo(b.name) && (
+                <svg class="blot__logo" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <g set:html={logo(b.name)} />
+                </svg>
+              )}
+              {/* The domains, in a ring round the logo, the ring turned
+                  a hashed way off the cardinal points (four words at
+                  twelve, three, six and nine is a compass rose), each a
+                  little off its bearing and off the ring, so the ring is
+                  as irregular as the rim; a single one under the logo on
+                  a tighter ring. Shown once the blot has opened far
+                  enough to hold them. The CSS reads --k against the
+                  button's width, which is the open diameter, so it is
+                  half the ring. */}
+              <span class="blot__words" aria-hidden="true">
+                {b.domains.map((d, k) => (
+                  <span
+                    class="blot__word"
+                    style={`--a:${u((b.domains.length === 1 ? 90 : -70 - (hash(b.name) % 21) + (360 * k) / b.domains.length) + (hash(b.name + d) % 11) - 5)}deg;--k:${u(ring(b.domains.length) / 2 - 0.01 + (hash(d + b.name) % 3) / 100)}`}
+                  >
+                    {d}
+                  </span>
+                ))}
+              </span>
+            </button>
+          </li>
+        );
+      })}
+    </ul>
+  </div>
+  {/* Without the script there is no ink under the logos: print the discs. */}
+  <noscript>
+    <style>
+      .blot {
+        opacity: 1;
+        background: var(--color-text);
+      }
+    </style>
+  </noscript>
+</figure>
+
+<script>
+  import { mount } from '@/lib/ink-shader';
+
+  const plate = document.querySelector<HTMLElement>('.ink');
+  if (plate) mount(plate);
+</script>

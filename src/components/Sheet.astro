@@ -16,7 +16,7 @@ import { Image } from 'astro:assets';
 import { ICON, TALL, TICK, WIDE, layout, type Layout, type Mark, type Plate } from '@/lib/sheet';
 import { logo } from '@/lib/logos';
 import { ORGS } from '@/lib/orgs';
-import { TIERS, type Tier } from '@/lib/projects';
+import { TIERS, tierOf } from '@/lib/projects';
 
 interface Props {
   /** The entry's id, which is the anchor the index of sheets links to. */
@@ -53,7 +53,7 @@ const years = p.to && p.to !== p.from ? `${p.from} to ${p.to}` : `${p.from}`;
 // the sheet was drawn. The bearing is drawn heavier the higher the tier, the
 // way a chart draws the line to a conspicuous mark heavier than to one it
 // can barely make out. The projects page prints the key once, at its head.
-const tier = (name: string): Tier => (p.core.includes(name) ? 'core' : p.touched.includes(name) ? 'touched' : 'used');
+const tier = (name: string) => tierOf(p, name);
 // The caption numbers the sheet within its series, the way charts are
 // numbered within the folio that holds them.
 const code = ORGS[p.org].code;
