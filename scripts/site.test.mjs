@@ -33,8 +33,8 @@ test('the personal site ships one page, local assets, and working legacy redirec
     'github.com',
     'www.linkedin.com',
   ]);
-  assert.match(home.replace(/\s+/g, ' '), /Ghostty, zsh and tmux, with pi as my coding agent\./);
-  assert.doesNotMatch(home, /<a\b[^>]*>[^<]*(?:Ghostty|zsh|tmux|\bpi\b)/);
+  assert.match(home.replace(/\s+/g, ' '), /Ghostty, zsh and tmux\. Vim is my editor, and pi is my coding agent\./);
+  assert.doesNotMatch(home, /<a\b[^>]*>[^<]*(?:Ghostty|zsh|tmux|Vim|\bpi\b)/);
 
   const images = [...home.matchAll(/<img\b[^>]*src="([^"]+)"/g)].map(match => match[1]);
   const portrait = home.match(/<img\b[^>]*>/)?.[0];
