@@ -1,295 +1,53 @@
 ---
 import '../styles/global.css';
-import { SHOW_BLOG } from '@/lib/log';
-import Header from '@/components/Header.astro';
-import Footer from '@/components/Footer.astro';
-import DepthRail from '@/components/DepthRail.astro';
-import Waterline from '@/components/Waterline.astro';
-import ChartMarks from '@/components/ChartMarks.astro';
-import Drift from '@/components/Drift.astro';
-import Shallows from '@/components/Shallows.astro';
+import { getImage } from 'astro:assets';
+import portrait from '@/assets/images/marcel-heidebrecht-portrait.jpeg';
 
 interface Props {
   title: string;
-  description?: string;
-  ogImage?: string;
-  /** Set on pages that fill the `surface` slot. See hasSurface below. */
-  surface?: boolean;
-  /** Keep the page out of the Pagefind index. */
   noindex?: boolean;
 }
 
-const {
-  title,
-  description = 'Marcel Heidebrecht, Fullstack Engineer & DevOps Enthusiast',
-  ogImage = '/og-default.png',
-  surface = false,
-  noindex = false,
-} = Astro.props;
-
-const canonicalURL = new URL(Astro.url.pathname, Astro.site);
-
-// Absolute, because every scraper that matters resolves og:image against
-// nothing at all: a root-relative path is fetched as-is and 404s.
-const ogImageURL = new URL(ogImage, Astro.site);
-
-const jsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'WebSite',
-  name: 'Marcel Heidebrecht',
-  url: Astro.site?.toString(),
-  description,
-};
-
-// Pages without a surface block (projects, search) cross the waterline
-// right after the header, so the crossing band tightens up.
-//
-// This has to be a prop. Astro.slots.has('surface') reads the compiled slot
-// table, not what a page actually passed, so a layout that forwards the slot
-// makes it true everywhere -- including behind a conditional.
-const hasSurface = surface;
-
-// The bottom, sounded. One profile across the page under the footer. It is
-// not tiled, so the wave numbers need not be integers; what it must be is
-// lopsided, because an even profile reads as manufacture.
-const SEABED_W = 1200;
-const seabedY = (t: number) =>
-  46 +
-  Math.sin(t * Math.PI * 2 * 1.3 + 0.7) * 9 +
-  Math.sin(t * Math.PI * 2 * 3.1 + 2.1) * 4.5 +
-  Math.sin(t * Math.PI * 2 * 7.7 + 0.3) * 2 +
-  Math.exp(-((t - 0.68) ** 2) / 0.004) * -14;
-const seabed =
-  'M' +
-  Array.from({ length: 97 }, (_, i) => {
-    const t = i / 96;
-    return `${(t * SEABED_W).toFixed(1)} ${seabedY(t).toFixed(1)}`;
-  }).join('L');
-// Casts that fixed the profile: [left%, value]. 48 is where the gauge stops.
-const seabedCasts: [number, number][] = [
-  [14, 47],
-  [41, 48],
-  [68, 44],
-  [88, 48],
-];
-
-// Scattered depth soundings, the way they are printed across the water on a
-// chart. Decorative only, and thin on purpose: a sounding is a place someone
-// actually took a cast, so a page of them reads as noise rather than as data.
-// [left%, top%, value]
-const soundings: [number, number, number][] = [
-  [23, 47, 9],
-  [37, 12, 22],
-  [58, 31, 11],
-  [67, 58, 26],
-  [83, 44, 19],
-  [16, 84, 31],
-  [91, 76, 13],
-];
+const { title, noindex = false } = Astro.props;
+const description =
+  'Software engineer in Berlin. Software development, cloud and DevOps alongside studies at TU Berlin and volunteer work at CCT.';
+const socialImageSize = 640;
+const socialImage = await getImage({
+  src: portrait,
+  width: socialImageSize,
+  height: socialImageSize,
+  fit: 'cover',
+  format: 'jpg',
+});
+const canonicalURL = new URL('/', Astro.site);
+const socialImageURL = new URL(socialImage.src, Astro.site);
 ---
 
 <!doctype html>
-<html lang="en" data-zone="surface" data-depth="dry">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="canonical" href={canonicalURL} />
-    {SHOW_BLOG && (
-      <link rel="alternate" type="application/rss+xml" title="Marcel Heidebrecht" href="/rss.xml" />
-    )}
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="preconnect" href="https://marine-api.open-meteo.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
-      rel="stylesheet"
-    />
-    <title>{title} | Marcel Heidebrecht</title>
+    <title>{title}</title>
     <meta name="description" content={description} />
-    <meta name="theme-color" content="#06141b" />
+    <meta name="theme-color" content="#f3f7f6" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    {!noindex && <link rel="canonical" href={canonicalURL} />}
+    {noindex && <meta name="robots" content="noindex, follow" />}
     <meta property="og:type" content="website" />
     <meta property="og:url" content={canonicalURL} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:image" content={ogImageURL} />
-    <meta name="twitter:card" content="summary_large_image" />
+    <meta property="og:image" content={socialImageURL} />
+    <meta property="og:image:width" content={String(socialImageSize)} />
+    <meta property="og:image:height" content={String(socialImageSize)} />
+    <meta property="og:image:alt" content="Portrait" />
+    <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
-    <meta name="twitter:image" content={ogImageURL} />
-    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+    <meta name="twitter:image" content={socialImageURL} />
   </head>
-  <body class="min-h-screen flex flex-col" data-pagefind-ignore={noindex ? true : undefined}>
-    <div class="edge-ticks" aria-hidden="true"></div>
-    <DepthRail />
-
-    <div class="zone-surface">
-      {
-        hasSurface && (
-          <>
-            <div class="soundings" aria-hidden="true">
-              {soundings.map(([left, top, value]) => (
-                <span style={`left:${left}%;top:${top}%`}>{value}</span>
-              ))}
-            </div>
-            <ChartMarks />
-          </>
-        )
-      }
-      <Header />
-      <div class="w-full max-w-3xl mx-auto px-4 sm:px-6">
-        <slot name="surface" />
-      </div>
-    </div>
-
-    <Waterline compact={!hasSurface} />
-
-    <div class="zone-deep flex-1 flex flex-col">
-      <Drift />
-      <Shallows />
-      <main class="flex-1 w-full max-w-3xl mx-auto px-4 sm:px-6 py-12 sm:py-20">
-        <slot />
-      </main>
-      <Footer />
-      <div class="seabed" aria-hidden="true">
-        <svg viewBox={`0 0 ${SEABED_W} 84`} preserveAspectRatio="none" fill="none">
-          <path d={seabed} stroke="currentColor" stroke-width="1" vector-effect="non-scaling-stroke" />
-        </svg>
-        {seabedCasts.map(([left, value]) => (
-          <span style={`left:${left}%;top:${(seabedY(left / 100) - 16).toFixed(1)}px`}>{value}</span>
-        ))}
-      </div>
-    </div>
-
-    <script>
-      const root = document.documentElement;
-      // The rail and the mobile badge both carry these hooks, so every match
-      // gets written.
-      const depthOutputs = document.querySelectorAll('[data-depth-value]');
-      const depthTicks =
-        document.querySelectorAll<HTMLElement>('[data-tick-depth]');
-      const waterline = document.querySelector<HTMLElement>('[data-waterline]');
-
-      const MAX_DEPTH = 48;
-      let queued = false;
-
-      function readDepth() {
-        queued = false;
-        const scrollable = document.body.scrollHeight - window.innerHeight;
-
-        // The rail is fixed and spans the viewport, so its two ends can sit
-        // over different zones at once. Each end gets its own threshold,
-        // measured against where the waterline currently is.
-        const waterlineBottom = waterline
-          ? waterline.getBoundingClientRect().bottom
-          : -1;
-
-        // Depth is measured from the waterline, not from the top of the
-        // document. The paper is the surface: the gauge reads 0 m for as long
-        // as any of the chart is in frame, and starts to fall only once the
-        // waterline has left the top of the viewport. Measured from the top
-        // of the page it read 48 m over dry paper on the home page.
-        const wetStart = window.scrollY + waterlineBottom;
-        const wetSpan = scrollable - wetStart;
-        const dry = waterlineBottom > 0 || wetSpan <= 0;
-        const wet = dry
-          ? 0
-          : Math.min(1, Math.max(0, (window.scrollY - wetStart) / wetSpan));
-
-        root.style.setProperty('--depth-pct', (wet * 100).toFixed(2));
-        root.style.setProperty('--attenuation', (1 - wet).toFixed(3));
-
-        const depthM = wet * MAX_DEPTH;
-        const depth = String(Math.round(depthM));
-        depthOutputs.forEach((el) => {
-          el.textContent = depth;
-        });
-
-        // Ticks sit 12m apart, so 2.5m of clearance keeps the marker's label
-        // off the scale's own at every viewport height.
-        depthTicks.forEach((el) => {
-          el.classList.toggle(
-            'is-covered',
-            Math.abs(Number(el.dataset.tickDepth) - depthM) < 2.5,
-          );
-        });
-
-        root.dataset.zone =
-          waterlineBottom < window.innerHeight * 0.34 ? 'deep' : 'surface';
-        root.dataset.zoneLow =
-          waterlineBottom < window.innerHeight * 0.9 ? 'deep' : 'surface';
-
-        // Which contacts are awake in the water column.
-        //
-        // Nothing is in the water until the waterline has left the top of the
-        // frame entirely -- the drift layer is fixed, so anything sooner would
-        // swim over the paper. The three bands then split what is left evenly,
-        // measured from where the water starts rather than from the top of the
-        // document: a page with a tall header would otherwise spend most of its
-        // scroll dry and give the shallow band a sliver to live in.
-        root.dataset.depth = dry
-          ? 'dry'
-          : wet < 0.34
-            ? 'shallow'
-            : wet < 0.7
-              ? 'mid'
-              : 'abyss';
-      }
-
-      function schedule() {
-        if (!queued) {
-          queued = true;
-          requestAnimationFrame(readDepth);
-        }
-      }
-
-      window.addEventListener('scroll', schedule, { passive: true });
-      window.addEventListener('resize', schedule, { passive: true });
-      readDepth();
-
-      // Live sea state, Baltic off Rostock. No key, CORS open. If this fails
-      // for any reason the CSS defaults hold and the readout stays as "--".
-      const MARINE_URL =
-        'https://marine-api.open-meteo.com/v1/marine' +
-        '?latitude=54.25&longitude=12.10' +
-        '&current=wave_height,sea_surface_temperature' +
-        '&timezone=Europe%2FBerlin';
-
-      // Baltic wave heights rarely pass 2.5m, so that is full scale.
-      const FULL_SCALE_M = 2.5;
-
-      fetch(MARINE_URL)
-        .then((res) => (res.ok ? res.json() : Promise.reject(res.status)))
-        .then((data) => {
-          const waveHeight = data?.current?.wave_height;
-          const seaTemp = data?.current?.sea_surface_temperature;
-
-          if (typeof waveHeight === 'number') {
-            root.style.setProperty(
-              '--sea-state',
-              Math.min(1, Math.max(0, waveHeight / FULL_SCALE_M)).toFixed(3),
-            );
-            document.querySelectorAll('[data-sea-hs]').forEach((el) => {
-              el.textContent = waveHeight.toFixed(1) + ' m';
-            });
-          }
-
-          if (typeof seaTemp === 'number') {
-            const el = document.querySelector('[data-sea-sst]');
-            if (el) el.textContent = seaTemp.toFixed(1) + '°';
-          }
-
-          // The observation time, buoy local, is what makes "live" believable.
-          const when = data?.current?.time;
-          if (typeof when === 'string' && when.length >= 16) {
-            document.querySelectorAll('[data-sea-time]').forEach((el) => {
-              el.textContent = when.slice(11, 16);
-            });
-          }
-        })
-        .catch(() => {
-          /* defaults hold */
-        });
-    </script>
+  <body>
+    <slot />
   </body>
 </html>
