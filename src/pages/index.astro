@@ -1,91 +1,65 @@
 ---
 import Base from '@/layouts/Base.astro';
-import Hero from '@/components/Hero.astro';
-import Passage from '@/components/Passage.astro';
-import LogEntry from '@/components/LogEntry.astro';
-import Sheet from '@/components/Sheet.astro';
-import { getCollection } from 'astro:content';
-import { newestFirst, readingMinutes, SHOW_BLOG } from '@/lib/log';
-import { series } from '@/lib/projects';
-
-const allPosts = SHOW_BLOG
-  ? (await getCollection('blog', ({ data }) => !data.draft)).sort(newestFirst).slice(0, 3)
-  : [];
-
-// One sheet on home, rank 1, numbered within its own series as it is on the
-// projects page. Three would be the projects page again.
-const [folio] = series(await getCollection('projects'));
-const newest = folio?.sheets[0];
-
-const interests = (await getCollection('interests')).sort((a, b) =>
-  a.data.title.localeCompare(b.data.title),
-);
+import { Image } from 'astro:assets';
+import portrait from '@/assets/images/marcel-heidebrecht-portrait.jpeg';
 ---
 
-<Base title="Home" surface>
-  <Hero slot="surface" />
-
-  {allPosts.length > 0 && (
-    <section class="mb-24 sm:mb-32">
-      <div class="section-heading">
-        <h2>recent remarks</h2>
-      </div>
-      <div class="rail flex flex-col gap-9">
-        {allPosts.map((post) => (
-          <LogEntry
-            slug={post.id}
-            title={post.data.title}
-            description={post.data.description}
-            pubDate={post.data.pubDate}
-            place={post.data.place}
-            tags={post.data.tags}
-            minutes={readingMinutes(post.body ?? '')}
+<Base title="Software engineer in Berlin">
+  <main>
+    <section class="intro column" aria-labelledby="intro-title">
+      <div class="intro-header">
+        <figure class="portrait">
+          <Image
+            src={portrait}
+            alt="Portrait"
+            width={120}
+            height={135}
+            densities={[1, 2, 3]}
+            quality={90}
+            fit="cover"
+            loading="eager"
+            fetchpriority="high"
           />
-        ))}
+        </figure>
+        <p class="role">Software engineer<br />Berlin</p>
       </div>
-      <a href="/blog" class="inline-block mt-6 font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-text-dim hover:text-accent transition-colors">
-        all remarks &rarr;
-      </a>
-    </section>
-  )}
 
-  {newest && (
-    <section>
-      <div class="section-heading">
-        <h2>projects</h2>
-      </div>
-      <Sheet id={newest.id} project={newest.data} index={1} total={folio.sheets.length} />
-      <a href="/projects" class="inline-block mt-6 font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-text-dim hover:text-accent transition-colors">
-        all projects &rarr;
-      </a>
+      <h1 id="intro-title">I build software<br />and keep it running.</h1>
+      <p class="intro-copy">
+        I'm finishing a master's in Industrial Engineering and Management at
+        TU Berlin, with a focus on IT. Alongside university, I've worked as a
+        student in software engineering at <a href="https://sourcepark.de/">Sourcepark</a>,
+        cloud consulting at <a href="https://www.campana-schott.com/de/de/">Campana &amp; Schott</a>,
+        and DevOps at <a href="https://www.capgemini.com/">Capgemini</a>.
+      </p>
     </section>
-  )}
 
-  {/* This used to hold a screen of open water back for the buoy and stand
-      taller than the viewport, from when nothing else was under the line: the
-      water column only wakes once the waterline has left the top of the
-      frame. The sheet above now does both jobs, riding alongside the buoy and
-      carrying the deep zone well past one screen on its own, so the reserved
-      screen had become a hole between two sections. */}
-  <section class="pt-24 sm:pt-32">
-    {/* What you find down here: the owner's own track, before the list. */}
-    <Passage detail class="mb-20 sm:mb-28" />
-    <div class="section-heading">
-      <h2>beyond code</h2>
+    <div class="work column">
+      <p>
+        I also volunteer at <a href="https://cct-ev.de/">CCT e.V.</a>, a student consultancy. I've contributed to its
+        member portal and Slack support bot, and built the <a href="https://www.juniter.de/">JunITer website</a> with
+        other members. That work includes getting changes into production and
+        maintaining them afterwards. I work in the terminal: Ghostty, zsh and
+        tmux, with pi as my coding agent.
+      </p>
     </div>
-    <dl class="border-t border-border-subtle">
-      {interests.map((i) => (
-        <div class="grid grid-cols-[6.5rem_1fr] sm:grid-cols-[9rem_1fr] gap-4 py-3.5 border-b border-border-subtle">
-          <dt class="font-mono text-xs uppercase tracking-[0.14em] text-accent pt-0.5">{i.data.title}</dt>
-          <dd class="text-[0.9375rem] text-text-muted">{i.data.description}</dd>
-        </div>
-      ))}
-    </dl>
-    {/* Set like the section heads above it, so the one action down here
-        speaks the same language as the controls. */}
-    <a href="/about" class="inline-flex items-center gap-3 mt-8 font-sans font-semibold uppercase tracking-[0.1em] text-[0.9375rem] [font-stretch:68%] text-text hover:text-accent transition-colors">
-      the full log
-      <span class="w-1 h-1 rounded-full bg-accent" aria-hidden="true"></span>
-    </a>
-  </section>
+
+    <div class="sea">
+      <section class="outside column" aria-labelledby="outside-title">
+        <h2 id="outside-title">Away from keyboard</h2>
+        <p>
+          I spent six months sailing with <a href="https://oceancollege.eu/en/">Ocean College</a>.
+          I'm also a certified diver (AOWD). There's gravel riding, too,
+          whenever I can get out.
+        </p>
+      </section>
+      <footer class="column">
+        <nav aria-label="Contact and profiles">
+          <a href="mailto:marcel@heidebrecht.de">Email</a>
+          <a href="https://github.com/marcel290820">GitHub</a>
+          <a href="https://www.linkedin.com/in/marcel-heidebrecht-a52296212">LinkedIn</a>
+        </nav>
+      </footer>
+    </div>
+  </main>
 </Base>

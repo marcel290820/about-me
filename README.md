@@ -1,38 +1,49 @@
-# marcel-heidebrecht.de
+# About site
 
-Personal portfolio and blog site for Marcel Heidebrecht — Fullstack Engineer & DevOps Enthusiast based in Berlin.
+A small personal website about software and life by the water. One page, system
+fonts, a static waterline, and direct contact links.
 
-Built with [Astro](https://astro.build), styled with Tailwind CSS v4, and deployed to GitHub Pages.
+Built with Astro and plain CSS. It serves no browser JavaScript and makes no
+third-party font or API requests.
 
-## Project Structure
+## Work locally
 
-```text
-/
-├── public/              Static assets (favicon, CNAME, robots.txt)
-├── src/
-│   ├── assets/          Images (portrait)
-│   ├── components/      Reusable UI components (Header, Footer, Hero, Cards, etc.)
-│   ├── content/         Content collections (blog posts, projects, interests)
-│   ├── layouts/         Page layouts (Base, Page, BlogPost)
-│   ├── pages/           Route pages (index, about, blog, projects, search)
-│   └── styles/          Global stylesheet (Tailwind + custom theme)
-└── astro.config.mjs
+Use Node 24 from `.nvmrc`, then install with `npm ci`.
+
+- `npm run dev`: start the local site at `http://localhost:4321`.
+- `npm run check`: build the site and verify the generated pages and assets.
+- `npm run preview`: serve the production build locally.
+- `npm test`: check an existing build in `dist/`.
+
+The check follows the repository's existing build-and-tests convention; there
+is no separate lint or typecheck toolchain.
+
+## Files
+
+- `src/pages/index.astro`: the page copy and layout.
+- `src/styles/global.css`: colors, typography, and responsive layout.
+- `src/layouts/Base.astro`: document metadata and the optimized sharing image.
+- `src/pages/404.astro`: a route back home for missing pages.
+- `astro.config.mjs`: site URL, sitemap, and redirects from old top-level routes.
+
+The portrait is optimized during the build. Contact links use the existing
+public profiles. Old blog, project, search, and writer systems are removed.
+
+## Deployment
+
+The existing GitHub Pages workflow installs from the lockfile, runs
+`npm run check`, and deploys that build on pushes to `master`.
+It does not currently run on pull requests. The custom domain stays in
+`public/CNAME`; there is no manual deploy step.
+
+## Previous design
+
+The annotated tag `archive/nautical-chart-v1` preserves the complete chart-based
+site, including its project content and blog tools. The tag was created locally;
+pushing it is a separate action.
+
+To inspect it without changing this working tree:
+
+```sh
+git worktree add --detach ../about-site-archive archive/nautical-chart-v1
 ```
-
-## Commands
-
-| Command | Action |
-| :---------------- | :------------------------------------------ |
-| `npm install` | Installs dependencies |
-| `npm run dev` | Starts local dev server at `localhost:4321` |
-| `npm run build` | Build production site to `./dist/` |
-| `npm run preview` | Preview build locally before deploying |
-
-## Tech Stack
-
-- **Astro** — Static site generation with content collections
-- **Tailwind CSS v4** — Utility-first styling with custom theme tokens
-- **MDX** — Rich blog post authoring
-- **Shiki** (Dracula theme) — Code syntax highlighting
-- **Pagefind** — Static search indexing
-- **GitHub Pages** — Deployment via GitHub Actions
