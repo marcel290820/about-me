@@ -25,7 +25,3 @@ pnpm-debug.log*
 
 # playwright mcp scratch output
 .playwright-mcp/
-
-# claude code worktrees and plan-execution scratch
-.claude/worktrees/
-.superpowers/

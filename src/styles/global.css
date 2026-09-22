@@ -4,10 +4,8 @@
   --color-text: #12303a;
   --color-text-muted: #425c64;
   --color-accent: #0b6e75;
-  --color-border: #b2c9c9;
   --color-water: #e7f0ee;
   --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
   --content-width: 632px;
   --page-gutter: 24px;
 }
@@ -64,7 +62,6 @@ main {
 
 h1 {
   margin: 0 0 27px;
-  font-family: var(--font-mono);
   font-size: 39px;
   font-weight: 500;
   line-height: 1.17;
@@ -82,10 +79,6 @@ p {
   font-size: 13px;
   line-height: 1.7;
   color: var(--color-text-muted);
-}
-
-.intro-copy {
-  max-width: 545px;
 }
 
 .work {
@@ -125,24 +118,6 @@ a:focus-visible {
   margin-top: 34px;
   padding-top: 24px;
   padding-bottom: 66px;
-}
-
-.sea-rule {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  width: calc(50% + var(--content-width) / 2);
-  max-width: calc(100% - var(--page-gutter));
-  transform: translateY(-50%);
-  margin-bottom: 22px;
-  color: var(--color-text-muted);
-  font: 11px/1.5 var(--font-mono);
-}
-
-.sea-rule::before {
-  content: "";
-  flex: 1;
-  border-top: 1px solid var(--color-border);
 }
 
 footer {
@@ -203,7 +178,6 @@ footer a {
 
   p {
     font-size: 16px;
-    line-height: 1.75;
   }
 
   .work {
@@ -213,10 +187,6 @@ footer a {
   .sea {
     margin-top: 32px;
     padding-bottom: 38px;
-  }
-
-  .sea-rule {
-    margin-bottom: 26px;
   }
 
   footer {

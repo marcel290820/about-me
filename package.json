@@ -11,8 +11,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "check": "npm run build && npm test",
-    "test": "node --test scripts/site.test.mjs",
-    "astro": "astro"
+    "test": "node --test scripts/site.test.mjs"
   },
   "dependencies": {
     "@astrojs/sitemap": "3.7.4",

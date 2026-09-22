@@ -27,7 +27,7 @@ is no separate lint or typecheck toolchain.
 - `astro.config.mjs`: site URL, sitemap, and redirects from old top-level routes.
 
 The portrait is optimized during the build. Contact links use the existing
-public profiles. Old blog, project, search, and writer systems are removed.
+public profiles.
 
 ## Deployment
 
@@ -35,15 +35,3 @@ The existing GitHub Pages workflow installs from the lockfile, runs
 `npm run check`, and deploys that build on pushes to `master`.
 It does not currently run on pull requests. The custom domain stays in
 `public/CNAME`; there is no manual deploy step.
-
-## Previous design
-
-The annotated tag `archive/nautical-chart-v1` preserves the complete chart-based
-site, including its project content and blog tools. The tag was created locally;
-pushing it is a separate action.
-
-To inspect it without changing this working tree:
-
-```sh
-git worktree add --detach ../about-site-archive archive/nautical-chart-v1
-```

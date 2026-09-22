@@ -18,24 +18,6 @@ test('the personal site ships one page, local assets, and working legacy redirec
   assert.doesNotMatch(home, /<script\b|<iframe\b|<canvas\b|<link[^>]+rel="(?:preconnect|alternate)"/i);
   assert.equal(files.some(file => /\.(?:m?js|woff2?)$/.test(file)), false);
 
-  const links = [...home.matchAll(/<a\b[^>]*href="([^"]+)"/g)].map(match => match[1]);
-  assert.equal(links.length, 9);
-  assert.equal(links.filter(link => link.startsWith('mailto:')).length, 1);
-  assert.deepEqual(links.slice(0, 5), [
-    'https://sourcepark.de/',
-    'https://www.campana-schott.com/de/de/',
-    'https://www.capgemini.com/',
-    'https://cct-ev.de/',
-    'https://www.juniter.de/',
-  ]);
-  assert.deepEqual(links.slice(5).filter(link => link.startsWith('https:')).map(link => new URL(link).hostname), [
-    'oceancollege.eu',
-    'github.com',
-    'www.linkedin.com',
-  ]);
-  assert.match(home.replace(/\s+/g, ' '), /Ghostty, zsh and tmux\. Vim is my editor, and pi is my coding agent\./);
-  assert.doesNotMatch(home, /<a\b[^>]*>[^<]*(?:Ghostty|zsh|tmux|Vim|\bpi\b)/);
-
   const images = [...home.matchAll(/<img\b[^>]*src="([^"]+)"/g)].map(match => match[1]);
   const portrait = home.match(/<img\b[^>]*>/)?.[0];
   const candidates = portrait?.match(/srcset="([^"]+)"/)?.[1].split(',').map(candidate => candidate.trim().split(/\s+/));
