@@ -3,7 +3,7 @@
 ## Design
 
 This is a one-page personal site. The accepted direction is Command line coast:
-a narrow column, system sans-serif headline, plain prose, small portrait, and one
+a narrow column, Barlow headline, plain prose, small portrait, and one
 static waterline above a faintly cooler background.
 
 Keep the copy personal and matter-of-fact. The site has no blog, project gallery,
@@ -11,8 +11,8 @@ technology inventory, employment timeline, animated ocean, or terminal
 simulation. Do not reintroduce those systems without a new request.
 
 All styling is plain CSS in `src/styles/global.css`. Use its semantic color and
-font variables. There are no external fonts, client scripts, live API calls, or
-framework islands.
+font choices. Barlow is self-hosted; there are no external font requests, client
+scripts, live API calls, or framework islands.
 
 ## Commands
 

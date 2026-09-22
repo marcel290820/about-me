@@ -1,10 +1,10 @@
 # About site
 
-A small personal website about software and life by the water. One page, system
-fonts, a static waterline, and direct contact links.
+A small personal website about software and life by the water. One page,
+self-hosted Barlow, a static waterline, and direct contact links.
 
 Built with Astro and plain CSS. It serves no browser JavaScript and makes no
-third-party font or API requests.
+third-party runtime requests.
 
 ## Work locally
 

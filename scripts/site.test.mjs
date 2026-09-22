@@ -16,7 +16,11 @@ test('the personal site ships one page, local assets, and working legacy redirec
   assert.match(home, /<html lang="en"/);
   assert.equal([...home.matchAll(/<h1[\s>]/g)].length, 1);
   assert.doesNotMatch(home, /<script\b|<iframe\b|<canvas\b|<link[^>]+rel="(?:preconnect|alternate)"/i);
-  assert.equal(files.some(file => /\.(?:m?js|woff2?)$/.test(file)), false);
+  assert.doesNotMatch(home, /fonts\.(?:googleapis|gstatic)\.com/);
+  assert.equal(files.some(file => /\.m?js$/.test(file)), false);
+
+  const fonts = [...home.matchAll(/url\(([^)]+\.woff2)\)/g)].map(match => match[1].replaceAll(/["']/g, ''));
+  assert.equal(fonts.length, 3);
 
   const images = [...home.matchAll(/<img\b[^>]*src="([^"]+)"/g)].map(match => match[1]);
   const portrait = home.match(/<img\b[^>]*>/)?.[0];
@@ -30,7 +34,7 @@ test('the personal site ships one page, local assets, and working legacy redirec
   assert.equal(images.length, 1);
   assert.ok(social, 'Sharing previews need an image');
   assert.equal(new URL(social[1]).hostname, domain);
-  for (const asset of [...images, ...candidates.map(([src]) => src), ...styles, '/favicon.svg', new URL(social[1]).pathname]) {
+  for (const asset of [...images, ...candidates.map(([src]) => src), ...styles, ...fonts, '/favicon.svg', new URL(social[1]).pathname]) {
     assert.match(asset, /^\/(?!\/)/, 'Assets must be served locally');
     await access(new URL(`.${asset}`, output));
   }
