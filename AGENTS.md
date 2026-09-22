@@ -3,7 +3,7 @@
 ## Design
 
 This is a one-page personal site. The accepted direction is Command line coast:
-a narrow column, system monospace headline, plain prose, small portrait, and one
+a narrow column, system sans-serif headline, plain prose, small portrait, and one
 static waterline above a faintly cooler background.
 
 Keep the copy personal and matter-of-fact. The site has no blog, project gallery,
@@ -22,7 +22,7 @@ framework islands.
 - `npm test` checks the existing build; run the full check after source changes.
 - `npm run preview` serves the production build.
 
-The existing `.claude/check.sh` delegates to `npm run check` for local hooks.
+The existing `.codex/check.sh` delegates to `npm run check` for local hooks.
 CI runs the same command. This repository uses build and output checks rather
 than a separate lint or typecheck toolchain.
 
@@ -46,8 +46,8 @@ UI change complete; preserve the accepted visual direction.
 The GitHub Pages workflow deploys on pushes to `master` after the check passes.
 It does not currently run on pull requests. Never deploy manually.
 
-The old site is preserved at `archive/nautical-chart-v1`. Do not keep unused old
-systems in the active tree for recovery; the archive already provides that.
+Do not keep unused old systems in the active tree for recovery; Git history
+already provides that.
 
 Commit and push only when asked. Use conventional commits without personal
 names or tool attribution.
